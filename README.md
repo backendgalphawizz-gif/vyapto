@@ -84,6 +84,22 @@ php artisan serve
 
 ---
 
+## 🖼️ UI Screenshots
+
+### 🏠 Landing Page
+![Landing Page](public/screenshots/landing_page.png)
+
+### 🔐 Login Page
+![Login Page](public/screenshots/login.png)
+
+### 📝 Register Page
+![Register Page](public/screenshots/register.png)
+
+### 📊 Admin Dashboard
+![Admin Dashboard](public/screenshots/admin_dashboard.png)
+
+---
+
 👨‍💻 **Developer**  
 **Leonard Domingo**
 
