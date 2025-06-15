@@ -37,13 +37,14 @@
 - ✅ **Recommended Version:** Composer **2.6 or higher**
 
 ### 🔍 To check your Composer version:
+
 ```bash
 composer --version
+```
 
 📦 **Need Composer?**  
 🔗 [Official Composer Installer](https://getcomposer.org/download/)  
 📥 [Download from Google Drive (Backup)](https://drive.google.com/file/d/1_RvlePpUOzqaVPJYQ-HQKCGEkAYxxkZU/view?usp=sharing)
-
 
 ---
 
@@ -79,13 +80,16 @@ php artisan storage:link
 
 # 8. Start Laravel server
 php artisan serve
+```
 
+---
 
-👨‍💻 Developer:
-Leonard Domingo
+👨‍💻 **Developer**  
+**Leonard Domingo**
+
+---
 
 ## 📄 License
 
-This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-
+This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).  
 The Laravel framework used in this project is also licensed under the MIT license.
