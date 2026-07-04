@@ -5,25 +5,6 @@
 @push('head')
     <!-- Trix Editor (WYSIWYG) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/trix@2.0.0/dist/trix.css">
-    <style>
-        trix-editor {
-            min-height: 150px;
-            background: #fff;
-        }
-         /* Loader overlay */
-        #loader {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(255,255,255,0.8);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;  
-            align-items: center;
-            justify-content: center;
-        }
-    </style>
 @endpush
 
 @section('content')

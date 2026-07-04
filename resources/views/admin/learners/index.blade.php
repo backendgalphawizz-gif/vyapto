@@ -3,7 +3,7 @@
 @section('title', 'Learner Management')
 
 @section('content')
-<div class="container-fluid px-2">
+<div class="main-section">
 
     <!-- Success Message -->
     @if(session('success'))

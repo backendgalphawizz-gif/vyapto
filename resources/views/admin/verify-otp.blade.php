@@ -4,29 +4,10 @@
 
 @section('content')
 @push('styles')
-<style>
-    body {
-        background: linear-gradient(to right, #1a202c, #2d3748);
-        font-family: 'Instrument Sans', sans-serif;
-    }
-    .otp-container {
-        max-width: 400px;
-        margin: 60px auto;
-        background: #fff;
-        padding: 30px;
-        border-radius: 12px;
-        box-shadow: 0 0 15px rgba(0,0,0,0.15);
-        position: relative;
-    }
-    .spinner-border-sm {
-        width: 1rem;
-        height: 1rem;
-        border-width: 0.15em;
-    }
-</style>
+
 @endpush
 
-<div class="container">
+<div class="main-section">
     <div class="otp-container">
         <!-- Close button -->
         <a href="{{ url('/') }}" class="btn-close position-absolute top-0 end-0 m-3" aria-label="Close"></a>

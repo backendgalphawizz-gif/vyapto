@@ -1,27 +1,12 @@
 <?php
 
 namespace App\Http\Controllers;
-// Defines this class as part of the App\Http\Controllers namespace,
-// so Laravel knows to use it for handling web requests.
 
 use Illuminate\Http\Request;       
-// Provides the Request object, which gives access to user input,
-// query parameters, and other HTTP request data in controller methods.
-
 use App\Models\User;               
-// Imports the User Eloquent model, allowing us to query,
-// create, update, and delete records in the `users` database table.
-
 use Illuminate\Support\Facades\Mail;       
-// Brings in Laravel’s Mail facade, which offers a simple
-// static interface to send emails via configured mail drivers.
-
 use App\Mail\WelcomeMail;          
-// Imports the WelcomeMail mailable class, which encapsulates
-// the email content, subject, and view template for welcome messages.
-
 use App\Mail\CustomMessageMail;
-
 use App\Models\EmailLog;
 use Illuminate\Support\Facades\DB;
 
@@ -29,9 +14,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        // $users = User::all(); // get all users
-        // $users = User::orderBy('name', 'asc')->get(); // alphabetical order
-        $users = User::orderBy('created_at', 'desc')->paginate(10); // created_date order descending
+        $users = User::orderBy('created_at', 'desc')->paginate(10); 
         return view('users.index', compact('users'));
     }
 

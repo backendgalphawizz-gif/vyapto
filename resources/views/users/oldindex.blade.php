@@ -71,7 +71,7 @@
     <form
       id="sendMailForm"
       method="POST"
-      action="{{ route('users.sendmail') }}"
+      action="{{ route('employees.sendmail') }}"
     >
       @csrf
 
@@ -156,7 +156,7 @@
       <form
         id="delete-user-{{ $user->id }}"
         method="POST"
-        action="{{ route('users.destroy', $user) }}"
+        action="{{ route('employees.destroy', $user) }}"
         class="d-none"
       >
         @csrf

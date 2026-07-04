@@ -3,7 +3,7 @@
 @section('title', 'Edit Profile')
 
 @section('content')
-<div class="container py-4">
+<div class="main-section">
     <h4 class="mb-4 gap-2">
         <i class="bi bi-pencil-square">
         </i>Edit Profile
@@ -22,11 +22,11 @@
             </div>
         </div>
 
-        <div class="col-12">
+        <!-- <div class="col-12">
             <div class="p-3 bg-white shadow rounded">
                 @include('admin.profile.delete-user-form')
             </div>
-        </div>
+        </div> -->
     </div>
 </div>
 @endsection

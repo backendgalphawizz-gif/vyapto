@@ -31,7 +31,7 @@
     </div>
 
     <!-- Mail Form and Table -->
-    <form id="sendMailForm" method="POST" action="{{ route('users.sendmail') }}">
+    <form id="sendMailForm" method="POST" action="{{ route('employees.sendmail') }}">
         @csrf
 
         <table class="table table-sm table-compact table-bordered table-hover bg-white">
@@ -92,7 +92,7 @@
         @foreach($users as $user)
         <div class="modal fade" id="editUserModal{{ $user->id }}" tabindex="-1" aria-labelledby="editUserModalLabel{{ $user->id }}" aria-hidden="true">
             <div class="modal-dialog">
-                <form action="{{ route('users.update', $user->id) }}" method="POST">
+                <form action="{{ route('employees.update', $user->id) }}" method="POST">
                     @csrf
                     @method('PUT')
                     <div class="modal-content border border-1 border-primary rounded-4 shadow">
@@ -137,7 +137,7 @@
 
     <!-- Hidden DELETE Forms -->
     @foreach($users as $user)
-        <form id="delete-user-{{ $user->id }}" method="POST" action="{{ route('users.destroy', $user) }}" class="d-none">
+        <form id="delete-user-{{ $user->id }}" method="POST" action="{{ route('employees.destroy', $user) }}" class="d-none">
             @csrf
             @method('DELETE')
         </form>
@@ -146,21 +146,7 @@
 @endsection
 
 @push('head')
-    <style>
-        #loader {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(255,255,255,0.8);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-    </style>
+
 @endpush
 
 @push('scripts')

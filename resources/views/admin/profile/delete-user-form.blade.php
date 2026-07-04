@@ -1,4 +1,4 @@
-<section>
+<!-- <section>
     <div class="mb-4">
         <h4 class="fw-bold">{{ __('Delete Account') }}</h4>
         <p class="text-muted small">
@@ -6,12 +6,10 @@
         </p>
     </div>
 
-    <!-- Delete Button to Trigger Modal -->
     <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
         {{ __('Delete Account') }}
     </button>
 
-    <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border border-danger rounded-4 shadow">
@@ -54,4 +52,4 @@
             </div>
         </div>
     </div>
-</section>
+</section> -->

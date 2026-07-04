@@ -3,7 +3,7 @@
 @section('title', 'Register User | LEMS')
 
 @section('content')
-<div class="container mt-3">
+<div class="main-section">
   @if ($errors->any())
     <div class="alert alert-danger">
         <ul class="mb-0">
