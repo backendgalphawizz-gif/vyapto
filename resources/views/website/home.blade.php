@@ -57,9 +57,7 @@
                         @endforelse
                     </div>
 
-                    <a href="{{ route('portal.login') }}" class="cta-btn" id="employees">
-                        <i class="fa-regular fa-user"></i> Employee Login <i class="fa-solid fa-arrow-right"></i>
-                    </a>
+                   
                 </div>
 
                 <div class="hero-image">

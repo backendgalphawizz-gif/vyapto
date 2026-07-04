@@ -19,10 +19,7 @@
                 <i class="fa-solid fa-bars"></i>
             </button>
 
-            <a href="{{ route('portal.login') }}" class="login-btn">
-                <i class="fa-regular fa-user"></i>
-                Employee Login
-            </a>
+            
         </div>
     </div>
 </header>
