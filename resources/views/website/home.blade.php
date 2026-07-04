@@ -227,12 +227,11 @@
 </section>
 
 <div class="container">
-    <div class="cta-banner">
+    <div class="cta-banner cta-banner--centered">
         <div>
             <h2>{{ $cta->title ?? 'Ready To Get Started?' }}</h2>
             <p>{{ $cta->content ?? 'Join thousands of delivery associates using Vyapto.' }}</p>
         </div>
-        <a class="banner-btn" href="{{ route('portal.login') }}">Employee Login</a>
     </div>
 </div>
 @endsection

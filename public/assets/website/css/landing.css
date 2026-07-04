@@ -661,6 +661,15 @@ header {
     font-size: 42px;
 }
 
+.cta-banner--centered {
+    justify-content: center;
+    text-align: center;
+}
+
+.cta-banner--centered > div {
+    margin-right: 0;
+}
+
 .cta-banner a.banner-btn {
     background: #ffe8cf;
     color: #FF6002;
