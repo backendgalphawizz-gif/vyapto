@@ -25,8 +25,8 @@
     /* Override assets/admin/css/style.css if it tightens nav links */
     .sidebar .nav-pills .menu-item.nav-link,
     .sidebar .nav-pills .nav-link.menu-item {
-      padding: 0.6rem 0.9rem !important;
-      line-height: 1.5 !important;
+      padding: 0.45rem 0.75rem !important;
+      line-height: 1.4 !important;
       min-height: auto;
       overflow: visible !important;
       display: flex;
@@ -39,6 +39,28 @@
     .sidebar .nav-item {
       overflow: visible !important;
     }
+    .sidebar-brand {
+      flex-shrink: 0;
+    }
+    .sidebar-menu {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      overflow-anchor: none;
+      margin: 0 -0.5rem;
+      padding: 0 0.5rem 0.5rem;
+    }
+    .sidebar-submenu {
+      list-style: none;
+      padding-left: 0.75rem;
+      margin: 0 0 0.25rem;
+    }
+    .sidebar-submenu .nav-link {
+      font-size: 0.85rem;
+      padding: 0.45rem 0.75rem !important;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -50,7 +72,7 @@
 
   <!-- Sidebar -->
   <nav class="sidebar d-flex flex-column p-3" id="sidebar">
-    <div class="text-center">
+    <div class="sidebar-brand text-center">
       <!-- Logo -->
       @php
       $company_web_logo = \App\Models\Setting::where('type', 'company_web_logo')->first();
@@ -63,10 +85,11 @@
         onerror="this.src='{{ asset('/assets/admin/images/company_logo.png') }}';">
 
       <!-- System Name -->
-      <h4 class="system-name text-white mb-4">VYAPTO</h4>
+      <h4 class="system-name text-white mb-3">VYAPTO</h4>
     </div>
 
-    <ul class="nav nav-pills flex-column mb-auto">
+    <div class="sidebar-menu">
+    <ul class="nav nav-pills flex-column mb-0">
       <li class="nav-item mb-1">
         <a href="{{ route('admin.dashboard') }}" class="menu-item nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" data-tooltip="Dashboard">
           <i class="bi bi-speedometer2 me-2"></i><span> Dashboard</span>
@@ -128,6 +151,53 @@
           <i class="bi bi-gear me-2"></i><span>Settings</span>
         </a>
       </li>
+
+      <li class="nav-item mb-1">
+        <a href="javascript:void(0)"
+          class="menu-item nav-link d-flex align-items-center {{ request()->routeIs('admin.website.*') ? 'active' : '' }}"
+          data-bs-toggle="collapse"
+          data-bs-target="#websiteSubmenu"
+          role="button"
+          aria-expanded="false"
+          aria-controls="websiteSubmenu"
+          data-tooltip="Website CMS">
+          <span><i class="bi bi-globe me-2"></i>Website</span>
+          <i class="bi bi-chevron-down ms-auto small"></i>
+        </a>
+        <ul class="sidebar-submenu collapse" id="websiteSubmenu">
+          <li class="nav-item mb-1">
+            <a href="{{ route('admin.website.page-sections.index') }}" class="menu-item nav-link {{ request()->routeIs('admin.website.page-sections.*') ? 'active' : '' }}">
+              <span>Page Sections</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a href="{{ route('admin.website.services.index') }}" class="menu-item nav-link {{ request()->routeIs('admin.website.services.*') ? 'active' : '' }}">
+              <span>Services</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a href="{{ route('admin.website.products.index') }}" class="menu-item nav-link {{ request()->routeIs('admin.website.products.*') ? 'active' : '' }}">
+              <span>Products</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a href="{{ route('admin.website.careers.index') }}" class="menu-item nav-link {{ request()->routeIs('admin.website.careers.*') ? 'active' : '' }}">
+              <span>Careers</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a href="{{ route('admin.website.blogs.index') }}" class="menu-item nav-link {{ request()->routeIs('admin.website.blogs.*') ? 'active' : '' }}">
+              <span>Blogs</span>
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a href="{{ route('admin.website.contact-messages.index') }}" class="menu-item nav-link {{ request()->routeIs('admin.website.contact-messages.*') ? 'active' : '' }}">
+              <span>Contact Messages</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
       <!-- <li class="nav-item">
         <a class="nav-link" href="{{ route('admin.hubs.index') }}">
           <i class="bi bi-shop me-2"></i> Hubs
@@ -196,8 +266,10 @@
           <span>Static Pages</span>
         </a>
       </li>
+
       <!-- Add the rest of your menu items here... -->
     </ul>
+    </div>
 
     <!-- <hr>
     <div>
@@ -411,6 +483,51 @@
       const drawer = document.getElementById('notificationDrawer');
       drawer.style.transform = drawer.style.transform === 'translateX(0%)' ? 'translateX(100%)' : 'translateX(0%)';
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const menu = document.querySelector('.sidebar-menu');
+      const submenu = document.getElementById('websiteSubmenu');
+      const submenuToggle = document.querySelector('[data-bs-target="#websiteSubmenu"]');
+
+      if (menu) {
+        menu.addEventListener('scroll', function () {
+          sessionStorage.setItem('sidebarScroll', menu.scrollTop);
+        }, { passive: true });
+
+        menu.querySelectorAll('a.menu-item[href]').forEach(function (link) {
+          link.addEventListener('mousedown', function () {
+            sessionStorage.setItem('sidebarScroll', menu.scrollTop);
+          });
+        });
+      }
+
+      if (submenu && submenuToggle) {
+        const open = sessionStorage.getItem('websiteSubmenuOpen') === '1';
+
+        if (open) {
+          submenu.classList.add('show');
+          submenuToggle.setAttribute('aria-expanded', 'true');
+        }
+
+        submenu.addEventListener('shown.bs.collapse', function () {
+          sessionStorage.setItem('websiteSubmenuOpen', '1');
+        });
+        submenu.addEventListener('hidden.bs.collapse', function () {
+          sessionStorage.setItem('websiteSubmenuOpen', '0');
+        });
+      }
+
+      if (menu) {
+        requestAnimationFrame(function () {
+          const savedScroll = sessionStorage.getItem('sidebarScroll');
+          if (savedScroll !== null) {
+            const maxScroll = Math.max(0, menu.scrollHeight - menu.clientHeight);
+            menu.scrollTop = Math.min(parseInt(savedScroll, 10) || 0, maxScroll);
+          }
+        });
+      }
+    });
+
     $(document).ready(function() {
       $('#usersTable').DataTable({
         "lengthChange": true,

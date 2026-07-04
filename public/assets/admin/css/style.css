@@ -5,25 +5,16 @@
 .sidebar {
   scrollbar-width: thin;
   height: 100vh;
-
-  /* width: 240px; */
   width: 270px;
   position: fixed;
-
   top: 0;
-
   left: 0;
-
-  overflow-y: auto;
-
+  overflow: hidden;
   background: #1e1e2f;
-
   color: white;
-
   transition:
     width 0.3s ease,
     background 0.3s ease;
-
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 }
 

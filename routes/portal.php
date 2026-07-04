@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Portal\HomeController;
 use App\Http\Controllers\Portal\AttendanceController;
 use App\Http\Controllers\Portal\AuthController as PortalAuthController;
 use App\Http\Controllers\Portal\DashboardController;
@@ -21,8 +20,6 @@ Route::middleware('guest')->prefix('portal')->name('portal.')->group(function ()
     Route::post('/login/otp/verify', [PortalAuthController::class, 'verifyOtp'])->name('login.otp.verify');
     Route::post('/login/email', [PortalAuthController::class, 'loginWithEmail'])->name('login.email');
 });
-
-Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::middleware(['auth', 'verified', 'app.user'])
     ->prefix('portal')

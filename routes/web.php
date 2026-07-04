@@ -23,8 +23,14 @@ use App\Http\Controllers\Admin\AssignmentParcelController;
 use App\Http\Controllers\Admin\VehicleUsageController;
 use App\Http\Controllers\Admin\FaqController as AdminFaqController;
 use App\Http\Controllers\Admin\FaqCategoryController as AdminFaqCategoryController;
+use App\Http\Controllers\Admin\WebsitePageSectionController;
+use App\Http\Controllers\Admin\WebsiteServiceController;
+use App\Http\Controllers\Admin\WebsiteProductController;
+use App\Http\Controllers\Admin\WebsiteCareerItemController;
+use App\Http\Controllers\Admin\WebsiteBlogController;
+use App\Http\Controllers\Admin\WebsiteContactMessageController;
 
-// Home page is registered in portal.php via HomeController@index
+// Public website routes are in website.php; portal routes in portal.php
 
 Route::get('/dashboard', function () {
 
@@ -46,6 +52,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('update-info', [SettingsController::class, 'updateInfo'])->name('update-info');
         });
         Route::resource('admin/static-pages', SettingsController::class)->only(['index', 'store', 'update', 'destroy']);
+
+        Route::prefix('admin/website')->name('admin.website.')->group(function () {
+            Route::get('page-sections', [WebsitePageSectionController::class, 'index'])->name('page-sections.index');
+            Route::get('page-sections/{pageSection}/edit', [WebsitePageSectionController::class, 'edit'])->name('page-sections.edit');
+            Route::put('page-sections/{pageSection}', [WebsitePageSectionController::class, 'update'])->name('page-sections.update');
+            Route::resource('services', WebsiteServiceController::class)->except(['show']);
+            Route::resource('products', WebsiteProductController::class)->except(['show']);
+            Route::resource('careers', WebsiteCareerItemController::class)->except(['show'])->parameters(['careers' => 'career']);
+            Route::resource('blogs', WebsiteBlogController::class)->except(['show']);
+            Route::get('contact-messages', [WebsiteContactMessageController::class, 'index'])->name('contact-messages.index');
+            Route::get('contact-messages/{contactMessage}', [WebsiteContactMessageController::class, 'show'])->name('contact-messages.show');
+            Route::patch('contact-messages/{contactMessage}/status', [WebsiteContactMessageController::class, 'updateStatus'])->name('contact-messages.update-status');
+            Route::delete('contact-messages/{contactMessage}', [WebsiteContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
+        });
     });
 
     Route::group(['middleware' => ['permission:manage_permissions']], function () {
@@ -224,4 +244,5 @@ Route::delete('/learners/{id}', [LearnerController::class, 'destroy'])->name('le
 
 
 require __DIR__ . '/auth.php';
+require __DIR__ . '/website.php';
 require __DIR__ . '/portal.php';
