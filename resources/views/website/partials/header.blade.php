@@ -31,5 +31,4 @@
     <a href="{{ route('website.careers') }}">Careers</a>
     <a href="{{ route('website.blogs') }}">Blogs</a>
     <a href="{{ route('website.contact') }}">Contact</a>
-    <a href="{{ route('portal.login') }}" class="mobile-login-btn">Employee Login</a>
 </div>
