@@ -130,11 +130,11 @@
                 <a href="#" class="playstore-btn"><img src="{{ asset('images/play-store.png') }}" alt="Play Store"></a>
             </div>
             <div class="mobile-app-image">
-                <div class="bg-gradient"></div>
-                <div class="dot-pattern dot-left"></div>
-                <div class="dot-pattern dot-right"></div>
-                <img src="{{ asset('images/app-screen-1.png') }}" alt="" class="phone phone-left">
-                <img src="{{ asset('images/app-screen-2.png') }}" alt="" class="phone phone-right">
+                <div class="bg-gradient" aria-hidden="true"></div>
+                <div class="dot-pattern dot-left" aria-hidden="true"></div>
+                <div class="dot-pattern dot-right" aria-hidden="true"></div>
+                <img src="{{ asset('images/app-screen-1.png') }}" alt="Vyapto mobile app" class="phone phone-left">
+                <img src="{{ asset('images/app-screen-2.png') }}" alt="Vyapto mobile app dashboard" class="phone phone-right">
             </div>
         </div>
     </div>
