@@ -7,17 +7,24 @@
 
 <section class="content-section">
     <div class="container">
-        <div class="cards-grid">
+        <div class="services-grid">
             @forelse($services as $service)
-                <div class="card-item">
-                    @if($service->imageUrl())
-                        <img src="{{ $service->imageUrl() }}" alt="{{ $service->title }}" class="cover">
-                    @else
-                        <div class="icon"><i class="fa-solid {{ $service->icon ?? 'fa-truck' }}"></i></div>
-                    @endif
-                    <h3>{{ $service->title }}</h3>
-                    <p>{{ $service->description }}</p>
-                    <a href="{{ route('website.services.show', $service->slug) }}" class="read-more">Learn more &rarr;</a>
+                <div class="service-card" data-reveal>
+                    <div class="service-card-image">
+                        @if($service->imageUrl())
+                            <img src="{{ $service->imageUrl() }}" alt="{{ $service->title }}">
+                        @else
+                            <div class="icon-fallback"><i class="fa-solid {{ $service->icon ?? 'fa-truck' }}"></i></div>
+                        @endif
+                    </div>
+                    <div class="service-card-body">
+                        <h3>{{ $service->title }}</h3>
+                        <p>{{ $service->description }}</p>
+                        <div class="service-card-actions">
+                            <a href="{{ route('website.services.show', $service->slug) }}" class="learn-more">Learn More</a>
+                            <a href="{{ route('website.services.show', $service->slug) }}" class="explore">Explore <i class="fa-solid fa-arrow-right"></i></a>
+                        </div>
+                    </div>
                 </div>
             @empty
                 <p class="empty-state">Services coming soon.</p>

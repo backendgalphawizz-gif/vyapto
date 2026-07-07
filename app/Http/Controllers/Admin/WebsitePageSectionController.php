@@ -19,7 +19,7 @@ class WebsitePageSectionController extends Controller
         }
 
         $sections = $query->paginate(50)->withQueryString();
-        $pages = config('website_sections.pages', ['global', 'home', 'services', 'products', 'careers', 'blogs', 'contact']);
+        $pages = config('website_sections.pages', ['global', 'home', 'about', 'services', 'products', 'careers', 'blogs', 'contact', 'faq']);
 
         return view('admin.website.page-sections.index', compact('sections', 'pages'));
     }
