@@ -2,8 +2,8 @@
     <div class="container">
         <div class="navbar">
             <a href="{{ route('website.home') }}" class="logo">
-                <img src="{{ asset('images/nav-logo.png') }}" alt="{{ $companyName ?? 'VYAPTO' }}" class="auth-hero-logo desktop-logo">
-                <img src="{{ asset('images/nav-logo-mobile.png') }}" alt="{{ $companyName ?? 'VYAPTO' }}" class="auth-hero-logo mobile-logo">
+                <img src="{{ $siteLogoDesktop }}" alt="{{ $companyName ?? 'VYAPTO' }}" class="auth-hero-logo desktop-logo">
+                <img src="{{ $siteLogoMobile }}" alt="{{ $companyName ?? 'VYAPTO' }}" class="auth-hero-logo mobile-logo">
             </a>
 
             <nav class="nav-links">

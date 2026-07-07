@@ -55,6 +55,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::prefix('admin/website')->name('admin.website.')->group(function () {
             Route::get('page-sections', [WebsitePageSectionController::class, 'index'])->name('page-sections.index');
+            Route::get('page-sections/create', [WebsitePageSectionController::class, 'create'])->name('page-sections.create');
+            Route::post('page-sections', [WebsitePageSectionController::class, 'store'])->name('page-sections.store');
             Route::get('page-sections/{pageSection}/edit', [WebsitePageSectionController::class, 'edit'])->name('page-sections.edit');
             Route::put('page-sections/{pageSection}', [WebsitePageSectionController::class, 'update'])->name('page-sections.update');
             Route::resource('services', WebsiteServiceController::class)->except(['show']);

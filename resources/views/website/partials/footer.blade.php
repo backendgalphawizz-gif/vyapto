@@ -2,7 +2,7 @@
     <div class="container">
         <div class="footer-grid">
             <div>
-                <img src="{{ asset('images/nav-logo.png') }}" alt="{{ $companyName ?? 'VYAPTO' }}" class="auth-foot-logo">
+                <img src="{{ $siteLogoFooter }}" alt="{{ $companyName ?? 'VYAPTO' }}" class="auth-foot-logo">
                 <p>Smart Delivery Workforce Platform for attendance, shipment tracking and operations.</p>
             </div>
             <div>

@@ -42,7 +42,24 @@ class WebsitePageSection extends Model
 
     public function imageUrl(): ?string
     {
-        return \App\Support\WebsiteMedia::url($this->image);
+        if ($this->image) {
+            return \App\Support\WebsiteMedia::url($this->image);
+        }
+
+        $default = $this->extra['default_image'] ?? null;
+
+        return \App\Support\WebsiteMedia::url($default);
+    }
+
+    public function label(): string
+    {
+        return config("website_sections.labels.{$this->page}.{$this->section_key}")
+            ?? ucwords(str_replace('_', ' ', $this->section_key));
+    }
+
+    public function hint(): ?string
+    {
+        return config("website_sections.hints.{$this->section_key}");
     }
 
     public static function sectionsFor(string $page): \Illuminate\Support\Collection
