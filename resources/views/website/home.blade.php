@@ -41,12 +41,12 @@
                     @endif
 
                     <h1>
-                        {{ $hero->title ?? 'Smart Delivery' }}
-                        <span>{{ $hero->subtitle ?? 'Workforce Platform' }}</span>
+                        {{ $hero?->title ?? 'Smart Delivery' }}
+                        <span>{{ $hero?->subtitle ?? 'Workforce Platform' }}</span>
                     </h1>
 
                     <p style="margin-bottom: 30px;">
-                        {{ $hero->content ?? 'Manage attendance, shipments, salary tracking and field operations from one secure platform.' }}
+                        {{ $hero?->content ?? 'Manage attendance, shipments, salary tracking and field operations from one secure platform.' }}
                     </p>
 
                     <div class="feature-row">
@@ -106,10 +106,10 @@
         <div class="section-title">
             <span class="section-badge">
                 @if($featuresHeader?->icon)<i class="fa-solid {{ $featuresHeader->icon }}"></i>@endif
-                {{ $featuresHeader->subtitle ?? 'FEATURES' }}
+                {{ $featuresHeader?->subtitle ?? 'FEATURES' }}
             </span>
-            <h2>{{ $featuresHeader->title ?? 'Everything You Need, In One Platform' }}</h2>
-            <p>{{ $featuresHeader->content ?? 'Built for delivery associates to simplify daily operations and maximize efficiency.' }}</p>
+            <h2>{{ $featuresHeader?->title ?? 'Everything You Need, In One Platform' }}</h2>
+            <p>{{ $featuresHeader?->content ?? 'Built for delivery associates to simplify daily operations and maximize efficiency.' }}</p>
         </div>
         <div class="features-grid">
             @forelse($platformFeatures as $feature)
@@ -156,10 +156,10 @@
             <div class="mobile-app-content">
                 <span class="mobile-badge">
                     @if($mobileApp?->icon)<i class="fa-solid {{ $mobileApp->icon }}"></i>@endif
-                    {{ $mobileApp->subtitle ?? 'MOBILE APP' }}
+                    {{ $mobileApp?->subtitle ?? 'MOBILE APP' }}
                 </span>
-                <h2>{!! nl2br(e($mobileApp->title ?? "Your Work,\nOn The Go")) !!}</h2>
-                <p>{{ $mobileApp->content ?? 'Our Android app helps you stay connected, manage deliveries, mark attendance and track earnings — anytime, anywhere.' }}</p>
+                <h2>{!! nl2br(e($mobileApp?->title ?? "Your Work,\nOn The Go")) !!}</h2>
+                <p>{{ $mobileApp?->content ?? 'Our Android app helps you stay connected, manage deliveries, mark attendance and track earnings — anytime, anywhere.' }}</p>
                 <div class="divider"></div>
                 @if($playStore?->imageUrl())
                     <a href="{{ $playStore->link ?: '#' }}" class="playstore-btn" @if($playStore->link && $playStore->link !== '#') target="_blank" rel="noopener" @endif>
@@ -198,10 +198,10 @@
             </ul>
         </div>
         <div class="promise-card">
-            <div class="icon"><i class="fa-solid {{ $promiseCard->icon ?? 'fa-shield-halved' }}"></i></div>
+            <div class="icon"><i class="fa-solid {{ $promiseCard?->icon ?? 'fa-shield-halved' }}"></i></div>
             <div>
-                <h4>{{ $promiseCard->title ?? 'Our Promise' }}</h4>
-                <p>{{ $promiseCard->content ?? 'To provide a secure, reliable and user-friendly platform that helps every delivery associate succeed.' }}</p>
+                <h4>{{ $promiseCard?->title ?? 'Our Promise' }}</h4>
+                <p>{{ $promiseCard?->content ?? 'To provide a secure, reliable and user-friendly platform that helps every delivery associate succeed.' }}</p>
             </div>
         </div>
     </div>
@@ -245,10 +245,10 @@
         <div class="section-heading">
             <span class="section-tag">
                 @if($testimonialsHeader?->icon)<i class="fa-solid {{ $testimonialsHeader->icon }}"></i>@endif
-                {{ $testimonialsHeader->subtitle ?? 'TESTIMONIALS' }}
+                {{ $testimonialsHeader?->subtitle ?? 'TESTIMONIALS' }}
             </span>
-            <h2>{{ $testimonialsHeader->title ?? 'Loved by Delivery Partners' }}</h2>
-            <p>{{ $testimonialsHeader->content ?? 'See what our employees have to say about Vyapto.' }}</p>
+            <h2>{{ $testimonialsHeader?->title ?? 'Loved by Delivery Partners' }}</h2>
+            <p>{{ $testimonialsHeader?->content ?? 'See what our employees have to say about Vyapto.' }}</p>
         </div>
         <div class="testimonial-grid">
             @forelse($testimonials as $testimonial)
@@ -285,8 +285,8 @@
 <div class="container">
     <div class="cta-banner cta-banner--centered" @if($ctaBg?->imageUrl()) style="background-image: url('{{ $ctaBg->imageUrl() }}');" @endif>
         <div>
-            <h2>{{ $cta->title ?? 'Ready To Get Started?' }}</h2>
-            <p>{{ $cta->content ?? 'Join thousands of delivery associates using Vyapto.' }}</p>
+            <h2>{{ $cta?->title ?? 'Ready To Get Started?' }}</h2>
+            <p>{{ $cta?->content ?? 'Join thousands of delivery associates using Vyapto.' }}</p>
         </div>
     </div>
 </div>

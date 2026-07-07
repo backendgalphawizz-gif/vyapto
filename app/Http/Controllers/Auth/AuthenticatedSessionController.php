@@ -30,11 +30,15 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        if (in_array((int) $user->role_id, [1, 2], true)) {
-            return redirect()->route('admin.dashboard');
+        if (in_array((int) $user->role_id, [1, 2], true) && ! $user->hasVerifiedEmail()) {
+            $user->forceFill(['email_verified_at' => now()])->save();
         }
 
-        return redirect()->route('portal.dashboard');
+        if (in_array((int) $user->role_id, [1, 2], true)) {
+            return redirect()->intended(route('admin.dashboard'));
+        }
+
+        return redirect()->intended(route('portal.dashboard'));
     }
 
 

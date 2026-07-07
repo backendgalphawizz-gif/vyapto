@@ -1,12 +1,10 @@
 <?php
 
+use App\Http\Middleware\JwtMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Spatie\Permission\Middlewares\RoleMiddleware;
-use Spatie\Permission\Middlewares\PermissionMiddleware;
-use Spatie\Permission\Middlewares\RoleOrPermissionMiddleware;
-use App\Http\Middleware\JwtMiddleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,7 +16,23 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->trustProxies(at: '*');
 
-        $middleware->redirectGuestsTo(fn () => route('portal.login'));
+        $middleware->redirectGuestsTo(function (Request $request) {
+            if ($request->is('portal', 'portal/*')) {
+                return route('portal.login');
+            }
+
+            return route('login');
+        });
+
+        $middleware->redirectUsersTo(function (Request $request) {
+            $user = $request->user();
+
+            if ($user && in_array((int) $user->role_id, [1, 2], true)) {
+                return route('admin.dashboard');
+            }
+
+            return route('portal.dashboard');
+        });
 
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
