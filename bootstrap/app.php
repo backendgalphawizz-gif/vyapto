@@ -53,4 +53,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return null; // let Laravel handle web errors
         });
+
+        $exceptions->reportable(function (\Illuminate\Session\TokenMismatchException $e) {
+            \Illuminate\Support\Facades\Log::warning('CSRF token mismatch', [
+                'url' => request()->fullUrl(),
+                'host' => request()->getHost(),
+                'app_url' => config('app.url'),
+                'has_session_cookie' => request()->hasCookie(config('session.cookie')),
+            ]);
+        });
     })->create();

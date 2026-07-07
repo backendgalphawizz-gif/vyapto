@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
@@ -23,8 +24,16 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrap();
 
+        if (! $this->app->runningInConsole()) {
+            $request = $this->app->make('request');
+
+            if ($request->hasHeader('Host')) {
+                URL::forceRootUrl($request->getSchemeAndHttpHost());
+            }
+        }
+
         if (parse_url((string) config('app.url'), PHP_URL_SCHEME) === 'https') {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
+            URL::forceScheme('https');
         }
 
         Gate::before(function ($user, $ability) {

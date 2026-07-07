@@ -16,7 +16,7 @@
         &times;
         </a> -->
 
-        <form method="POST" action="{{ route('login') }}" class="mt-5" novalidate>
+        <form method="POST" action="/login" class="mt-5" novalidate>
             @csrf
 
             <!-- Email Address -->
