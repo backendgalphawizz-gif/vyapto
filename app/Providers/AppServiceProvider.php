@@ -23,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrap();
 
+        if (parse_url((string) config('app.url'), PHP_URL_SCHEME) === 'https') {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         Gate::before(function ($user, $ability) {
             return $user->role_id == 1 ? true : null;
         });
