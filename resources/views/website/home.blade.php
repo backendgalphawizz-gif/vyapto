@@ -10,7 +10,7 @@
     $cta = $sections->get('cta');
     $features = $sections->filter(fn ($s) => str_starts_with($s->section_key, 'feature_'));
     $heroBg = $hero?->imageUrl() ?? asset('images/web-auth-bg.png');
-    $heroSide = $sections->get('hero_image')?->imageUrl() ?? asset('images/app-screen-1.png');
+    $heroSide = $sections->get('hero_image')?->imageUrl() ?? asset('images/app-screen-2.png');
 @endphp
 
 <div class="home-wrapper">
@@ -61,7 +61,7 @@
                 </div>
 
                 <div class="hero-image">
-                    <img src="{{ $heroSide }}" alt="Vyapto">
+                    <img src="{{ $heroSide }}" alt="Vyapto mobile app" class="hero-phone-img">
                 </div>
             </div>
 
