@@ -13,12 +13,14 @@
                     @if($blog->imageUrl())
                         <img src="{{ $blog->imageUrl() }}" alt="{{ $blog->title }}" class="cover">
                     @endif
-                    @if($blog->published_at)
-                        <p class="blog-meta">{{ $blog->published_at->format('M d, Y') }}@if($blog->author) &middot; {{ $blog->author }}@endif</p>
-                    @endif
-                    <h3>{{ $blog->title }}</h3>
-                    <p>{{ $blog->excerpt }}</p>
-                    <a href="{{ route('website.blogs.show', $blog->slug) }}" class="read-more">Read more &rarr;</a>
+                    <div class="card-item-body">
+                        @if($blog->published_at)
+                            <p class="blog-meta">{{ $blog->published_at->format('M d, Y') }}@if($blog->author) &middot; {{ $blog->author }}@endif</p>
+                        @endif
+                        <h3>{{ $blog->title }}</h3>
+                        <p>{{ $blog->excerpt }}</p>
+                        <a href="{{ route('website.blogs.show', $blog->slug) }}" class="read-more">Read more &rarr;</a>
+                    </div>
                 </div>
             @empty
                 <p class="empty-state">No blog posts yet.</p>

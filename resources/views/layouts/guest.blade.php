@@ -18,9 +18,13 @@
     @stack('styles')
 </head>
 <body class="min-h-screen flex items-center justify-center font-sans text-white antialiased bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 px-4">
+    @php
+        $siteLogo = \App\Support\BrandAssets::siteLogoDesktop();
+        $companyName = \App\Support\BrandAssets::companyName();
+    @endphp
     <div class="w-full sm:max-w-md mt-6 px-6 py-8 glass rounded-3xl shadow-lg" style="background-color: #ffff;">
         <div class="flex justify-center mt-4">
-            <img src="{{ asset('assets/admin/images/company_logo.png') }}" alt="Vyapto" class="h-20 w-20 logo-animation" onerror="this.src='{{ asset('images/developer.png') }}';">
+            <img src="{{ $siteLogo }}" alt="{{ $companyName }}" class="h-20 w-25 logo-animation object-contain" onerror="this.src='{{ asset('images/nav-logo.png') }}';">
         </div>
         {{ $slot }}
     </div>

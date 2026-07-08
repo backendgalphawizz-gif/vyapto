@@ -15,9 +15,11 @@
                     @else
                         <div class="icon"><i class="fa-solid fa-box"></i></div>
                     @endif
-                    <h3>{{ $product->title }}</h3>
-                    <p>{{ $product->description }}</p>
-                    <a href="{{ route('website.products.show', $product->slug) }}" class="read-more">Learn more &rarr;</a>
+                    <div class="card-item-body">
+                        <h3>{{ $product->title }}</h3>
+                        <p>{{ $product->description }}</p>
+                        <a href="{{ route('website.products.show', $product->slug) }}" class="read-more">Learn more &rarr;</a>
+                    </div>
                 </div>
             @empty
                 <p class="empty-state">Products coming soon.</p>

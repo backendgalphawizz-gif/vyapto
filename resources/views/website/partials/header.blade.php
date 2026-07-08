@@ -1,16 +1,21 @@
 <div class="top-bar">
     <div class="container">
-        <div class="top-bar-info">
-            @if(!empty($companyPhone))
-                <a href="tel:{{ $companyPhone }}"><i class="fa-solid fa-phone"></i> {{ $companyPhone }}</a>
-            @endif
-            @if(!empty($companyEmail))
-                <a href="mailto:{{ $companyEmail }}"><i class="fa-solid fa-envelope"></i> {{ $companyEmail }}</a>
-            @endif
-            @if(!empty($companyAddress))
-                <span><i class="fa-solid fa-location-dot"></i> {{ $companyAddress }}</span>
-            @endif
-        </div>
+    <div class="top-bar-info">
+    <a href="tel:{{ !empty($companyPhone) ? $companyPhone : '+91 98765 43210' }}">
+        <i class="fa-solid fa-phone"></i>
+        {{ !empty($companyPhone) ? $companyPhone : '+91 98765 43210' }}
+    </a>
+
+    <a href="mailto:{{ !empty($companyEmail) ? $companyEmail : 'info@yourcompany.com' }}">
+        <i class="fa-solid fa-envelope"></i>
+        {{ !empty($companyEmail) ? $companyEmail : 'info@yourcompany.com' }}
+    </a>
+
+    <span>
+        <i class="fa-solid fa-location-dot"></i>
+        {{ !empty($companyAddress) ? $companyAddress : 'Ahmedabad, Gujarat, India' }}
+    </span>
+</div>
     </div>
 </div>
 
@@ -43,7 +48,7 @@
                 <a href="{{ route('website.products') }}" class="cursor-hover {{ request()->routeIs('website.products*') ? 'active' : '' }}">Products</a>
                 <a href="{{ route('website.blogs') }}" class="cursor-hover {{ request()->routeIs('website.blogs*') ? 'active' : '' }}">Blog</a>
                 <a href="{{ route('website.careers') }}" class="cursor-hover {{ request()->routeIs('website.careers') ? 'active' : '' }}">Careers</a>
-                <a href="{{ route('website.faq') }}" class="cursor-hover {{ request()->routeIs('website.faq') ? 'active' : '' }}">FAQ</a>
+                <!-- <a href="{{ route('website.faq') }}" class="cursor-hover {{ request()->routeIs('website.faq') ? 'active' : '' }}">FAQ</a> -->
             </nav>
 
             <div class="header-actions">
@@ -74,3 +79,24 @@
     <a href="{{ route('website.contact') }}">Contact</a>
     <a href="{{ route('portal.login') }}">Employee Login</a>
 </div>
+
+
+<script>
+const topBar = document.querySelector('.top-bar');
+const siteHeader = document.querySelector('.site-header');
+
+function handleHeaderScroll() {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    if (scrollTop > 50) {
+        topBar && topBar.classList.add('hide');
+        siteHeader && siteHeader.classList.add('scrolled');
+    } else {
+        topBar && topBar.classList.remove('hide');
+        siteHeader && siteHeader.classList.remove('scrolled');
+    }
+}
+
+window.addEventListener('scroll', handleHeaderScroll, { passive: true });
+handleHeaderScroll();
+</script>

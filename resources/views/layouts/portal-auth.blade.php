@@ -6,10 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login | VYAPTO Employee Portal</title>
     @php
-        $companyLogo = \App\Models\Setting::where('type', 'company_web_logo')->first();
-        $logoUrl = $companyLogo
-            ? asset('storage/company/'.$companyLogo->value)
-            : asset('assets/admin/images/company_logo.png');
+        $logoUrl = \App\Support\BrandAssets::siteLogoDesktop();
+        $companyName = \App\Support\BrandAssets::companyName();
     @endphp
     <link rel="icon" href="{{ $logoUrl }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">

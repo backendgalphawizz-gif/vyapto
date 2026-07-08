@@ -7,44 +7,45 @@
 
 <section class="content-section">
     <div class="container">
+    <h2 class="section-heading-left">Get in Touch</h2>
         <div class="contact-grid">
-            <div>
-                @php $contactSide = $sections->get('contact_info'); @endphp
-                @if($contactSide && $contactSide->imageUrl())
-                    <img src="{{ $contactSide->imageUrl() }}" alt="Contact" class="contact-side-image">
-                @endif
-                <h2 class="section-heading-left">Get in Touch</h2>
+        <div>
+    @php $contactSide = $sections->get('contact_info'); @endphp
 
-                @if($companyEmail)
-                <div class="contact-info-item">
-                    <i class="fa-solid fa-envelope"></i>
-                    <div>
-                        <strong>Email</strong><br>
-                        <a href="mailto:{{ $companyEmail }}">{{ $companyEmail }}</a>
-                    </div>
-                </div>
-                @endif
+    @if($contactSide && $contactSide->imageUrl())
+        <img src="{{ $contactSide->imageUrl() }}" alt="Contact" class="contact-side-image">
+    @endif
 
-                @if($companyPhone)
-                <div class="contact-info-item">
-                    <i class="fa-solid fa-phone"></i>
-                    <div>
-                        <strong>Phone</strong><br>
-                        <a href="tel:{{ $companyPhone }}">{{ $companyPhone }}</a>
-                    </div>
-                </div>
-                @endif
+   
 
-                @if($companyAddress)
-                <div class="contact-info-item">
-                    <i class="fa-solid fa-location-dot"></i>
-                    <div>
-                        <strong>Address</strong><br>
-                        {{ $companyAddress }}
-                    </div>
-                </div>
-                @endif
-            </div>
+    <div class="contact-info-item contact-form">
+        <i class="fa-solid fa-envelope"></i>
+        <div>
+            <strong>Email</strong><br>
+            <a href="mailto:{{ !empty($companyEmail) ? $companyEmail : 'info@yourcompany.com' }}">
+                {{ !empty($companyEmail) ? $companyEmail : 'info@yourcompany.com' }}
+            </a>
+        </div>
+    </div>
+
+    <div class="contact-info-item contact-form">
+        <i class="fa-solid fa-phone"></i>
+        <div>
+            <strong>Phone</strong><br>
+            <a href="tel:{{ !empty($companyPhone) ? $companyPhone : '+91 98765 43210' }}">
+                {{ !empty($companyPhone) ? $companyPhone : '+91 98765 43210' }}
+            </a>
+        </div>
+    </div>
+
+    <div class="contact-info-item contact-form">
+        <i class="fa-solid fa-location-dot"></i>
+        <div>
+            <strong>Address</strong><br>
+            {{ !empty($companyAddress) ? $companyAddress : 'Ahmedabad, Gujarat, India' }}
+        </div>
+    </div>
+</div>
 
             <div class="contact-form">
                 <h3 class="form-heading">Send a Message</h3>

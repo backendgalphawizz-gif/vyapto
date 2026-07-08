@@ -6,10 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Home') | VYAPTO</title>
     @php
-        $companyLogo = \App\Models\Setting::where('type', 'company_web_logo')->first();
-        $logoUrl = $companyLogo
-            ? asset('storage/company/'.$companyLogo->value)
-            : asset('assets/admin/images/company_logo.png');
+        $logoUrl = \App\Support\BrandAssets::siteLogoDesktop();
+        $companyName = \App\Support\BrandAssets::companyName();
         $avatar = Auth::user()->profileImageUrl();
         $todayAttendance = \App\Models\Attendance::where('employee_id', Auth::id())->whereDate('punch_in_date', today())->first();
         $isDashboard = request()->routeIs('portal.dashboard');
