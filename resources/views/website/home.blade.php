@@ -165,7 +165,13 @@ $heroImageLabel = $sections->get('hero_image')?->title;
         <div class="why-grid">
             @forelse($whyCards as $card)
             <div class="why-card" data-reveal>
-                <span class="why-icon">{{ $card->icon ? '' : '⚡' }}@if($card->icon && str_starts_with($card->icon, 'fa-'))<i class="fa-solid {{ $card->icon }}" style="font-size:40px;color:var(--primary);"></i>@else{{ $card->icon }}@endif</span>
+                <span class="why-icon">
+                    @if($card->icon && str_starts_with($card->icon, 'fa-'))
+                        <i class="fa-solid {{ $card->icon }}"></i>
+                    @else
+                        {{ $card->icon ?: '⚡' }}
+                    @endif
+                </span>
                 <h3>{{ $card->title }}</h3>
                 <p>{{ $card->content }}</p>
             </div>

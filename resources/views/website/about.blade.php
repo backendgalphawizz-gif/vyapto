@@ -72,7 +72,11 @@
             <div class="why-grid">
                 @forelse($whyCards as $card)
                     <div class="why-card">
-                        <span class="why-icon">@if($card->icon)<i class="fa-solid {{ $card->icon }}" style="font-size:32px;color:var(--primary);"></i>@endif</span>
+                        <span class="why-icon">
+                            @if($card->icon)
+                                <i class="fa-solid {{ $card->icon }}"></i>
+                            @endif
+                        </span>
                         <h3>{{ $card->title }}</h3>
                         <p>{{ $card->content }}</p>
                     </div>
@@ -83,7 +87,7 @@
                         ['fa-users', 'Customer-Centric Approach', 'Dedicated success teams focused on providing customized service and support.'],
                     ] as $w)
                         <div class="why-card">
-                            <span class="why-icon"><i class="fa-solid {{ $w[0] }}" style="font-size:32px;color:var(--primary);"></i></span>
+                            <span class="why-icon"><i class="fa-solid {{ $w[0] }}"></i></span>
                             <h3>{{ $w[1] }}</h3>
                             <p>{{ $w[2] }}</p>
                         </div>

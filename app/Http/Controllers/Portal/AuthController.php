@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\BrandAssets;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,10 +19,7 @@ class AuthController extends Controller
             return $this->redirectAfterLogin(Auth::user());
         }
 
-        $companyLogo = \App\Models\Setting::where('type', 'company_web_logo')->first();
-        $logoUrl = $companyLogo
-            ? asset('storage/company/'.$companyLogo->value)
-            : asset('assets/admin/images/company_logo.png');
+        $logoUrl = BrandAssets::siteLogoDesktop();
 
         return view('portal.auth.login', compact('logoUrl'));
     }
@@ -32,10 +30,7 @@ class AuthController extends Controller
             return $this->redirectAfterLogin(Auth::user());
         }
 
-        $companyLogo = \App\Models\Setting::where('type', 'company_web_logo')->first();
-        $logoUrl = $companyLogo
-            ? asset('storage/company/'.$companyLogo->value)
-            : asset('assets/admin/images/company_logo.png');
+        $logoUrl = BrandAssets::siteLogoDesktop();
 
         return view('portal.auth.register', compact('logoUrl'));
     }

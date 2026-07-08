@@ -3,6 +3,7 @@
 @section('content')
 <div class="auth-page">
     <section class="auth-hero">
+        <img src="{{ asset('images/auth-login-bg.png') }}" alt="" class="auth-hero-bg" aria-hidden="true">
         <img src="{{ $logoUrl }}" alt="VYAPTO" class="auth-hero-logo">
         <h1>Join VYAPTO</h1>
         <p>Create your employee account to access attendance, shipments, salary slips, and daily field tasks.</p>

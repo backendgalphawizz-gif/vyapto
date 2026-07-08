@@ -5,13 +5,11 @@
   <meta charset="UTF-8">
   <title>VYAPTO | @yield('title', 'Dashboard')</title>
   @php
-    $companyTabIcon = \App\Models\Setting::where('type', 'company_web_logo')->first();
-    $tabIconUrl = $companyTabIcon
-      ? asset('storage/company/' . $companyTabIcon->value)
-      : asset('assets/admin/images/company_logo.png');
+    $siteLogo = \App\Support\BrandAssets::siteLogoDesktop();
+    $companyName = \App\Support\BrandAssets::companyName();
   @endphp
-  <link rel="icon" type="image/png" href="{{ $tabIconUrl }}">
-  <link rel="shortcut icon" href="{{ $tabIconUrl }}">
+  <link rel="icon" type="image/png" href="{{ $siteLogo }}">
+  <link rel="shortcut icon" href="{{ $siteLogo }}">
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -74,18 +72,15 @@
   <nav class="sidebar d-flex flex-column p-3" id="sidebar">
     <div class="sidebar-brand text-center">
       <!-- Logo -->
-      @php
-      $company_web_logo = \App\Models\Setting::where('type', 'company_web_logo')->first();
-      @endphp
       <img
-        src="{{ $company_web_logo ? asset('storage/company/'.$company_web_logo->value) : asset('images/developer.png') }}"
-        alt="LEMS Logo"
+        src="{{ $siteLogo }}"
+        alt="{{ $companyName }}"
         class="system-logo mx-auto d-block mb-3"
         style="max-height: 80px;"
-        onerror="this.src='{{ asset('/assets/admin/images/company_logo.png') }}';">
+        onerror="this.src='{{ asset('images/nav-logo.png') }}';">
 
       <!-- System Name -->
-      <h4 class="system-name text-white mb-3">VYAPTO</h4>
+      <h4 class="system-name text-white mb-3">{{ strtoupper($companyName) }}</h4>
     </div>
 
     <div class="sidebar-menu">

@@ -16,11 +16,11 @@
             @if($product->content)
                 <div class="content">{!! $product->content !!}</div>
             @endif
-            @if($product->link)
-                <a href="{{ $product->link }}" class="cta-btn" style="margin-top:24px;display:inline-flex;" target="_blank" rel="noopener">Visit Product</a>
-            @endif
-            <div style="margin-top:32px;">
-                <a href="{{ route('website.products') }}" class="read-more">&larr; Back to Products</a>
+            <div class="detail-actions">
+                <a href="{{ route('website.products') }}" class="btn-outline">&larr; Back to Products</a>
+                @if($product->link)
+                    <a href="{{ $product->link }}" class="btn-primary" target="_blank" rel="noopener">Visit Product</a>
+                @endif
             </div>
         </div>
     </div>

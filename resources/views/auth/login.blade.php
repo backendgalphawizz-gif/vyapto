@@ -27,7 +27,7 @@
                     class="block mt-1 w-full {{ $errors->has('email') ? '!border-red-500 !focus:border-red-500 !focus:ring-red-500' : '' }}"
                     type="email" name="email" :value="old('email')" required autofocus autocomplete="username"
                     placeholder="Enter your email address"
-                    style="color:#000; background:#fff; border:1px solid #ccc;" />
+                    style="padding:12px 16px; color:#000; background:#fff; border:1px solid #ccc;" />
 
                 <x-input-error :messages="$errors->get('email')" class="mt-2 text-red-500" />
             </div>
@@ -39,7 +39,7 @@
                 <x-text-input id="password"
                     class="block mt-1 w-full {{ $errors->has('password') ? '!border-red-500 !focus:border-red-500 !focus:ring-red-500' : '' }}"
                     type="password" name="password" required autocomplete="current-password"
-                    placeholder="Enter your password" style="color:#000; background:#fff; border:1px solid #ccc;" />
+                    placeholder="Enter your password" style="padding:12px 16px; color:#000; background:#fff; border:1px solid #ccc;" />
 
                 <x-input-error :messages="$errors->get('password')" class="mt-2 text-red-500" />
             </div>
