@@ -9,7 +9,7 @@
     <div class="container">
         <div class="cards-grid">
             @forelse($products as $product)
-                <div class="card-item">
+                <div class="card-item" data-reveal>
                     @if($product->imageUrl())
                         <img src="{{ $product->imageUrl() }}" alt="{{ $product->title }}" class="cover">
                     @else

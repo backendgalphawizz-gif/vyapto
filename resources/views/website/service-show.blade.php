@@ -19,7 +19,8 @@
                 <div class="content">{!! $service->content !!}</div>
             @endif
             <div style="margin-top:32px;">
-                <a href="{{ route('website.services') }}" class="read-more">&larr; Back to Services</a>
+                <a href="{{ route('website.services') }}" class="btn-outline">&larr; Back to Services</a>
+                <a href="{{ route('website.contact') }}" class="btn-primary" style="margin-left:12px;">Get in Touch</a>
             </div>
         </div>
     </div>

@@ -23,14 +23,23 @@ class WebsiteSeeder extends Seeder
     private function seedPageSections(): void
     {
         $sections = [
-            ['page' => 'home', 'section_key' => 'hero', 'title' => 'Smart Delivery', 'subtitle' => 'Workforce Platform', 'content' => 'Manage attendance, shipments, salary tracking and field operations from one secure platform.', 'icon' => 'fa-user-group', 'sort_order' => 1],
-            ['page' => 'home', 'section_key' => 'hero_badge', 'title' => 'Employee Portal', 'icon' => 'fa-user-group', 'sort_order' => 2],
+            ['page' => 'home', 'section_key' => 'hero', 'title' => 'Complete Logistics Support for', 'subtitle' => 'Your Business', 'content' => 'Vyapto empowers businesses with expert logistics, accounting, IT support, and HR solutions — all from a single trusted partner.', 'sort_order' => 1],
+            ['page' => 'home', 'section_key' => 'hero_badge', 'title' => 'Trusted by 500+ Businesses', 'sort_order' => 2],
             ['page' => 'home', 'section_key' => 'hero_bg', 'title' => 'Hero Background', 'sort_order' => 3, 'extra' => ['default_image' => 'images/web-auth-bg.png']],
-            ['page' => 'home', 'section_key' => 'hero_image', 'title' => 'Hero Phone', 'sort_order' => 4, 'extra' => ['default_image' => 'images/app-screen-2.png']],
-            ['page' => 'home', 'section_key' => 'about', 'title' => "Built for Smarter\nDelivery Operations", 'content' => 'We empower delivery teams and operations managers with the tools they need to work smarter and deliver better.', 'sort_order' => 50],
-            ['page' => 'home', 'section_key' => 'promise_card', 'title' => 'Our Promise', 'content' => 'To provide a secure, reliable and user-friendly platform that helps every delivery associate succeed.', 'icon' => 'fa-shield-halved', 'sort_order' => 51],
-            ['page' => 'home', 'section_key' => 'cta', 'title' => 'Ready To Get Started?', 'content' => 'Join thousands of delivery associates using Vyapto.', 'sort_order' => 90],
-            ['page' => 'home', 'section_key' => 'cta_bg', 'title' => 'CTA Background', 'sort_order' => 91, 'extra' => ['default_image' => 'images/foot-card-bg.png']],
+            ['page' => 'home', 'section_key' => 'hero_image', 'title' => 'Freight & Logistics Solutions', 'sort_order' => 4, 'extra' => ['default_image' => 'https://images.unsplash.com/photo-1601584115917-0f970f2f0e6b?w=800&h=900&fit=crop']],
+            ['page' => 'home', 'section_key' => 'services_header', 'title' => 'Comprehensive Solutions Built for Growth', 'content' => 'Our integrated platform streamlines every aspect of your operations, from logistics to workforce management.', 'sort_order' => 25],
+            ['page' => 'home', 'section_key' => 'why_header', 'title' => 'Why Partner With Us?', 'content' => 'We deliver strategic advantages that directly impact your bottom line.', 'sort_order' => 30],
+            ['page' => 'home', 'section_key' => 'process_header', 'title' => 'Our Streamlined Process', 'content' => 'From initial consultation to ongoing support, we\'ve optimized every step for maximum efficiency.', 'sort_order' => 40],
+            ['page' => 'home', 'section_key' => 'impact_header', 'title' => 'Proven Impact, Measurable Results', 'content' => 'Join hundreds of companies that have transformed their operations with our solutions.', 'sort_order' => 50],
+            ['page' => 'home', 'section_key' => 'gallery_header', 'title' => 'Operations in Motion', 'content' => 'Real logistics operations and networks powering supply chains.', 'sort_order' => 70],
+            ['page' => 'home', 'section_key' => 'faq_header', 'title' => 'Frequently Asked Questions', 'content' => 'Find answers to common questions about our services and solutions.', 'sort_order' => 80],
+            ['page' => 'home', 'section_key' => 'cta', 'title' => 'Ready to Transform Your Operations?', 'content' => 'Partner with us today and experience the difference.', 'sort_order' => 90],
+            ['page' => 'about', 'section_key' => 'hero', 'title' => 'About Vyapto', 'content' => 'Leading the future of logistics support, business services & operational excellence.', 'sort_order' => 1],
+            ['page' => 'about', 'section_key' => 'overview', 'title' => 'Powering Smarter Logistics & Driving Real Growth', 'content' => 'We go beyond basics by helping our clients manage operations, optimizing processes, and staying ahead in a highly competitive industry.', 'sort_order' => 2],
+            ['page' => 'about', 'section_key' => 'who_we_are', 'title' => 'Who We Are', 'content' => 'Vyapto provides logistics support services with structured operations and standardized processes for day-to-day consistency and efficiency.', 'sort_order' => 3],
+            ['page' => 'about', 'section_key' => 'why_choose', 'title' => 'Why Choose Vyapto?', 'content' => 'There are several reasons why you should choose us.', 'sort_order' => 20],
+            ['page' => 'about', 'section_key' => 'cta', 'title' => "Let's Simplify Logistics Together!", 'content' => 'Partner with us today and develop smarter logistics operations.', 'sort_order' => 90],
+            ['page' => 'faq', 'section_key' => 'hero', 'title' => 'Frequently Asked Questions', 'content' => 'Find answers to common questions about our services and solutions.', 'sort_order' => 1],
             ['page' => 'services', 'section_key' => 'hero', 'title' => 'Our Services', 'content' => 'End-to-end logistics and workforce solutions tailored for growing businesses.', 'sort_order' => 1],
             ['page' => 'products', 'section_key' => 'hero', 'title' => 'Our Products', 'content' => 'Innovative platforms and products powering the Vyapto ecosystem.', 'sort_order' => 1],
             ['page' => 'careers', 'section_key' => 'hero', 'title' => 'Careers & Highlights', 'content' => 'Build your career with Vyapto — where logistics meets innovation.', 'sort_order' => 1],
@@ -39,6 +48,7 @@ class WebsiteSeeder extends Seeder
             ['page' => 'global', 'section_key' => 'site_logo_desktop', 'title' => 'Desktop Logo', 'sort_order' => 1, 'extra' => ['default_image' => 'images/nav-logo.png']],
             ['page' => 'global', 'section_key' => 'site_logo_mobile', 'title' => 'Mobile Logo', 'sort_order' => 2, 'extra' => ['default_image' => 'images/nav-logo-mobile.png']],
             ['page' => 'global', 'section_key' => 'site_logo_footer', 'title' => 'Footer Logo', 'sort_order' => 3, 'extra' => ['default_image' => 'images/nav-logo.png']],
+            ['page' => 'global', 'section_key' => 'footer_tagline', 'title' => 'Footer Tagline', 'content' => 'Professional logistics and workforce solutions for businesses across the globe.', 'sort_order' => 4],
         ];
 
         foreach ($sections as $section) {
@@ -63,10 +73,9 @@ class WebsiteSeeder extends Seeder
         }
 
         $stats = [
-            ['title' => '1000+', 'subtitle' => 'Active Employees', 'icon' => 'fa-users'],
-            ['title' => '25K+', 'subtitle' => 'Shipments Delivered', 'icon' => 'fa-box'],
-            ['title' => '50+', 'subtitle' => 'Locations', 'icon' => 'fa-location-dot'],
-            ['title' => '99.9%', 'subtitle' => 'Secure Platform', 'icon' => 'fa-shield-halved'],
+            ['title' => '1,000+', 'subtitle' => 'Professionals Supporting Operations'],
+            ['title' => '24/7', 'subtitle' => 'Dedicated Business Support'],
+            ['title' => '50+', 'subtitle' => 'Operational Specialists'],
         ];
 
         foreach ($stats as $i => $stat) {
@@ -144,19 +153,81 @@ class WebsiteSeeder extends Seeder
             ['page' => 'home', 'section_key' => 'testimonials_header'],
             [
                 'page' => 'home',
-                'title' => 'Loved by Delivery Partners',
-                'subtitle' => 'TESTIMONIALS',
-                'content' => 'See what our employees have to say about Vyapto.',
-                'icon' => 'fa-user-group',
+                'title' => 'Voices from Our Team',
+                'content' => 'Hear what our team members say about working with Vyapto.',
                 'sort_order' => 60,
                 'status' => true,
             ]
         );
 
+        $whyPartners = [
+            ['icon' => '⚡', 'title' => 'Industry Expertise', 'content' => 'Years of experience serving the logistics industry with deep operational knowledge and proven best practices.'],
+            ['icon' => '🌎', 'title' => 'Nationwide Coverage', 'content' => 'Supporting businesses across all regions with scalable logistics solutions and a strong network.'],
+            ['icon' => '✅', 'title' => 'Proven Results', 'content' => 'Trusted by hundreds of companies who have improved efficiency, reduced costs, and scaled operations.'],
+        ];
+        foreach ($whyPartners as $i => $card) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'home', 'section_key' => 'why_partner_' . ($i + 1)],
+                array_merge($card, ['page' => 'home', 'sort_order' => 31 + $i, 'status' => true])
+            );
+        }
+
+        $processSteps = [
+            ['title' => 'Consultation', 'content' => 'We understand your business needs and operational challenges.'],
+            ['title' => 'Planning', 'content' => 'Custom strategy tailored to your logistics requirements.'],
+            ['title' => 'Implementation', 'content' => 'Seamless deployment with dedicated support teams.'],
+            ['title' => 'Ongoing Support', 'content' => '24/7 assistance to ensure continuity and growth.'],
+        ];
+        foreach ($processSteps as $i => $step) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'home', 'section_key' => 'process_step_' . ($i + 1)],
+                array_merge($step, ['page' => 'home', 'sort_order' => 41 + $i, 'status' => true])
+            );
+        }
+
+        $impacts = [
+            ['title' => '500+', 'subtitle' => 'Companies Served'],
+            ['title' => '24/7', 'subtitle' => 'Business Support'],
+            ['title' => '50+', 'subtitle' => 'Specialists'],
+            ['title' => '99%', 'subtitle' => 'Client Satisfaction'],
+        ];
+        foreach ($impacts as $i => $impact) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'home', 'section_key' => 'impact_' . ($i + 1)],
+                array_merge($impact, ['page' => 'home', 'sort_order' => 51 + $i, 'status' => true])
+            );
+        }
+
+        $milestones = [
+            ['subtitle' => '2021', 'title' => 'The Foundation', 'content' => 'Vyapto started with a skilled team focused on providing reliable logistics support services.'],
+            ['subtitle' => '2022', 'title' => 'Establishing The Brand', 'content' => 'Operations were unified under Vyapto, solidifying and launching the brand.'],
+            ['subtitle' => '2023', 'title' => 'Expanding Reach', 'content' => 'Our team grew and we opened more offices, enabling 24x7 support to clients.'],
+            ['subtitle' => '2025', 'title' => 'Strengthening Capabilities', 'content' => 'We added integrated logistics support services and upgraded customer success systems.'],
+        ];
+        foreach ($milestones as $i => $m) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'about', 'section_key' => 'milestone_' . ($i + 1)],
+                array_merge($m, ['page' => 'about', 'sort_order' => 10 + $i, 'status' => true])
+            );
+        }
+
+        $locations = [
+            ['title' => 'Mohali', 'subtitle' => 'Head Office'],
+            ['title' => 'Gurgaon', 'subtitle' => 'Sub-Branch'],
+            ['title' => 'Noida', 'subtitle' => 'Sub-Branch'],
+            ['title' => 'Delhi', 'subtitle' => 'Sub-Branch'],
+        ];
+        foreach ($locations as $i => $loc) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'about', 'section_key' => 'location_' . ($i + 1)],
+                array_merge($loc, ['page' => 'about', 'sort_order' => 15 + $i, 'status' => true])
+            );
+        }
+
         $testimonials = [
-            ['content' => 'Vyapto app makes my work so easy. Punch in, get deliveries and track earnings — everything in one place.', 'title' => 'Aman Kumar', 'subtitle' => 'Delivery Associate', 'default_image' => 'https://i.pravatar.cc/60?img=12'],
-            ['content' => 'The GPS attendance is accurate and the app is very simple to use.', 'title' => 'Rohit Paswan', 'subtitle' => 'Delivery Associate', 'default_image' => 'https://i.pravatar.cc/60?img=15'],
-            ['content' => 'I can track my salary and download payslips anytime. Very helpful!', 'title' => 'Vivek Singh', 'subtitle' => 'Delivery Associate', 'default_image' => 'https://i.pravatar.cc/60?img=18'],
+            ['content' => 'Vyapto is a great place to work, known for its positive work culture. They truly appreciate their employees.', 'title' => 'Ayesha Amaan', 'subtitle' => 'Customer Success Team'],
+            ['content' => 'The platform makes daily operations so much easier. Everything is in one place.', 'title' => 'Rohit Sharma', 'subtitle' => 'Operations Manager'],
+            ['content' => 'Excellent support team and reliable systems. Highly recommended!', 'title' => 'Vivek Singh', 'subtitle' => 'Delivery Partner'],
         ];
 
         foreach ($testimonials as $i => $testimonial) {
@@ -167,22 +238,55 @@ class WebsiteSeeder extends Seeder
                     'title' => $testimonial['title'],
                     'subtitle' => $testimonial['subtitle'],
                     'content' => $testimonial['content'],
-                    'extra' => ['default_image' => $testimonial['default_image']],
                     'sort_order' => 61 + $i,
                     'status' => true,
                 ]
             );
         }
+
+        $galleryImages = [
+            'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=560&h=400&fit=crop',
+            'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=560&h=400&fit=crop',
+            'https://images.unsplash.com/photo-1494414623144-080708c2043b?w=560&h=400&fit=crop',
+            'https://images.unsplash.com/photo-1519003722464-d8e2f013f3cb?w=560&h=400&fit=crop',
+            'https://images.unsplash.com/photo-1601584115917-0f970f2f0e6b?w=560&h=400&fit=crop',
+            'https://images.unsplash.com/photo-1580674685258-234b35eb6d6d?w=560&h=400&fit=crop',
+            'https://images.unsplash.com/photo-1513828583688-c52646db42ef?w=560&h=400&fit=crop',
+            'https://images.unsplash.com/photo-1544626977-9e4c4d0d0c0c?w=560&h=400&fit=crop',
+        ];
+        foreach ($galleryImages as $i => $url) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'home', 'section_key' => 'gallery_' . ($i + 1)],
+                [
+                    'page' => 'home',
+                    'title' => 'Gallery Image ' . ($i + 1),
+                    'sort_order' => 71 + $i,
+                    'status' => true,
+                    'extra' => ['default_image' => $url],
+                ]
+            );
+        }
+
+        WebsitePageSection::updateOrCreate(
+            ['page' => 'about', 'section_key' => 'overview'],
+            [
+                'page' => 'about',
+                'title' => 'Powering Smarter Logistics & Driving Real Growth',
+                'content' => 'We go beyond basics by helping our clients manage operations, optimizing processes, and staying ahead in a highly competitive industry.',
+                'sort_order' => 2,
+                'status' => true,
+                'extra' => ['default_image' => 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&h=400&fit=crop'],
+            ]
+        );
     }
 
     private function seedServices(): void
     {
         $services = [
-            ['title' => 'Transportation & Logistics', 'slug' => 'transportation-logistics', 'description' => 'Reliable freight and fleet management for seamless supply chain operations.', 'icon' => 'fa-truck', 'sort_order' => 1],
-            ['title' => 'Last-Mile Delivery Solutions', 'slug' => 'last-mile-delivery', 'description' => 'Optimized last-mile delivery with real-time tracking and route management.', 'icon' => 'fa-route', 'sort_order' => 2],
-            ['title' => 'Manpower Solutions', 'slug' => 'manpower-solutions', 'description' => 'Skilled workforce deployment and management for logistics operations.', 'icon' => 'fa-users', 'sort_order' => 3],
-            ['title' => 'Franchise Operations', 'slug' => 'franchise-operations', 'description' => 'Scalable franchise models with centralized control and local execution.', 'icon' => 'fa-store', 'sort_order' => 4],
-            ['title' => 'Consumer Products', 'slug' => 'consumer-products', 'description' => 'Quality consumer goods delivered through our extensive distribution network.', 'icon' => 'fa-basket-shopping', 'sort_order' => 5],
+            ['title' => 'Freight Brokerage Solutions', 'slug' => 'freight-brokerage', 'description' => 'Load matching with our extensive carrier network. Connect operations seamlessly.', 'icon' => 'fa-truck', 'sort_order' => 1],
+            ['title' => 'Accounting Services', 'slug' => 'accounting-services', 'description' => 'Bookkeeping, tax prep, and compliance designed specifically for logistics businesses.', 'icon' => 'fa-calculator', 'sort_order' => 2],
+            ['title' => 'IT & Administration Support', 'slug' => 'it-administration', 'description' => 'Modern operational systems and technical support to streamline your operations.', 'icon' => 'fa-laptop', 'sort_order' => 3],
+            ['title' => 'HR & Payroll Management', 'slug' => 'hr-payroll', 'description' => 'Payroll processing, employee onboarding, and compliance management.', 'icon' => 'fa-users', 'sort_order' => 4],
         ];
 
         foreach ($services as $service) {

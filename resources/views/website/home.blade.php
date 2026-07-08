@@ -4,290 +4,512 @@
 
 @section('content')
 @php
-    $hero = $sections->get('hero');
-    $heroBadge = $sections->get('hero_badge');
-    $about = $sections->get('about');
-    $cta = $sections->get('cta');
-    $ctaBg = $sections->get('cta_bg');
-    $features = $sections->filter(fn ($s) => str_starts_with($s->section_key, 'feature_'));
-    $stats = $sections->filter(fn ($s) => str_starts_with($s->section_key, 'stat_'))->sortBy('sort_order');
-    $featuresHeader = $sections->get('features_header');
-    $platformFeatures = $sections->filter(fn ($s) => str_starts_with($s->section_key, 'platform_feature_'))->sortBy('sort_order');
-    $mobileApp = $sections->get('mobile_app');
-    $mobilePhoneLeft = $sections->get('mobile_phone_left');
-    $mobilePhoneRight = $sections->get('mobile_phone_right');
-    $playStore = $sections->get('play_store');
-    $promiseCard = $sections->get('promise_card');
-    $testimonialsHeader = $sections->get('testimonials_header');
-    $testimonials = $sections->filter(fn ($s) => str_starts_with($s->section_key, 'testimonial_'))->sortBy('sort_order');
-    $heroBg = $sections->get('hero_bg')?->imageUrl() ?? asset('images/web-auth-bg.png');
-    $heroSide = $sections->get('hero_image')?->imageUrl() ?? asset('images/app-screen-2.png');
+$hero = $sections->get('hero');
+$heroBadge = $sections->get('hero_badge');
+$servicesHeader = $sections->get('services_header');
+$whyHeader = $sections->get('why_header');
+$whyCards = $sections->filter(fn ($s) => str_starts_with($s->section_key, 'why_partner_'))->sortBy('sort_order');
+$processHeader = $sections->get('process_header');
+$processSteps = $sections->filter(fn ($s) => str_starts_with($s->section_key, 'process_step_'))->sortBy('sort_order');
+$impactHeader = $sections->get('impact_header');
+$impactStats = $sections->filter(fn ($s) => str_starts_with($s->section_key, 'impact_') && $s->section_key !== 'impact_header')->sortBy('sort_order');
+$testimonialsHeader = $sections->get('testimonials_header');
+$testimonials = $sections->filter(fn ($s) => str_starts_with($s->section_key, 'testimonial_'))->sortBy('sort_order');
+$slideCount = $testimonials->isNotEmpty() ? $testimonials->count() : 3;
+$galleryHeader = $sections->get('gallery_header');
+$galleryImages = $sections->filter(fn ($s) => str_starts_with($s->section_key, 'gallery_') && $s->section_key !== 'gallery_header')->sortBy('sort_order');
+$faqHeader = $sections->get('faq_header');
+$cta = $sections->get('cta');
+$stats = $sections->filter(fn ($s) => str_starts_with($s->section_key, 'stat_'))->sortBy('sort_order');
+$heroImage = $sections->get('hero_image')?->imageUrl() ?? 'https://images.unsplash.com/photo-1601584115917-0f970f2f0e6b?w=800&h=900&fit=crop';
+$heroImageLabel = $sections->get('hero_image')?->title;
 @endphp
 
-<div class="home-wrapper">
-    <img src="{{ $heroBg }}" alt="" class="hero-bg">
+{{-- Hero --}}
+<section class="hero-section" id="home">
+    <div class="hero-bg-pattern"></div>
+    <div class="container">
+        <div class="hero-grid">
+            <div class="hero-content margingtopmanage" data-reveal>
+                <div style="margin-top: ;" class="trust-badge">
+                    <span class="star">&#9733;</span>
+                    {{ $heroBadge?->title ?? 'Trusted by 500+ Businesses' }}
+                </div>
+                <h1>
+                    {{ $hero?->title ?? 'Complete Logistics Support for' }}
+                    <span class="highlight">{{ $hero?->subtitle ?? 'Your Business' }}</span>
+                </h1>
+                <p class="hero-subtitle">{{ $hero?->extra['tagline'] ?? ($hero?->content ? '' : 'Freight, Accounting, HR & IT Support — All Under One Roof') }}</p>
+                @if($hero?->content)
+                <p class="hero-desc">{{ $hero->content }}</p>
+                @else
+                <p class="hero-desc">We empower businesses with expert logistics, accounting, IT support, and HR solutions — all from a single trusted partner.</p>
+                @endif
+                <div class="hero-actions">
+                    <a href="{{ route('website.services') }}" class="btn-secondary managebutton">Explore Our Services <i class="fa-solid fa-arrow-right"></i></a>
+                    <a href="{{ route('website.contact') }}" class="btn-primary managebutton">Get in Touch</a>
+                </div>
 
-    <section class="hero" id="home">
-        <div class="container">
-            <div class="hero-wrapper">
-                <div>
-                    @if($heroBadge)
-                        <div class="badge">
-                            @if($heroBadge->icon)<i class="fa-solid {{ $heroBadge->icon }}"></i>@endif
-                            {{ $heroBadge->title }}
-                        </div>
-                    @else
-                        <div class="badge"><i class="fa-solid fa-user-group"></i> Employee Portal</div>
-                    @endif
-
-                    <h1>
-                        {{ $hero?->title ?? 'Smart Delivery' }}
-                        <span>{{ $hero?->subtitle ?? 'Workforce Platform' }}</span>
-                    </h1>
-
-                    <p style="margin-bottom: 30px;">
-                        {{ $hero?->content ?? 'Manage attendance, shipments, salary tracking and field operations from one secure platform.' }}
-                    </p>
-
-                    <div class="feature-row">
-                        @forelse($features as $feature)
-                            <div class="feature-box">
-                                @if($feature->imageUrl())
-                                    <img src="{{ $feature->imageUrl() }}" alt="" style="width:55px;height:55px;object-fit:cover;border-radius:50%;margin:0 auto 10px;display:block;">
-                                @elseif($feature->icon)
-                                    <i class="fa-solid {{ $feature->icon }}"></i>
-                                @endif
-                                <h5>{{ $feature->title }}</h5>
-                                @if($feature->subtitle)<p>{{ $feature->subtitle }}</p>@endif
-                            </div>
-                        @empty
-                            <div class="feature-box"><i class="fa-solid fa-shield-halved"></i><h5>Secure Access</h5><p>OTP Based Login</p></div>
-                            <div class="feature-box"><i class="fa-solid fa-location-dot"></i><h5>GPS Attendance</h5><p>Live Tracking</p></div>
-                            <div class="feature-box"><i class="fa-solid fa-box"></i><h5>Shipment Tracking</h5><p>Real Time Updates</p></div>
-                            <div class="feature-box"><i class="fa-solid fa-file-lines"></i><h5>Salary Reports</h5><p>Work Reports</p></div>
-                        @endforelse
+                <div class="managecontent">
+                    <div class="box-fixing">
+                        <h5 class="managetextproper">1,000+</h5>
+                        <p class="managetext">Professionals Supporting Operations</p>
+                    </div>
+                    <div class="box-fixing ">
+                        <h5 class="managetextproper">24/7</h5>
+                        <p class="managetext">Dedicated Business Support</p>
+                    </div>
+                    <div class="box-fixing">
+                        <h5 class="managetextproper">50+</h5>
+                        <p class="managetext">Operational Specialists Across Departments</p>
                     </div>
                 </div>
 
-                <div class="hero-image">
-                    <img src="{{ $heroSide }}" alt="Vyapto mobile app" class="hero-phone-img">
-                </div>
             </div>
 
-            @if($stats->isNotEmpty())
-            <div class="stats">
-                <div class="stats-box">
-                    @foreach($stats as $stat)
-                        <div class="stat-wrapper">
-                            <div>
-                                @if($stat->icon)
-                                    <i class="fa-solid {{ $stat->icon }}"></i>
-                                @else
-                                    <i class="fa-solid fa-users"></i>
-                                @endif
+            <div class="hero-visual" data-reveal="right">
+                <div class="hero-image-wrap">
+                    <div id="heroCarousel" class="custom-carousel">
+                        <div class="carousel-inner">
+                            <div class="carousel-item active">
+                                <img src="../../../images/4slider.avif" alt="Hero Image 1">
                             </div>
-                            <div class="stat-text">
-                                <div class="stat">
-                                    <h3>{{ $stat->title }}</h3>
-                                    <p>{{ $stat->subtitle }}</p>
-                                </div>
+                            <div class="carousel-item">
+                                <img src="../../../images/5slider.avif" alt="Hero Image 2">
+                            </div>
+                            <div class="carousel-item">
+                                <img src="../../../images/3slider.avif" alt="Hero Image 3">
                             </div>
                         </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-        </div>
-    </section>
-</div>
-
-<section id="feature" class="features-section">
-    <div class="container">
-        <div class="section-title">
-            <span class="section-badge">
-                @if($featuresHeader?->icon)<i class="fa-solid {{ $featuresHeader->icon }}"></i>@endif
-                {{ $featuresHeader?->subtitle ?? 'FEATURES' }}
-            </span>
-            <h2>{{ $featuresHeader?->title ?? 'Everything You Need, In One Platform' }}</h2>
-            <p>{{ $featuresHeader?->content ?? 'Built for delivery associates to simplify daily operations and maximize efficiency.' }}</p>
-        </div>
-        <div class="features-grid">
-            @forelse($platformFeatures as $feature)
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        @if($feature->imageUrl())
-                            <img src="{{ $feature->imageUrl() }}" alt="{{ $feature->title }}" class="feature-icons">
-                        @elseif($feature->icon)
-                            <i class="fa-solid {{ $feature->icon }}"></i>
-                        @endif
-                    </div>
-                    <div class="feature-content">
-                        <h4>{{ $feature->title }}</h4>
-                        <p>{{ $feature->content }}</p>
                     </div>
                 </div>
-            @empty
-                @foreach([
-                    ['feature-icon1.png', 'Easy Attendance', 'Punch in/out with GPS location and selfie verification for accurate attendance.'],
-                    ['feature-icon2.png', 'Manage Deliveries', 'Get assigned shipments and update delivery status in real time.'],
-                    ['feature-icon3.png', 'Real-Time Tracking', 'Live tracking of deliveries and routes to ensure complete visibility.'],
-                    ['feature-icon4.png', 'Salary on Track', 'Access your salary slips, earnings and work reports anytime.'],
-                    ['feature-icon5.png', 'Performance Insights', 'Track your performance and delivery statistics with detailed insights.'],
-                    ['feature-icon6.png', 'Secure & Trusted', 'Your data is protected with industry-standard security and privacy.'],
-                ] as $f)
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <img src="{{ asset('images/' . $f[0]) }}" alt="" class="feature-icons">
-                        </div>
-                        <div class="feature-content">
-                            <h4>{{ $f[1] }}</h4>
-                            <p>{{ $f[2] }}</p>
-                        </div>
-                    </div>
-                @endforeach
-            @endforelse
-        </div>
-    </div>
-</section>
+            </div>
 
-<section class="mobile-app-section">
+
+
+        </div>
+
+
+        <!-- @if($stats->isNotEmpty())
+  <div class="stats-bar">
     <div class="container">
-        <div class="mobile-app-wrapper">
-            <div class="mobile-app-content">
-                <span class="mobile-badge">
-                    @if($mobileApp?->icon)<i class="fa-solid {{ $mobileApp->icon }}"></i>@endif
-                    {{ $mobileApp?->subtitle ?? 'MOBILE APP' }}
-                </span>
-                <h2>{!! nl2br(e($mobileApp?->title ?? "Your Work,\nOn The Go")) !!}</h2>
-                <p>{{ $mobileApp?->content ?? 'Our Android app helps you stay connected, manage deliveries, mark attendance and track earnings — anytime, anywhere.' }}</p>
-                <div class="divider"></div>
-                @if($playStore?->imageUrl())
-                    <a href="{{ $playStore->link ?: '#' }}" class="playstore-btn" @if($playStore->link && $playStore->link !== '#') target="_blank" rel="noopener" @endif>
-                        <img src="{{ $playStore->imageUrl() }}" alt="Play Store">
-                    </a>
-                @endif
-            </div>
-            <div class="mobile-app-image">
-                <div class="bg-gradient" aria-hidden="true"></div>
-                <div class="dot-pattern dot-left" aria-hidden="true"></div>
-                <div class="dot-pattern dot-right" aria-hidden="true"></div>
-                @if($mobilePhoneLeft?->imageUrl())
-                    <img src="{{ $mobilePhoneLeft->imageUrl() }}" alt="Vyapto mobile app" class="phone phone-left">
-                @endif
-                @if($mobilePhoneRight?->imageUrl())
-                    <img src="{{ $mobilePhoneRight->imageUrl() }}" alt="Vyapto mobile app dashboard" class="phone phone-right">
-                @endif
-            </div>
+      @foreach($stats->take(3) as $stat)
+        <div class="stat-item" data-reveal>
+          <h3 @if(preg_match('/\d/', $stat->title)) data-count="{{ $stat->title }}" @endif>{{ $stat->title }}</h3>
+          <p>{{ $stat->subtitle }}</p>
         </div>
+      @endforeach
     </div>
+  </div>
+  @endif -->
 </section>
 
-<section class="why-vyapto" id="about">
-    <div class="container">
-        <div class="content">
-            <span class="badge"><i class="fa-solid fa-users"></i> WHY CHOOSE VYAPTO</span>
-            <h2>@if($about?->title){!! nl2br(e($about->title)) !!}@else Built for Smarter<br>Delivery Operations @endif</h2>
-            <p>{{ $about?->content ? strip_tags($about->content) : 'We empower delivery teams and operations managers with the tools they need to work smarter and deliver better.' }}</p>
-            @if($about && $about->imageUrl())
-                <img src="{{ $about->imageUrl() }}" alt="{{ $about->title }}" style="max-width:100%;border-radius:16px;margin-top:20px;">
-            @endif
-            <ul>
-                <li><i class="fa-solid fa-circle-check"></i> Dedicated support for employees and delivery partners</li>
-                <li><i class="fa-solid fa-circle-check"></i> Reliable & accurate tracking for all operations</li>
-                <li><i class="fa-solid fa-circle-check"></i> Designed for speed, simplicity and productivity</li>
-            </ul>
-        </div>
-        <div class="promise-card">
-            <div class="icon"><i class="fa-solid {{ $promiseCard?->icon ?? 'fa-shield-halved' }}"></i></div>
-            <div>
-                <h4>{{ $promiseCard?->title ?? 'Our Promise' }}</h4>
-                <p>{{ $promiseCard?->content ?? 'To provide a secure, reliable and user-friendly platform that helps every delivery associate succeed.' }}</p>
-            </div>
-        </div>
-    </div>
-</section>
-
+{{-- Services --}}
 @if($services->isNotEmpty())
-<section class="features-section" style="padding-top:40px;">
+<section class="section" id="services">
     <div class="container">
-        <div class="section-title">
-            <span class="section-badge"><i class="fa-solid fa-truck"></i> OUR SERVICES</span>
-            <h2>What We Offer</h2>
-            <p>End-to-end logistics and workforce solutions for growing businesses.</p>
+        <div class="section-header" data-reveal>
+            <!-- <span class="section-badge"><i class="fa-solid fa-truck"></i> Our Services</span> -->
+            <h2>{{ $servicesHeader?->title ?? 'Comprehensive Solutions Built for Growth' }}</h2>
+            <div class="w-24 h-1 bg-gradient-to-r from-brand to-cyan-400 rounded-full mx-auto mb-6"></div>
+            <p>{{ $servicesHeader?->content ?? 'Our integrated platform streamlines every aspect of your operations, from logistics to workforce management.' }}</p>
         </div>
-        <div class="features-grid">
+        <div class="services-grid">
+            @php
+    $defaultImages = [
+        '../../../images/6slider.avif',
+        '../../../images/9slider.avif',
+        '../../../images/7slider.avif',
+        '../../../images/8slider.avif',
+
+    ];
+@endphp
             @foreach($services as $service)
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        @if($service->imageUrl())
-                            <img src="{{ $service->imageUrl() }}" alt="" class="feature-icons">
-                        @else
-                            <i class="fa-solid {{ $service->icon ?? 'fa-truck' }}" style="font-size:28px;color:#FF6002;"></i>
-                        @endif
-                    </div>
-                    <div class="feature-content">
-                        <h4>{{ $service->title }}</h4>
-                        <p>{{ $service->description }}</p>
-                        <a href="{{ route('website.services.show', $service->slug) }}" style="color:#FF6002;font-weight:600;text-decoration:none;">Learn more &rarr;</a>
+
+            <div class="service-card cursor-hover" data-reveal data-reveal-delay="{{ $loop->index * 0.1 }}">
+                <div class="service-card-image">
+                    @if($service->imageUrl())
+                    <img src="{{ $service->imageUrl() }}" alt="{{ $service->title }}">
+                    @else
+                     <img src="{{ $defaultImages[$loop->index % count($defaultImages)] }}" alt="{{ $service->title }}">
+                    <!-- <div class="icon-fallback"><i class="fa-solid {{ $service->icon ?? 'fa-truck' }}"></i></div> -->
+                    @endif
+                </div>
+                <div class="service-card-body">
+                    <h3>{{ $service->title }}</h3>
+                    <p>{{ $service->description }}</p>
+                    <div class="service-card-actions">
+                        <a href="{{ route('website.services.show', $service->slug) }}" class="learn-more">Learn More</a>
+                        <a href="{{ route('website.services.show', $service->slug) }}" class="explore">Explore <i class="fa-solid fa-arrow-right"></i></a>
                     </div>
                 </div>
+            </div>
             @endforeach
         </div>
-        <div style="text-align:center;margin-top:30px;">
-            <a href="{{ route('website.services') }}" class="cta-btn">View All Services</a>
+        <div style="text-align:center;margin-top:40px;" data-reveal>
+            <a href="{{ route('website.services') }}" class="btn-secondary">View All Services</a>
         </div>
     </div>
 </section>
 @endif
 
-<section class="testimonials-section">
+{{-- Why Partner --}}
+<section class="section section-alt" id="why">
     <div class="container">
-        <div class="section-heading">
-            <span class="section-tag">
-                @if($testimonialsHeader?->icon)<i class="fa-solid {{ $testimonialsHeader->icon }}"></i>@endif
-                {{ $testimonialsHeader?->subtitle ?? 'TESTIMONIALS' }}
-            </span>
-            <h2>{{ $testimonialsHeader?->title ?? 'Loved by Delivery Partners' }}</h2>
-            <p>{{ $testimonialsHeader?->content ?? 'See what our employees have to say about Vyapto.' }}</p>
+        <div class="section-header" data-reveal>
+            <!-- <span class="section-badge"><i class="fa-solid fa-handshake"></i> Why Us</span> -->
+            <h2>{{ $whyHeader?->title ?? 'Why Partner With Us?' }}</h2>
+            <div class="w-24 h-1 bg-gradient-to-r from-brand to-cyan-400 rounded-full mx-auto mb-6"></div>
+            <p>{{ $whyHeader?->content ?? 'We deliver strategic advantages that directly impact your bottom line.' }}</p>
         </div>
-        <div class="testimonial-grid">
-            @forelse($testimonials as $testimonial)
-                <div class="testimonial-card">
-                    <div class="rating">★★★★★</div>
-                    <p class="testimonial-text">"{{ $testimonial->content }}"</p>
-                    <div class="testimonial-user">
-                        @if($testimonial->imageUrl())
-                            <img src="{{ $testimonial->imageUrl() }}" alt="{{ $testimonial->title }}">
-                        @endif
-                        <div><h5>{{ $testimonial->title }}</h5><span>{{ $testimonial->subtitle }}</span></div>
-                    </div>
-                </div>
+        <div class="why-grid">
+            @forelse($whyCards as $card)
+            <div class="why-card" data-reveal>
+                <span class="why-icon">{{ $card->icon ? '' : '⚡' }}@if($card->icon && str_starts_with($card->icon, 'fa-'))<i class="fa-solid {{ $card->icon }}" style="font-size:40px;color:var(--primary);"></i>@else{{ $card->icon }}@endif</span>
+                <h3>{{ $card->title }}</h3>
+                <p>{{ $card->content }}</p>
+            </div>
             @empty
-                @foreach([
-                    ['"Vyapto app makes my work so easy. Punch in, get deliveries and track earnings — everything in one place."', 'Aman Kumar', 'Delivery Associate', 12],
-                    ['"The GPS attendance is accurate and the app is very simple to use."', 'Rohit Paswan', 'Delivery Associate', 15],
-                    ['"I can track my salary and download payslips anytime. Very helpful!"', 'Vivek Singh', 'Delivery Associate', 18],
-                ] as $t)
-                    <div class="testimonial-card">
-                        <div class="rating">★★★★★</div>
-                        <p class="testimonial-text">{!! $t[0] !!}</p>
-                        <div class="testimonial-user">
-                            <img src="https://i.pravatar.cc/60?img={{ $t[3] }}" alt="">
-                            <div><h5>{{ $t[1] }}</h5><span>{{ $t[2] }}</span></div>
-                        </div>
-                    </div>
-                @endforeach
+            @foreach([
+            ['⚡', 'Industry Expertise', 'Years of experience serving the logistics industry with deep operational knowledge and proven best practices.'],
+            ['🌎', 'Nationwide Coverage', 'Supporting businesses across all regions with scalable logistics solutions and a strong network.'],
+            ['✅', 'Proven Results', 'Trusted by hundreds of companies who have improved efficiency, reduced costs, and scaled operations.'],
+            ] as $w)
+            <div class="why-card" data-reveal>
+                <span class="why-icon">{{ $w[0] }}</span>
+                <h3>{{ $w[1] }}</h3>
+                <p>{{ $w[2] }}</p>
+            </div>
+            @endforeach
             @endforelse
         </div>
     </div>
 </section>
 
-<div class="container">
-    <div class="cta-banner cta-banner--centered" @if($ctaBg?->imageUrl()) style="background-image: url('{{ $ctaBg->imageUrl() }}');" @endif>
-        <div>
-            <h2>{{ $cta?->title ?? 'Ready To Get Started?' }}</h2>
-            <p>{{ $cta?->content ?? 'Join thousands of delivery associates using Vyapto.' }}</p>
+{{-- Process --}}
+<section class="section" id="process">
+    <div class="container">
+        <div class="section-header" data-reveal>
+            <!-- <span class="section-badge"><i class="fa-solid fa-list-check"></i> Process</span> -->
+            <h2>{{ $processHeader?->title ?? 'Our Streamlined Process' }}</h2>
+            <div class="w-24 h-1 bg-gradient-to-r from-brand to-cyan-400 rounded-full mx-auto mb-6"></div>
+            <p>{{ $processHeader?->content ?? 'From initial consultation to ongoing support, we\'ve optimized every step for maximum efficiency.' }}</p>
+        </div>
+        <!-- <div class="process-grid">
+            @forelse($processSteps as $step)
+            <div class="process-step" data-reveal data-reveal-delay="{{ $loop->index * 0.1 }}">
+                <div class="step-number">{{ $loop->iteration }}</div>
+                <h3>{{ $step->title }}</h3>
+                <p>{{ $step->content }}</p>
+            </div>
+            @empty
+            @foreach(['Consultation', 'Planning', 'Implementation', 'Ongoing Support'] as $title)
+            <div class="process-step" data-reveal data-reveal-delay="{{ $loop->index * 0.1 }}">
+                <div class="step-number">{{ $loop->iteration }}</div>
+                <h3>{{ $title }}</h3>
+                <p>We work closely with you at every stage to ensure seamless delivery.</p>
+            </div>
+            @endforeach
+            @endforelse
+        </div> -->
+
+
+<div class="hero-section section" style="background: var(--bg);" id="home">
+    <div class="hero-bg-pattern"></div>
+    <div class="container">
+        <div class="hero-grid">
+
+
+
+            {{-- Visual Section containing Both Carousels --}}
+            <div class="hero-visual" data-reveal="right">
+
+                {{-- SECOND CAROUSEL (Different ID & Item Classes) --}}
+                <div class="hero-image-wrap" style="margin-top: 20px;"> {{-- Adjust or remove inline margin depending on layout preference --}}
+                    <div id="featuresCarousel" class="custom-carousel">
+                        <div class="carousel-inner">
+                            <div class="features-item active">
+                                <img src="../../../images/4slider.avif" alt="Feature Image 1">
+                            </div>
+                            <div class="features-item">
+                                <img src="../../../images/5slider.avif" alt="Feature Image 2">
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+             {{-- Content Section --}}
+            <div class="hero-content margingtopmanage" data-reveal>
+
+               <div class="features-list-wrapper">
+    {{-- Card 1 --}}
+    <div class="box-fixing2 borde-coloe active">
+        <div class="card-number">1</div>
+        <div class="card-body-content">
+            <h5 class="managetextproper">Freight Brokerage Solutions</h5>
+            <p class="managetext">Connect with our extensive carrier network to find the perfect load matching solution. We streamline load matching to maximize your efficiency.</p>
+        </div>
+    </div>
+
+    {{-- Card 2 --}}
+    <div class="box-fixing2 borde-coloe">
+        <div class="card-number">2</div>
+        <div class="card-body-content">
+            <h5 class="managetextproper">US Accounting Services for Trucking Companies</h5>
+            <p class="managetext">Comprehensive bookkeeping, tax preparation, and financial reporting designed specifically for the trucking industry.</p>
+        </div>
+    </div>
+
+    {{-- Card 3 --}}
+    <div class="box-fixing2 borde-coloe">
+        <div class="card-number">3</div>
+        <div class="card-body-content">
+            <h5 class="managetextproper">IT & Administration Support</h5>
+            <p class="managetext">Modern operational systems, CRM management, and technical support to keep your operations running smoothly.</p>
+        </div>
+    </div>
+
+    {{-- Card 4 --}}
+    <!-- <div class="box-fixing2 borde-coloe">
+        <div class="card-number">4</div>
+        <div class="card-body-content">
+            <h5 class="managetextproper">HR & Payroll Management for Logistics Firms</h5>
+            <p class="managetext">Streamlined payroll processing, employee onboarding, and DOT compliance management for your workforce.</p>
+        </div>
+    </div> -->
+</div>
+            </div>
+
         </div>
     </div>
 </div>
+  </div>
+</section>
+{{-- Impact --}}
+<section class="section section-dark" id="impact">
+    <div class="container">
+        <div class="section-header" data-reveal>
+            <!-- <span class="section-badge" style="background:rgba(255,255,255,0.1);color:var(--accent);"><i class="fa-solid fa-chart-line"></i> Results</span> -->
+            <h2>{{ $impactHeader?->title ?? 'Proven Impact, Measurable Results' }}</h2>
+            <div class="w-24 h-1 bg-gradient-to-r from-brand to-cyan-400 rounded-full mx-auto mb-6"></div>
+            <p>{{ $impactHeader?->content ?? 'Join hundreds of companies that have transformed their operations with our solutions.' }}</p>
+        </div>
+        <div class="impact-grid">
+            @forelse($impactStats as $impact)
+            <div class="impact-card" data-reveal data-reveal-delay="{{ $loop->index * 0.08 }}">
+                <h3 @if(preg_match('/\d/', $impact->title)) data-count="{{ $impact->title }}" @endif>{{ $impact->title }}</h3>
+                <p>{{ $impact->subtitle ?? $impact->content }}</p>
+            </div>
+            @empty
+            @foreach([['500+', 'Companies Served'], ['24/7', 'Business Support'], ['50+', 'Specialists'], ['99%', 'Client Satisfaction']] as $imp)
+            <div class="impact-card" data-reveal>
+                <h3>{{ $imp[0] }}</h3>
+                <p>{{ $imp[1] }}</p>
+            </div>
+            @endforeach
+            @endforelse
+        </div>
+    </div>
+</section>
+
+{{-- Testimonials --}}
+<section class="section section-alt" id="testimonials">
+    <div class="container">
+        <div class="section-header" data-reveal>
+            <!-- <span class="section-badge"><i class="fa-solid fa-quote-left"></i> Testimonials</span> -->
+            <h2>{{ $testimonialsHeader?->title ?? 'Voices from Our Team' }}</h2>
+            <div class="w-24 h-1 bg-gradient-to-r from-brand to-cyan-400 rounded-full mx-auto mb-6"></div>
+            <p>{{ $testimonialsHeader?->content ?? 'Hear what our team members say about working with us.' }}</p>
+        </div>
+        <div class="testimonial-carousel" data-reveal>
+            @forelse($testimonials as $testimonial)
+            <div class="testimonial-slide">
+                <p class="testimonial-quote">"{{ $testimonial->content }}"</p>
+               <div class="textalign">
+                <div class="w-24 h-1 bg-gradient-to-r from-brand to-cyan-400 rounded-full  mb-6"></div>
+</div>
+                <div class="testimonial-author">
+                    @if($testimonial->imageUrl())
+                    <img src="{{ $testimonial->imageUrl() }}" alt="{{ $testimonial->title }}" class="avatar">
+                    @else
+                    <div class="avatar">{{ strtoupper(substr($testimonial->title, 0, 1)) }}</div>
+                    @endif
+                    <div class="author-info">
+                        <h4>{{ $testimonial->title }}</h4>
+                        <span>{{ $testimonial->subtitle }}</span>
+                    </div>
+                </div>
+            </div>
+            @empty
+            @foreach([
+            ['"A great place to work, known for its positive work culture. They truly appreciate their employees."', 'Ayesha Amaan', 'Customer Success Team'],
+            ['"The platform makes daily operations so much easier. Everything is in one place."', 'Rohit Sharma', 'Operations Manager'],
+            ['"Excellent support team and reliable systems. Highly recommended!"', 'Vivek Singh', 'Delivery Partner'],
+            ] as $t)
+            <div class="testimonial-slide">
+                <p class="testimonial-quote">{{ $t[0] }}</p>
+                <div class="testimonial-author">
+                    <div class="avatar">{{ strtoupper(substr($t[1], 0, 1)) }}</div>
+                    <div class="author-info">
+                        <h4>{{ $t[1] }}</h4>
+                        <span>{{ $t[2] }}</span>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+            @endforelse
+            <div class="carousel-controls">
+                <button class="carousel-prev" aria-label="Previous"><i class="fa-solid fa-chevron-left"></i></button>
+                <div class="carousel-dots">
+                    @for($i = 0; $i < $slideCount; $i++)
+                        <button class="carousel-dot {{ $i === 0 ? 'active' : '' }}" aria-label="Slide {{ $i + 1 }}"></button>
+                        @endfor
+                </div>
+                <span class="carousel-counter">1 of {{ $slideCount }}</span>
+                <button class="carousel-next" aria-label="Next"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- Gallery --}}
+<section class="section gallery-section" id="gallery">
+    <div class="container">
+        <div class="section-header" data-reveal>
+            <!-- <span class="section-badge"><i class="fa-solid fa-images"></i> Gallery</span> -->
+            <h2>{{ $galleryHeader?->title ?? 'Operations in Motion' }}</h2>
+            <p>{{ $galleryHeader?->content ?? 'Real logistics operations and networks powering supply chains.' }}</p>
+        </div>
+    </div>
+    @if($galleryImages->isNotEmpty())
+    <div class="gallery-marquee" data-reveal>
+        <div class="gallery-track">
+            @foreach($galleryImages as $img)
+            @if($img->imageUrl())
+            <div class="gallery-item cursor-hover">
+                <img src="{{ $img->imageUrl() }}" alt="{{ $img->title ?? 'Operations' }}" loading="lazy">
+            </div>
+            @endif
+            @endforeach
+        </div>
+    </div>
+    @else
+    <div class="container">
+        <div class="gallery-grid" data-reveal>
+            @for($i = 1; $i <= 8; $i++)
+                <div class="gallery-item">
+                <img src="https://images.unsplash.com/photo-{{ ['1566576912321-d58ddd7a6088','1586528116311-ad8dd3c8310d','1494414623144-080708c2043b','1519003722464-d8e2f013f3cb','1601584115917-0f970f2f0e6b','1580674685258-234b35eb6d6d','1513828583688-c52646db42ef','1544626977-9e4c4d0d0c0c'][$i-1] ?? '1566576912321-d58ddd7a6088' }}?w=400&h=300&fit=crop" alt="Logistics operations {{ $i }}">
+        </div>
+        @endfor
+    </div>
+    </div>
+    @endif
+</section>
+
+{{-- FAQ --}}
+<section class="section section-alt" id="faq">
+    <div class="container">
+        <div class="section-header" data-reveal>
+            <!-- <span class="section-badge"><i class="fa-solid fa-circle-question"></i> FAQ</span> -->
+            <h2>{{ $faqHeader?->title ?? 'Frequently Asked Questions' }}</h2>
+            <div class="w-24 h-1 bg-gradient-to-r from-brand to-cyan-400 rounded-full mx-auto mb-6"></div>
+            <p>{{ $faqHeader?->content ?? 'Find answers to common questions about our services and solutions.' }}</p>
+        </div>
+        <div class="faq-list" data-reveal>
+            @forelse($faqs as $faq)
+            <div class="faq-item">
+                <button type="button" class="faq-question">
+                    {{ $faq->title }}
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">{{ $faq->description }}</div>
+                </div>
+            </div>
+            @empty
+            @foreach([
+            ['What services do you offer?', 'We provide comprehensive solutions including logistics, accounting services, IT support, and HR management tailored for businesses.'],
+            ['How can your services help my business?', 'Our extensive network and smart systems connect you with the best solutions. We handle operations so you can focus on growth.'],
+            ['Do you provide support across regions?', 'Yes! We serve businesses across multiple regions with nationwide support and dedicated teams.'],
+            ['Can you help with system setup?', 'Absolutely. We set up modern operational systems and provide ongoing technical support for your operations.'],
+            ['What areas do you serve?', 'We serve businesses across the entire region with comprehensive logistics and support services.'],
+            ] as $f)
+            <div class="faq-item">
+                <button type="button" class="faq-question">{{ $f[0] }} <i class="fa-solid fa-chevron-down"></i></button>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">{{ $f[1] }}</div>
+                </div>
+            </div>
+            @endforeach
+            @endforelse
+        </div>
+        <div style="text-align:center;margin-top:32px;" data-reveal>
+            <a href="{{ route('website.faq') }}" class="btn-outline">View All FAQs</a>
+        </div>
+    </div>
+</section>
+
+{{-- CTA --}}
+<div class="container">
+    <div class="cta-banner" data-reveal>
+        <h2>{{ $cta?->title ?? 'Ready to Transform Your Operations?' }}</h2>
+        <p>{{ $cta?->content ?? 'Partner with us today and experience the difference.' }}</p>
+        <a href="{{ route('website.contact') }}" class="btn-primary cursor-hover">Get in Touch <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var carousel = document.getElementById('heroCarousel');
+        if (!carousel) return;
+
+        var slides = carousel.querySelectorAll('.carousel-item');
+        if (slides.length <= 1) return; // Don't cycle if there's only one image
+
+        var currentSlide = 0;
+
+        function nextSlide() {
+            // Remove active class from the current slide
+            slides[currentSlide].classList.remove('active');
+
+            // Calculate the next slide index
+            currentSlide = (currentSlide + 1) % slides.length;
+
+            // Add active class to the new slide
+            slides[currentSlide].classList.add('active');
+        }
+
+        // Run the nextSlide function every 3000ms (3 seconds)
+        setInterval(nextSlide, 3000);
+    });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Helper function to initialize clean vanilla carousels dynamically
+    function initVanillaCarousel(carouselId, itemSelector, intervalTime) {
+        var carousel = document.getElementById(carouselId);
+        if (!carousel) return;
+
+        var slides = carousel.querySelectorAll(itemSelector);
+        if (slides.length <= 1) return;
+
+        var currentSlide = 0;
+
+        setInterval(function () {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }, intervalTime);
+    }
+
+    // Initialize Hero Carousel
+    initVanillaCarousel('heroCarousel', '.carousel-item', 3000);
+
+    // Initialize Features Carousel (You can change 3000 to 3500 if you want them staggered!)
+    initVanillaCarousel('featuresCarousel', '.features-item', 3000);
+});
+</script>
 @endsection

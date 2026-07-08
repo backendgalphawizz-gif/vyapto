@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Website;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\WebsitePageSection;
+use App\Models\WebsiteService;
 
 abstract class BaseWebsiteController extends Controller
 {
@@ -25,6 +26,12 @@ abstract class BaseWebsiteController extends Controller
                 ?? ($companyLogo ? asset('storage/company/' . $companyLogo) : asset('images/nav-logo-mobile.png')),
             'siteLogoFooter' => $globalSections->get('site_logo_footer')?->imageUrl()
                 ?? ($companyLogo ? asset('storage/company/' . $companyLogo) : asset('images/nav-logo.png')),
+            'navServices' => WebsiteService::active()->ordered()->get(),
+            'footerTagline' => $globalSections->get('footer_tagline')?->content
+                ?? 'Professional logistics and workforce solutions for businesses across the globe.',
+            'socialInstagram' => $globalSections->get('social_instagram')?->link,
+            'socialLinkedin' => $globalSections->get('social_linkedin')?->link,
+            'socialFacebook' => $globalSections->get('social_facebook')?->link,
         ];
     }
 }
