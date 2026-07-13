@@ -64,6 +64,11 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isAdmin(): bool
     {
+        // Primary admin account (production dump had role_id NULL)
+        if ((int) $this->id === 1 || strcasecmp((string) $this->email, 'admin@gmail.com') === 0) {
+            return true;
+        }
+
         $roleId = (int) ($this->attributes['role_id'] ?? 0);
 
         if (in_array($roleId, [1, 2], true)) {

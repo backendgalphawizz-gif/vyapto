@@ -37,7 +37,16 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Gate::before(function ($user, $ability) {
-            return $user->role_id == 1 ? true : null;
+            // Super admin bypass for all permissions
+            if ((int) ($user->role_id ?? 0) === 1) {
+                return true;
+            }
+
+            if (method_exists($user, 'isAdmin') && $user->isAdmin()) {
+                return true;
+            }
+
+            return null;
         });
     }
 }
