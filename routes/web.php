@@ -36,6 +36,11 @@ Route::get('/dashboard', function () {
     return redirect()->route('admin.dashboard');
 })->middleware(['auth'])->name('dashboard');
 
+// Admin home: auth only (avoid verified middleware redirect loops when session is flaky)
+Route::get('/admin/dashboard', [AdminController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('admin.dashboard');
+
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // i want prefix company setting and then inside that i want to have permissions, roles, users, vehicles, attendance, announcements
@@ -123,8 +128,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/verify-otp', [RegisterController::class, 'showOtpForm'])->name('admin.otp.verify.form');
     Route::post('/verify-otp', [RegisterController::class, 'verifyOtp'])->name('admin.otp.verify.submit');
 
-    // Admin
-    Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
     // Employee
     Route::get('/employee/dashboard', [EmployeeController::class, 'index'])->name('employee.dashboard');
     // Learner

@@ -30,16 +30,18 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        if (! $user->hasVerifiedEmail()) {
+        if ($user && ! $user->hasVerifiedEmail()) {
             $user->forceFill(['email_verified_at' => now()])->save();
         }
 
-        // /login is the admin login only — always open the admin panel
+        // Prevent bounce-back to /login (or stale intended URLs) after a successful login.
         $request->session()->forget('url.intended');
+        $request->session()->save();
 
-        return redirect()->route('admin.dashboard');
+        return redirect()
+            ->route('admin.dashboard')
+            ->setStatusCode(303);
     }
-
 
     /**
      * Destroy an authenticated session.
@@ -49,9 +51,8 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return redirect()->route('login')->setStatusCode(303);
     }
 }

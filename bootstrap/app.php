@@ -52,16 +52,17 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 419);
             }
 
+            // Never use redirect()->guest() here — it causes login↔login refresh loops.
             $loginUrl = $request->is('portal', 'portal/*')
                 ? route('portal.login')
                 : route('login');
 
             return redirect()
-                ->guest($loginUrl)
-                ->with('status', 'Your session expired. Please refresh the page and try logging in again.');
+                ->to($loginUrl)
+                ->setStatusCode(303)
+                ->with('status', 'Your session expired. Please try logging in again.');
         };
 
-        // Laravel converts TokenMismatchException → HttpException(419) before render callbacks.
         $exceptions->render(function (HttpExceptionInterface $e, Request $request) use ($renderExpired) {
             if ($e->getStatusCode() !== 419) {
                 return null;
@@ -74,26 +75,13 @@ return Application::configure(basePath: dirname(__DIR__))
             return $renderExpired($request);
         });
 
-        $exceptions->render(function (\Throwable $e, Request $request) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => $e->getMessage(),
-                ], 500);
-            }
-
-            return null;
-        });
-
         $exceptions->reportable(function (TokenMismatchException $e) {
             \Illuminate\Support\Facades\Log::warning('CSRF token mismatch', [
                 'url' => request()->fullUrl(),
                 'host' => request()->getHost(),
                 'secure' => request()->isSecure(),
-                'app_url' => config('app.url'),
-                'session_domain' => config('session.domain'),
-                'session_secure' => config('session.secure'),
                 'session_driver' => config('session.driver'),
+                'session_domain' => config('session.domain'),
                 'has_session_cookie' => request()->hasCookie(config('session.cookie')),
             ]);
         });
