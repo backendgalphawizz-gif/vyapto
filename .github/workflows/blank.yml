@@ -74,8 +74,16 @@ jobs:
               curl -s -D - -o /dev/null -H "Host: vyapto.developmentalphawizz.com" http://127.0.0.1/login
               echo "===== curl localhost /admin/dashboard ====="
               curl -s -D - -o /dev/null -H "Host: vyapto.developmentalphawizz.com" http://127.0.0.1/admin/dashboard
+              echo "===== storage/framework/sessions perms + writability ====="
+              ls -ld storage storage/framework storage/framework/sessions 2>&1
+              touch storage/framework/sessions/_write_test.tmp 2>&1 && echo "WRITE OK" && rm storage/framework/sessions/_write_test.tmp || echo "WRITE FAILED"
+              whoami; id
+              echo "===== real HTTPS request to the real domain, FROM the server itself ====="
+              curl -s -D - -o /dev/null "https://vyapto.developmentalphawizz.com/login"
               echo "===== laravel.log size ====="
               wc -l storage/logs/laravel.log
+              echo "===== timestamp NOW on server ====="
+              date -u
               echo "===== start line of last few log entries ====="
               grep -n "^\[20" storage/logs/laravel.log | tail -n 5
               echo "===== full text of the LAST logged entry (message + first frames) ====="
