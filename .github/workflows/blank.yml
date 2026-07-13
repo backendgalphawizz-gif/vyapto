@@ -43,3 +43,38 @@ jobs:
             $PHP_BIN artisan route:clear
             $PHP_BIN artisan view:clear
             $PHP_BIN artisan optimize:clear || true
+
+      # TEMPORARY diagnostics — remove once the /admin/dashboard 200-instead-of-302
+      # + missing Set-Cookie issue is understood. Hits the app from localhost on the
+      # server itself, bypassing any external proxy/CDN, to see ground truth.
+      - name: Diagnose login/session issue
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/${{ secrets.SERVER_USER }}/public_html/vyapto.developmentalphawizz.com/
+            PHP_BIN=$(command -v php || command -v php8.2 || command -v php82 || echo /usr/local/bin/ea-php82)
+            echo "===== web server ====="
+            command -v httpd && httpd -v 2>&1 || true
+            command -v apachectl && apachectl -v 2>&1 || true
+            command -v litespeed && echo "litespeed binary found" || true
+            rpm -qa 2>/dev/null | grep -i litespeed || true
+            echo "===== .env session/app settings (masked) ====="
+            grep -E '^(APP_ENV|APP_URL|APP_DEBUG|SESSION_|CACHE_)' .env || true
+            echo "===== bootstrap/cache (stale caches?) ====="
+            ls -la bootstrap/cache/ || true
+            echo "===== route:list for admin.dashboard ====="
+            $PHP_BIN artisan route:list --path=admin/dashboard 2>&1 || true
+            echo "===== curl -v localhost /login (loopback, bypasses any external proxy) ====="
+            curl -s -D - -o /dev/null -H "Host: vyapto.developmentalphawizz.com" http://127.0.0.1/login 2>&1 || true
+            echo "===== curl -v localhost /admin/dashboard ====="
+            curl -s -D - -o /dev/null -H "Host: vyapto.developmentalphawizz.com" http://127.0.0.1/admin/dashboard 2>&1 || true
+            echo "===== last 40 lines of laravel.log ====="
+            tail -n 40 storage/logs/laravel.log 2>&1 || true
+            echo "===== php version / sapi ====="
+            $PHP_BIN -v
+            echo "===== httpd vhost conf grep (cache/proxy hints) ====="
+            grep -ril "litespeed\|mod_cache\|CacheEnable" /etc/apache2/conf.d/ 2>/dev/null || true
+            grep -ril "litespeed\|mod_cache\|CacheEnable" /usr/local/apache/conf/ 2>/dev/null || true
