@@ -3,6 +3,16 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 
+// Some hosting SAPIs (e.g. PHP-FPM behind cPanel/LiteSpeed) don't honor the
+// display_errors=Off set in .htaccess (that only applies to mod_php/lsapi).
+// If a stray notice/warning prints even a single byte before Laravel's own
+// Response::send() runs, PHP implicitly flushes headers right then — and every
+// later header()/setcookie() call (session cookies, CSRF, etc.) silently no-ops
+// for the rest of the request. Buffering from the very first line guarantees
+// nothing reaches the client before Laravel controls the headers.
+ini_set('display_errors', '0');
+ob_start();
+
 define('LARAVEL_START', microtime(true));
 
 // Determine if the application is in maintenance mode...

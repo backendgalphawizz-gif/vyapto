@@ -347,11 +347,11 @@
           </button>
           <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
             <li class="dropdown-item-text fw-semibold">
-              {{ Auth::user()->name }}
+              {{ Auth::user()?->name }}
               <br>
-              <small class="text-muted">{{ Auth::user()->email }}</small>
+              <small class="text-muted">{{ Auth::user()?->email }}</small>
               <small class="text-primary text-uppercase">
-                {{ Auth::user()->getRoleNames()->first() ?? 'No role assigned' }}
+                {{ Auth::user()?->getRoleNames()->first() ?? 'No role assigned' }}
               </small>
             </li>
             <li>
