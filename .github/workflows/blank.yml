@@ -74,8 +74,13 @@ jobs:
               curl -s -D - -o /dev/null -H "Host: vyapto.developmentalphawizz.com" http://127.0.0.1/login
               echo "===== curl localhost /admin/dashboard ====="
               curl -s -D - -o /dev/null -H "Host: vyapto.developmentalphawizz.com" http://127.0.0.1/admin/dashboard
-              echo "===== last 40 lines of laravel.log ====="
-              tail -n 40 storage/logs/laravel.log
+              echo "===== laravel.log size ====="
+              wc -l storage/logs/laravel.log
+              echo "===== start line of last few log entries ====="
+              grep -n "^\[20" storage/logs/laravel.log | tail -n 5
+              echo "===== full text of the LAST logged entry (message + first frames) ====="
+              LASTLINE=$(grep -n "^\[20" storage/logs/laravel.log | tail -n 1 | cut -d: -f1)
+              sed -n "${LASTLINE},$((LASTLINE+30))p" storage/logs/laravel.log
               echo "===== php version ====="
               $PHP_BIN -v
             } > "$OUT" 2>&1
