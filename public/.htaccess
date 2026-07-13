@@ -1,3 +1,9 @@
+# See root .htaccess: this is a dynamic session-authenticated app, disable LiteSpeed page cache.
+<IfModule LiteSpeed>
+    CacheDisable public /
+    CacheDisable private /
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

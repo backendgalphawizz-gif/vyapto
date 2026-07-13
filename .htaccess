@@ -1,3 +1,12 @@
+# This is a dynamic, session-authenticated Laravel app (login, admin panel, CMS-managed
+# content) — full-page/edge caching here causes stale content and login redirect loops
+# (a logged-in user hitting /admin/dashboard can get served someone else's cached
+# "redirect to /login" page). Disable LiteSpeed's page cache for the whole site.
+<IfModule LiteSpeed>
+    CacheDisable public /
+    CacheDisable private /
+</IfModule>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     # Only redirect to public if the request isn't already for public
