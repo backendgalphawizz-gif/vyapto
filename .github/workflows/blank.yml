@@ -45,36 +45,41 @@ jobs:
             $PHP_BIN artisan optimize:clear || true
 
       # TEMPORARY diagnostics — remove once the /admin/dashboard 200-instead-of-302
-      # + missing Set-Cookie issue is understood. Hits the app from localhost on the
-      # server itself, bypassing any external proxy/CDN, to see ground truth.
+      # + missing Set-Cookie issue is understood. Runs on the runner (not via the
+      # ssh-action) so we can write results into $GITHUB_STEP_SUMMARY, which is
+      # visible on the public run page without needing log-download permissions.
       - name: Diagnose login/session issue
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /home/${{ secrets.SERVER_USER }}/public_html/vyapto.developmentalphawizz.com/
-            PHP_BIN=$(command -v php || command -v php8.2 || command -v php82 || echo /usr/local/bin/ea-php82)
-            echo "===== web server ====="
-            command -v httpd && httpd -v 2>&1 || true
-            command -v apachectl && apachectl -v 2>&1 || true
-            command -v litespeed && echo "litespeed binary found" || true
-            rpm -qa 2>/dev/null | grep -i litespeed || true
-            echo "===== .env session/app settings (masked) ====="
-            grep -E '^(APP_ENV|APP_URL|APP_DEBUG|SESSION_|CACHE_)' .env || true
-            echo "===== bootstrap/cache (stale caches?) ====="
-            ls -la bootstrap/cache/ || true
-            echo "===== route:list for admin.dashboard ====="
-            $PHP_BIN artisan route:list --path=admin/dashboard 2>&1 || true
-            echo "===== curl -v localhost /login (loopback, bypasses any external proxy) ====="
-            curl -s -D - -o /dev/null -H "Host: vyapto.developmentalphawizz.com" http://127.0.0.1/login 2>&1 || true
-            echo "===== curl -v localhost /admin/dashboard ====="
-            curl -s -D - -o /dev/null -H "Host: vyapto.developmentalphawizz.com" http://127.0.0.1/admin/dashboard 2>&1 || true
-            echo "===== last 40 lines of laravel.log ====="
-            tail -n 40 storage/logs/laravel.log 2>&1 || true
-            echo "===== php version / sapi ====="
-            $PHP_BIN -v
-            echo "===== httpd vhost conf grep (cache/proxy hints) ====="
-            grep -ril "litespeed\|mod_cache\|CacheEnable" /etc/apache2/conf.d/ 2>/dev/null || true
-            grep -ril "litespeed\|mod_cache\|CacheEnable" /usr/local/apache/conf/ 2>/dev/null || true
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts 2>/dev/null
+
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" "
+            cd /home/$SERVER_USER/public_html/vyapto.developmentalphawizz.com/
+            PHP_BIN=\$(command -v php || command -v php8.2 || command -v php82 || echo /usr/local/bin/ea-php82)
+            echo '===== web server binaries ====='
+            command -v httpd && httpd -v 2>&1
+            command -v apachectl && apachectl -v 2>&1
+            rpm -qa 2>/dev/null | grep -i litespeed
+            echo '===== .env session/app settings ====='
+            grep -E '^(APP_ENV|APP_URL|APP_DEBUG|SESSION_|CACHE_)' .env
+            echo '===== bootstrap/cache dir ====='
+            ls -la bootstrap/cache/
+            echo '===== route:list for admin/dashboard ====='
+            \$PHP_BIN artisan route:list --path=admin/dashboard 2>&1
+            echo '===== curl localhost /login (loopback, bypasses any external proxy) ====='
+            curl -s -D - -o /dev/null -H 'Host: vyapto.developmentalphawizz.com' http://127.0.0.1/login
+            echo '===== curl localhost /admin/dashboard ====='
+            curl -s -D - -o /dev/null -H 'Host: vyapto.developmentalphawizz.com' http://127.0.0.1/admin/dashboard
+            echo '===== last 40 lines of laravel.log ====='
+            tail -n 40 storage/logs/laravel.log
+            echo '===== php version ====='
+            \$PHP_BIN -v
+          " >> $GITHUB_STEP_SUMMARY 2>&1
+          echo '```' >> $GITHUB_STEP_SUMMARY
