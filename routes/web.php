@@ -32,6 +32,28 @@ use App\Http\Controllers\Admin\WebsiteContactMessageController;
 
 // Public website routes are in website.php; portal routes in portal.php
 
+// TEMPORARY diagnostic route — remove once the missing Set-Cookie issue is understood.
+Route::get('/_cookie_diag', function (\Illuminate\Http\Request $request) {
+    session(['diag_test' => 'hello']);
+    $lines = [
+        'session_id' => session()->getId(),
+        'session_driver' => config('session.driver'),
+        'session_cookie_name' => config('session.cookie'),
+        'session_domain' => config('session.domain'),
+        'session_secure' => config('session.secure'),
+        'session_same_site' => config('session.same_site'),
+        'request_is_secure' => $request->isSecure(),
+        'request_host' => $request->getHost(),
+        'has_incoming_session_cookie' => $request->hasCookie(config('session.cookie')),
+        'php_sapi' => PHP_SAPI,
+        'output_buffering_level' => ob_get_level(),
+        'headers_sent_before' => headers_sent(),
+    ];
+    return response(implode("\n", array_map(fn ($k, $v) => "$k: ".json_encode($v), array_keys($lines), $lines)))
+        ->cookie('manual_diag_cookie', 'plain-cookie-value', 60)
+        ->header('Content-Type', 'text/plain');
+})->name('cookie.diag');
+
 Route::get('/dashboard', function () {
     return redirect()->route('admin.dashboard');
 })->middleware(['auth'])->name('dashboard');
