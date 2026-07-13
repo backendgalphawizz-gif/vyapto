@@ -156,7 +156,9 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    'domain' => (($domain = env('SESSION_DOMAIN')) === null || $domain === '' || strcasecmp((string) $domain, 'null') === 0)
+        ? null
+        : $domain,
 
     /*
     |--------------------------------------------------------------------------
