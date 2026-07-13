@@ -22,3 +22,24 @@ jobs:
           remote_host: ${{ secrets.SERVER_IP }}
           remote_user: ${{ secrets.SERVER_USER }}
           remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # Rsync only updates files on disk. Laravel's cached config/routes/views
+      # (config:cache, route:cache, view:cache) and PHP OPcache keep serving the
+      # OLD code until we explicitly clear them — without this step, deploys can
+      # silently have zero effect on the live site.
+      - name: Clear Laravel caches on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /home/${{ secrets.SERVER_USER }}/public_html/vyapto.developmentalphawizz.com/
+            PHP_BIN=$(command -v php || command -v php8.2 || command -v php82 || echo /usr/local/bin/ea-php82)
+            echo "Using PHP binary: $PHP_BIN"
+            $PHP_BIN artisan config:clear
+            $PHP_BIN artisan cache:clear
+            $PHP_BIN artisan route:clear
+            $PHP_BIN artisan view:clear
+            $PHP_BIN artisan optimize:clear || true
