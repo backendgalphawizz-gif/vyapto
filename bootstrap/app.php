@@ -6,7 +6,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
-use Throwable;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -44,7 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (TokenMismatchException $e, Request $request) {
+        $renderExpired = function (Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'status' => false,
@@ -57,11 +57,24 @@ return Application::configure(basePath: dirname(__DIR__))
                 : route('login');
 
             return redirect()
-                ->to($loginUrl)
-                ->with('status', 'Your session expired. Please try logging in again.');
+                ->guest($loginUrl)
+                ->with('status', 'Your session expired. Please refresh the page and try logging in again.');
+        };
+
+        // Laravel converts TokenMismatchException → HttpException(419) before render callbacks.
+        $exceptions->render(function (HttpExceptionInterface $e, Request $request) use ($renderExpired) {
+            if ($e->getStatusCode() !== 419) {
+                return null;
+            }
+
+            return $renderExpired($request);
         });
 
-        $exceptions->render(function (Throwable $e, Request $request) {
+        $exceptions->render(function (TokenMismatchException $e, Request $request) use ($renderExpired) {
+            return $renderExpired($request);
+        });
+
+        $exceptions->render(function (\Throwable $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'status' => false,
@@ -80,6 +93,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'app_url' => config('app.url'),
                 'session_domain' => config('session.domain'),
                 'session_secure' => config('session.secure'),
+                'session_driver' => config('session.driver'),
                 'has_session_cookie' => request()->hasCookie(config('session.cookie')),
             ]);
         });
