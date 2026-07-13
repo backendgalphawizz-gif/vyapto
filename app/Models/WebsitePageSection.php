@@ -30,7 +30,11 @@ class WebsitePageSection extends Model
         return $query->where('status', true);
     }
 
-    public function scopeForPage($query, string $page)
+    /**
+     * Filter by website page slug (home, about, …).
+     * Named forWebsitePage — NOT forPage — because Laravel paginate() calls forPage() for LIMIT/OFFSET.
+     */
+    public function scopeForWebsitePage($query, string $page)
     {
         return $query->where('page', $page);
     }
@@ -65,7 +69,7 @@ class WebsitePageSection extends Model
     public static function sectionsFor(string $page): \Illuminate\Support\Collection
     {
         return static::query()
-            ->forPage($page)
+            ->forWebsitePage($page)
             ->active()
             ->ordered()
             ->get()

@@ -8,7 +8,7 @@
             <h4 class="fw-bold mb-0">{{ $section->label() }}</h4>
             <small class="text-muted">{{ $section->page }} / {{ $section->section_key }}</small>
         </div>
-        <a href="{{ route('admin.website.page-sections.index', ['page' => $section->page]) }}" class="btn btn-outline-secondary btn-sm">Back</a>
+        <a href="{{ route('admin.website.page-sections.index', ['website_page' => $section->page]) }}" class="btn btn-outline-secondary btn-sm">Back</a>
     </div>
 
     @if($section->hint())
@@ -34,8 +34,8 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Image</label>
-                        <input type="file" name="image" class="form-control" accept="image/jpeg,image/jpg,image/png,image/webp">
-                        <small class="text-muted">Upload to replace the current image. Removing upload restores the built-in default if one exists.</small>
+                        <input type="file" name="image" class="form-control" accept="image/jpeg,image/jpg,image/png,image/webp,image/avif">
+                        <small class="text-muted">Upload JPG/PNG/WebP/AVIF to replace the current image. Check “Remove” to restore the built-in default.</small>
                         @if($section->imageUrl())
                             <div class="mt-2">
                                 <img src="{{ $section->imageUrl() }}" alt="Current" class="rounded border" style="max-height:120px;object-fit:contain;">

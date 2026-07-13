@@ -46,7 +46,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Image</label>
-                        <input type="file" name="image" class="form-control" accept="image/jpeg,image/jpg,image/png,image/webp">
+                        <input type="file" name="image" class="form-control" accept="image/jpeg,image/jpg,image/png,image/webp,image/avif">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Icon</label>

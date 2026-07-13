@@ -72,19 +72,6 @@ class WebsiteSeeder extends Seeder
             );
         }
 
-        $stats = [
-            ['title' => '1,000+', 'subtitle' => 'Professionals Supporting Operations'],
-            ['title' => '24/7', 'subtitle' => 'Dedicated Business Support'],
-            ['title' => '50+', 'subtitle' => 'Operational Specialists'],
-        ];
-
-        foreach ($stats as $i => $stat) {
-            WebsitePageSection::updateOrCreate(
-                ['page' => 'home', 'section_key' => 'stat_' . ($i + 1)],
-                array_merge($stat, ['page' => 'home', 'sort_order' => 20 + $i, 'status' => true])
-            );
-        }
-
         WebsitePageSection::updateOrCreate(
             ['page' => 'home', 'section_key' => 'features_header'],
             [
@@ -173,15 +160,86 @@ class WebsiteSeeder extends Seeder
         }
 
         $processSteps = [
-            ['title' => 'Consultation', 'content' => 'We understand your business needs and operational challenges.'],
-            ['title' => 'Planning', 'content' => 'Custom strategy tailored to your logistics requirements.'],
-            ['title' => 'Implementation', 'content' => 'Seamless deployment with dedicated support teams.'],
-            ['title' => 'Ongoing Support', 'content' => '24/7 assistance to ensure continuity and growth.'],
+            ['title' => 'Freight Brokerage Solutions', 'content' => 'Connect with our extensive carrier network to find the perfect load matching solution. We streamline load matching to maximize your efficiency.'],
+            ['title' => 'US Accounting Services for Trucking Companies', 'content' => 'Comprehensive bookkeeping, tax preparation, and financial reporting designed specifically for the trucking industry.'],
+            ['title' => 'IT & Administration Support', 'content' => 'Modern operational systems, CRM management, and technical support to keep your operations running smoothly.'],
+            ['title' => 'HR & Payroll Management for Logistics Firms', 'content' => 'Streamlined payroll processing, employee onboarding, and DOT compliance management for your workforce.'],
         ];
         foreach ($processSteps as $i => $step) {
             WebsitePageSection::updateOrCreate(
                 ['page' => 'home', 'section_key' => 'process_step_' . ($i + 1)],
                 array_merge($step, ['page' => 'home', 'sort_order' => 41 + $i, 'status' => true])
+            );
+        }
+
+        $processImages = [
+            'images/4slider.avif',
+            'images/5slider.avif',
+            'images/3slider.avif',
+        ];
+        foreach ($processImages as $i => $img) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'home', 'section_key' => 'process_image_' . ($i + 1)],
+                [
+                    'page' => 'home',
+                    'title' => 'Process Image ' . ($i + 1),
+                    'sort_order' => 40 + $i,
+                    'status' => true,
+                    'extra' => ['default_image' => $img],
+                ]
+            );
+        }
+
+        $heroSlides = [
+            'images/4slider.avif',
+            'images/5slider.avif',
+            'images/3slider.avif',
+        ];
+        foreach ($heroSlides as $i => $img) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'home', 'section_key' => 'hero_slide_' . ($i + 1)],
+                [
+                    'page' => 'home',
+                    'title' => 'Hero Slide ' . ($i + 1),
+                    'sort_order' => 5 + $i,
+                    'status' => true,
+                    'extra' => ['default_image' => $img],
+                ]
+            );
+        }
+
+        $heroMiniStats = [
+            ['title' => '1,000+', 'subtitle' => 'Professionals Supporting Operations'],
+            ['title' => '24/7', 'subtitle' => 'Dedicated Business Support'],
+            ['title' => '50+', 'subtitle' => 'Operational Specialists Across Departments'],
+        ];
+        foreach ($heroMiniStats as $i => $stat) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'home', 'section_key' => 'stat_' . ($i + 1)],
+                array_merge($stat, ['page' => 'home', 'sort_order' => 20 + $i, 'status' => true])
+            );
+        }
+
+        $galleryImages = [
+            'images/1slider.avif',
+            'images/2slider.avif',
+            'images/6slider.avif',
+            'images/7slider.avif',
+            'images/8slider.avif',
+            'images/9slider.avif',
+            'images/3slider.avif',
+            'images/4slider.avif',
+        ];
+        foreach ($galleryImages as $i => $url) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'home', 'section_key' => 'gallery_' . ($i + 1)],
+                [
+                    'page' => 'home',
+                    'title' => 'Gallery Image ' . ($i + 1),
+                    'sort_order' => 71 + $i,
+                    'status' => true,
+                    'extra' => ['default_image' => $url],
+                ]
             );
         }
 
@@ -240,29 +298,6 @@ class WebsiteSeeder extends Seeder
                     'content' => $testimonial['content'],
                     'sort_order' => 61 + $i,
                     'status' => true,
-                ]
-            );
-        }
-
-        $galleryImages = [
-            'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=560&h=400&fit=crop',
-            'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=560&h=400&fit=crop',
-            'https://images.unsplash.com/photo-1494414623144-080708c2043b?w=560&h=400&fit=crop',
-            'https://images.unsplash.com/photo-1519003722464-d8e2f013f3cb?w=560&h=400&fit=crop',
-            'https://images.unsplash.com/photo-1601584115917-0f970f2f0e6b?w=560&h=400&fit=crop',
-            'https://images.unsplash.com/photo-1580674685258-234b35eb6d6d?w=560&h=400&fit=crop',
-            'https://images.unsplash.com/photo-1513828583688-c52646db42ef?w=560&h=400&fit=crop',
-            'https://images.unsplash.com/photo-1544626977-9e4c4d0d0c0c?w=560&h=400&fit=crop',
-        ];
-        foreach ($galleryImages as $i => $url) {
-            WebsitePageSection::updateOrCreate(
-                ['page' => 'home', 'section_key' => 'gallery_' . ($i + 1)],
-                [
-                    'page' => 'home',
-                    'title' => 'Gallery Image ' . ($i + 1),
-                    'sort_order' => 71 + $i,
-                    'status' => true,
-                    'extra' => ['default_image' => $url],
                 ]
             );
         }

@@ -14,14 +14,16 @@ class WebsitePageSectionController extends Controller
     {
         $query = WebsitePageSection::query()->orderBy('page')->orderBy('sort_order');
 
-        if ($request->filled('page')) {
-            $query->where('page', $request->page);
+        // Use website_page — Laravel pagination already owns the ?page= query param.
+        $websitePage = $request->input('website_page');
+        if (filled($websitePage)) {
+            $query->where('page', $websitePage);
         }
 
         $sections = $query->paginate(50)->withQueryString();
         $pages = config('website_sections.pages', ['global', 'home', 'about', 'services', 'products', 'careers', 'blogs', 'contact', 'faq']);
 
-        return view('admin.website.page-sections.index', compact('sections', 'pages'));
+        return view('admin.website.page-sections.index', compact('sections', 'pages', 'websitePage'));
     }
 
     public function create()
@@ -49,7 +51,7 @@ class WebsitePageSectionController extends Controller
             'content' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
             'link' => 'nullable|string|max:500',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'image' => 'nullable|file|mimes:jpg,jpeg,png,webp,avif|max:5120',
             'sort_order' => 'nullable|integer|min:0',
             'status' => 'nullable|boolean',
         ]);
@@ -63,7 +65,7 @@ class WebsitePageSectionController extends Controller
 
         WebsitePageSection::create($validated);
 
-        return redirect()->route('admin.website.page-sections.index', ['page' => $validated['page']])
+        return redirect()->route('admin.website.page-sections.index', ['website_page' => $validated['page']])
             ->with('success', 'Section created successfully.');
     }
 
@@ -80,7 +82,7 @@ class WebsitePageSectionController extends Controller
             'content' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
             'link' => 'nullable|string|max:500',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'image' => 'nullable|file|mimes:jpg,jpeg,png,webp,avif|max:5120',
             'sort_order' => 'nullable|integer|min:0',
             'status' => 'nullable|boolean',
         ]);
@@ -101,7 +103,7 @@ class WebsitePageSectionController extends Controller
 
         $pageSection->update($validated);
 
-        return redirect()->route('admin.website.page-sections.index', ['page' => $pageSection->page])
+        return redirect()->route('admin.website.page-sections.index', ['website_page' => $pageSection->page])
             ->with('success', 'Section updated successfully.');
     }
 }

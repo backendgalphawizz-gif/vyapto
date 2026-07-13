@@ -18,7 +18,13 @@
     @endif
 
     <div class="alert alert-info py-2 small">
-        Manage all website images and text blocks here. Filter by <strong>Home</strong> for hero, stats, features, mobile app, testimonials, and CTA. Use <strong>Global</strong> for header/footer logos.
+        Filter by <strong>Home</strong> to edit homepage content and images:
+        <code>hero_slide_1–4</code> (hero carousel),
+        <code>stat_1–3</code> (hero mini stats),
+        <code>gallery_1–8</code> (Operations in Motion),
+        <code>process_image_*</code> + <code>process_step_*</code>,
+        testimonials, impact stats, and more.
+        Use <strong>Global</strong> for logos. Upload an image on each section to replace defaults.
     </div>
 
     <div class="card shadow-sm border-0 rounded-3 mb-3">
@@ -26,10 +32,10 @@
             <form method="GET" class="row g-2 align-items-end">
                 <div class="col-md-4">
                     <label class="form-label small text-muted mb-1">Filter by page</label>
-                    <select name="page" class="form-select" onchange="this.form.submit()">
+                    <select name="website_page" class="form-select" onchange="this.form.submit()">
                         <option value="">All Pages</option>
                         @foreach($pages as $p)
-                            <option value="{{ $p }}" {{ request('page') === $p ? 'selected' : '' }}>{{ ucfirst($p) }}</option>
+                            <option value="{{ $p }}" {{ ($websitePage ?? request('website_page')) === $p ? 'selected' : '' }}>{{ ucfirst($p) }}</option>
                         @endforeach
                     </select>
                 </div>
