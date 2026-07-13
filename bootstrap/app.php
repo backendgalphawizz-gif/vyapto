@@ -5,6 +5,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
+use Throwable;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,7 +16,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->trustProxies(at: '*');
+        $middleware->trustProxies(
+            at: '*',
+            headers: Request::HEADER_X_FORWARDED_FOR
+                | Request::HEADER_X_FORWARDED_HOST
+                | Request::HEADER_X_FORWARDED_PORT
+                | Request::HEADER_X_FORWARDED_PROTO
+                | Request::HEADER_X_FORWARDED_AWS_ELB
+        );
 
         $middleware->redirectGuestsTo(function (Request $request) {
             if ($request->is('portal', 'portal/*')) {
@@ -35,7 +44,24 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->render(function (Throwable $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (TokenMismatchException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Your session expired. Please refresh and try again.',
+                ], 419);
+            }
+
+            $loginUrl = $request->is('portal', 'portal/*')
+                ? route('portal.login')
+                : route('login');
+
+            return redirect()
+                ->to($loginUrl)
+                ->with('status', 'Your session expired. Please try logging in again.');
+        });
+
+        $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'status' => false,
@@ -43,14 +69,17 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 500);
             }
 
-            return null; // let Laravel handle web errors
+            return null;
         });
 
-        $exceptions->reportable(function (\Illuminate\Session\TokenMismatchException $e) {
+        $exceptions->reportable(function (TokenMismatchException $e) {
             \Illuminate\Support\Facades\Log::warning('CSRF token mismatch', [
                 'url' => request()->fullUrl(),
                 'host' => request()->getHost(),
+                'secure' => request()->isSecure(),
                 'app_url' => config('app.url'),
+                'session_domain' => config('session.domain'),
+                'session_secure' => config('session.secure'),
                 'has_session_cookie' => request()->hasCookie(config('session.cookie')),
             ]);
         });
