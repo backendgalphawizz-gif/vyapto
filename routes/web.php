@@ -33,10 +33,9 @@ use App\Http\Controllers\Admin\WebsiteContactMessageController;
 // Public website routes are in website.php; portal routes in portal.php
 
 Route::get('/dashboard', function () {
-
     $user = auth()->user();
 
-    if (in_array((int) $user->role_id, [1, 2], true)) {
+    if ($user && $user->isAdmin()) {
         return redirect()->route('admin.dashboard');
     }
 

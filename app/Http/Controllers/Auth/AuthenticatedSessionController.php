@@ -29,16 +29,21 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
+        $isAdmin = $user->isAdmin();
 
-        if (in_array((int) $user->role_id, [1, 2], true) && ! $user->hasVerifiedEmail()) {
+        if ($isAdmin && ! $user->hasVerifiedEmail()) {
             $user->forceFill(['email_verified_at' => now()])->save();
         }
 
-        if (in_array((int) $user->role_id, [1, 2], true)) {
-            return redirect()->intended(route('admin.dashboard'));
+        // Clear any stored "intended" URL from browsing the public site/portal
+        // so /login always lands admins on the admin panel.
+        $request->session()->forget('url.intended');
+
+        if ($isAdmin) {
+            return redirect()->route('admin.dashboard');
         }
 
-        return redirect()->intended(route('portal.dashboard'));
+        return redirect()->route('portal.dashboard');
     }
 
 
