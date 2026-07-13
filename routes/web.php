@@ -33,13 +33,7 @@ use App\Http\Controllers\Admin\WebsiteContactMessageController;
 // Public website routes are in website.php; portal routes in portal.php
 
 Route::get('/dashboard', function () {
-    $user = auth()->user();
-
-    if ($user && $user->isAdmin()) {
-        return redirect()->route('admin.dashboard');
-    }
-
-    return redirect()->route('portal.dashboard');
+    return redirect()->route('admin.dashboard');
 })->middleware(['auth'])->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {

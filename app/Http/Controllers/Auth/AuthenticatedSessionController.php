@@ -30,24 +30,11 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        // Prefer DB column directly — /login is for Admin (1) and HR Admin (2) only
-        $roleId = (int) ($user->getAttributes()['role_id'] ?? $user->role_id ?? 0);
-        $isAdmin = in_array($roleId, [1, 2], true) || $user->isAdmin();
-
-        if (! $isAdmin) {
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
-            return back()->withErrors([
-                'email' => 'This login is for admin only. Employees should use the Employee Portal login.',
-            ])->onlyInput('email');
-        }
-
         if (! $user->hasVerifiedEmail()) {
             $user->forceFill(['email_verified_at' => now()])->save();
         }
 
+        // /login is the admin login only — always open the admin panel
         $request->session()->forget('url.intended');
 
         return redirect()->route('admin.dashboard');

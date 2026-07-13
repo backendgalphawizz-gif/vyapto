@@ -24,20 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return route('login');
         });
 
-        $middleware->redirectUsersTo(function (Request $request) {
-            $user = $request->user();
-
-            if ($user && $user->isAdmin()) {
-                return route('admin.dashboard');
-            }
-
-            // Non-admins who hit /login go to portal dashboard if already logged in
-            if ($request->is('login')) {
-                return route('portal.dashboard');
-            }
-
-            return route('portal.dashboard');
-        });
+        $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
 
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
