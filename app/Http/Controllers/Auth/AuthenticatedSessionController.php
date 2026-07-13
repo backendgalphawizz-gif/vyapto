@@ -30,8 +30,11 @@ class AuthenticatedSessionController extends Controller
 
         $user = Auth::user();
 
-        // /login is admin-only — employees must use /portal/login
-        if (! $user->isAdmin()) {
+        // Prefer DB column directly — /login is for Admin (1) and HR Admin (2) only
+        $roleId = (int) ($user->getAttributes()['role_id'] ?? $user->role_id ?? 0);
+        $isAdmin = in_array($roleId, [1, 2], true) || $user->isAdmin();
+
+        if (! $isAdmin) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

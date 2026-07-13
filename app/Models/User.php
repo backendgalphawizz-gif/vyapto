@@ -64,11 +64,16 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isAdmin(): bool
     {
-        if (in_array((int) $this->role_id, [1, 2], true)) {
+        // Primary app check: users.role_id (1 = Admin, 2 = HR Admin)
+        if (in_array((int) ($this->attributes['role_id'] ?? $this->role_id ?? 0), [1, 2], true)) {
             return true;
         }
 
-        return $this->hasAnyRole(['Admin', 'HR Admin', 'admin', 'hr admin']);
+        try {
+            return $this->hasAnyRole(['Admin', 'HR Admin']);
+        } catch (Throwable $e) {
+            return false;
+        }
     }
 
     public function department()
