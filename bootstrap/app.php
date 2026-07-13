@@ -31,6 +31,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 return route('admin.dashboard');
             }
 
+            // Non-admins who hit /login go to portal dashboard if already logged in
+            if ($request->is('login')) {
+                return route('portal.dashboard');
+            }
+
             return route('portal.dashboard');
         });
 

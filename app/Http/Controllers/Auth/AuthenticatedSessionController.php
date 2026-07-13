@@ -29,21 +29,25 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
-        $isAdmin = $user->isAdmin();
 
-        if ($isAdmin && ! $user->hasVerifiedEmail()) {
+        // /login is admin-only — employees must use /portal/login
+        if (! $user->isAdmin()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors([
+                'email' => 'This login is for admin only. Employees should use the Employee Portal login.',
+            ])->onlyInput('email');
+        }
+
+        if (! $user->hasVerifiedEmail()) {
             $user->forceFill(['email_verified_at' => now()])->save();
         }
 
-        // Clear any stored "intended" URL from browsing the public site/portal
-        // so /login always lands admins on the admin panel.
         $request->session()->forget('url.intended');
 
-        if ($isAdmin) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        return redirect()->route('portal.dashboard');
+        return redirect()->route('admin.dashboard');
     }
 
 
@@ -58,6 +62,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect()->route('login');
     }
 }
