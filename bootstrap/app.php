@@ -35,6 +35,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
 
+        // Belt-and-suspenders: if the host's cache (e.g. LiteSpeed Cache) ignores
+        // this, disable caching there instead — see App\Http\Middleware\PreventCaching.
+        $middleware->web(append: [
+            \App\Http\Middleware\PreventCaching::class,
+        ]);
+
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
