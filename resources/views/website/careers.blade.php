@@ -8,10 +8,8 @@
     $culture = $sections->get('culture');
     $rolesHeader = $sections->get('roles_header');
     $apply = $sections->get('apply');
-    $heroImage = $hero?->imageUrl()
-        ?: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1600&q=85';
-    $cultureImage = $culture?->imageUrl()
-        ?: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1000&q=80';
+    $heroImage = $hero?->imageUrl() ?: asset('images/vyapto-warehouse-bg.png');
+    $cultureImage = $culture?->imageUrl() ?: asset('images/3slider.avif');
     $meta = $hero?->extra['meta'] ?? [
         ['label' => 'Open Categories', 'value' => (string) max($openings->count(), 6)],
         ['label' => 'Locations', 'value' => 'Bihar + Pan-India'],

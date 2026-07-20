@@ -26,7 +26,7 @@ class WebsiteSeeder extends Seeder
             ['page' => 'home', 'section_key' => 'hero', 'title' => 'Complete Logistics Support for', 'subtitle' => 'Your Business', 'content' => 'Vyapto empowers businesses with expert logistics, accounting, IT support, and HR solutions — all from a single trusted partner.', 'sort_order' => 1],
             ['page' => 'home', 'section_key' => 'hero_badge', 'title' => 'Trusted by 500+ Businesses', 'sort_order' => 2],
             ['page' => 'home', 'section_key' => 'hero_bg', 'title' => 'Hero Background', 'sort_order' => 3, 'extra' => ['default_image' => 'images/web-auth-bg.png']],
-            ['page' => 'home', 'section_key' => 'hero_image', 'title' => 'Freight & Logistics Solutions', 'sort_order' => 4, 'extra' => ['default_image' => 'https://images.unsplash.com/photo-1601584115917-0f970f2f0e6b?w=800&h=900&fit=crop']],
+            ['page' => 'home', 'section_key' => 'hero_image', 'title' => 'Freight & Logistics Solutions', 'sort_order' => 4, 'extra' => ['default_image' => 'images/6slider.avif']],
             ['page' => 'home', 'section_key' => 'services_header', 'title' => 'Comprehensive Solutions Built for Growth', 'content' => 'Our integrated platform streamlines every aspect of your operations, from logistics to workforce management.', 'sort_order' => 25],
             ['page' => 'home', 'section_key' => 'why_header', 'title' => 'Why Partner With Us?', 'content' => 'We deliver strategic advantages that directly impact your bottom line.', 'sort_order' => 30],
             ['page' => 'home', 'section_key' => 'process_header', 'title' => 'Our Streamlined Process', 'content' => 'From initial consultation to ongoing support, we\'ve optimized every step for maximum efficiency.', 'sort_order' => 40],
@@ -41,9 +41,9 @@ class WebsiteSeeder extends Seeder
             ['page' => 'about', 'section_key' => 'cta', 'title' => "Let's Simplify Logistics Together!", 'content' => 'Partner with us today and develop smarter logistics operations.', 'sort_order' => 90],
             ['page' => 'faq', 'section_key' => 'hero', 'title' => 'Frequently Asked Questions', 'content' => 'Find answers to common questions about our services and solutions.', 'sort_order' => 1],
             ['page' => 'services', 'section_key' => 'hero', 'title' => 'Solving real challenges.', 'subtitle' => 'Delivering real results.', 'content' => 'We understand the challenges businesses face every day. Vyapto is built to solve them with efficient solutions, transparency, and an unwavering commitment to quality service.', 'sort_order' => 1, 'extra' => ['default_image' => 'images/vyapto-warehouse-bg.png']],
-            ['page' => 'products', 'section_key' => 'hero', 'title' => 'Our Products', 'content' => "Built on the trust we've earned through our services — now bringing quality directly to you.", 'sort_order' => 1, 'extra' => ['default_image' => 'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=1600&q=85']],
+            ['page' => 'products', 'section_key' => 'hero', 'title' => 'Our Products', 'content' => "Built on the trust we've earned through our services — now bringing quality directly to you.", 'sort_order' => 1, 'extra' => ['default_image' => 'images/vyapto-warehouse-bg.png']],
             ['page' => 'careers', 'section_key' => 'hero', 'title' => "Ride with a\ncompany that moves.", 'subtitle' => 'Crew Manifest · Now Boarding', 'content' => "150+ people strong and growing — on the road, in the hubs, behind the CRM, and on the franchise floor. If you like solving real problems for real businesses, there's a seat for you.", 'sort_order' => 1, 'extra' => [
-                'default_image' => 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1600&q=85',
+                'default_image' => 'images/vyapto-warehouse-bg.png',
                 'meta' => [
                     ['label' => 'Open Categories', 'value' => '6'],
                     ['label' => 'Locations', 'value' => 'Bihar + Pan-India'],
@@ -53,7 +53,7 @@ class WebsiteSeeder extends Seeder
             ['page' => 'careers', 'section_key' => 'culture', 'title' => "Work that shows up\non the road, not just a slide.", 'content' => "You'll see the outcome of your work the same day — a route run on time, a client onboarded, a hub cleared before the evening rush.", 'sort_order' => 10, 'extra' => [
                 'num' => 'Culture',
                 'category' => 'Why Vyapto',
-                'default_image' => 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1000&q=80',
+                'default_image' => 'images/3slider.avif',
             ]],
             ['page' => 'careers', 'section_key' => 'value_1', 'title' => 'Integrity', 'content' => 'Honest, transparent, ethical, always.', 'icon' => 'fa-shield-halved', 'sort_order' => 11],
             ['page' => 'careers', 'section_key' => 'value_2', 'title' => 'Efficiency', 'content' => 'We optimize, not just work harder.', 'icon' => 'fa-gears', 'sort_order' => 12],
@@ -62,7 +62,7 @@ class WebsiteSeeder extends Seeder
             ['page' => 'careers', 'section_key' => 'value_5', 'title' => 'Commitment', 'content' => 'Excellence in every service.', 'icon' => 'fa-bullseye', 'sort_order' => 15],
             ['page' => 'careers', 'section_key' => 'roles_header', 'title' => "Where you could\njoin the route.", 'content' => "Hiring across every vertical we operate — reach out even if your exact role isn't listed.", 'sort_order' => 20, 'extra' => ['num' => 'Positions', 'category' => 'Open Categories']],
             ['page' => 'careers', 'section_key' => 'apply', 'title' => "Send us your\ndetails. We'll route it.", 'content' => 'Drop your details below and our workforce team will match you to the right category — no long forms, no waiting for a portal login.', 'sort_order' => 30, 'extra' => ['num' => 'Join', 'category' => 'Application Note']],
-            ['page' => 'blogs', 'section_key' => 'hero', 'title' => 'Stories that move with us', 'content' => 'Insights, updates, and stories from the Vyapto team — logistics, workforce, and the road ahead.', 'sort_order' => 1, 'extra' => ['default_image' => 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1600&q=85']],
+            ['page' => 'blogs', 'section_key' => 'hero', 'title' => 'Stories that move with us', 'content' => 'Insights, updates, and stories from the Vyapto team — logistics, workforce, and the road ahead.', 'sort_order' => 1, 'extra' => ['default_image' => 'images/4slider.avif']],
             ['page' => 'contact', 'section_key' => 'hero', 'title' => 'Contact Us', 'content' => 'Have a question or want to work with us? Reach out and our team will get back to you.', 'sort_order' => 1],
             ['page' => 'global', 'section_key' => 'site_logo_desktop', 'title' => 'Desktop Logo', 'sort_order' => 1, 'extra' => ['default_image' => 'images/nav-logo.png']],
             ['page' => 'global', 'section_key' => 'site_logo_mobile', 'title' => 'Mobile Logo', 'sort_order' => 2, 'extra' => ['default_image' => 'images/nav-logo-mobile.png']],
@@ -329,7 +329,7 @@ class WebsiteSeeder extends Seeder
                 'content' => 'We go beyond basics by helping our clients manage operations, optimizing processes, and staying ahead in a highly competitive industry.',
                 'sort_order' => 2,
                 'status' => true,
-                'extra' => ['default_image' => 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&h=400&fit=crop'],
+                'extra' => ['default_image' => 'images/5slider.avif'],
             ]
         );
     }
@@ -421,7 +421,7 @@ class WebsiteSeeder extends Seeder
                 'subtitle' => 'Authentic. Pure. Wholesome. Made for Every Home.',
                 'description' => "Building on the trust we've earned through our logistics and business services, Vyapto Foods brings you authentic, high-quality, value-for-money makhana (fox nuts) for everyday snacking. Every pack is roasted, light, crunchy, and made with love in Bihar.",
                 'icon' => 'fa-basket-shopping',
-                'image' => 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=900&q=80',
+                'image' => 'images/6slider.avif',
                 'link' => 'https://vyaptofoods.com/',
                 'sort_order' => 1,
                 'features' => [
@@ -440,13 +440,13 @@ class WebsiteSeeder extends Seeder
                     ],
                     'gallery' => [
                         [
-                            'image' => 'https://images.unsplash.com/photo-1621939514649-16e1d15c1fbb?auto=format&fit=crop&w=900&q=80',
+                            'image' => 'images/1slider.avif',
                             'meta' => 'Vyapto Foods · Jar Range',
                             'title' => 'Makhana Premium Jars',
                             'desc' => 'Same 6 honest flavors — now in resealable premium jars for freshness and convenience.',
                         ],
                         [
-                            'image' => 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=900&q=80',
+                            'image' => 'images/2slider.avif',
                             'meta' => 'Vyapto Foods · Pouch Range',
                             'title' => 'Makhana Flavour Range',
                             'desc' => '6 bold flavors — Pudina · Cheese · Peri Peri · Cream & Onion · Barbeque · Pink Salt',
@@ -636,7 +636,7 @@ class WebsiteSeeder extends Seeder
                 'excerpt' => 'How technology is reshaping the final leg of logistics — and what it means for Indian supply chains.',
                 'content' => '<p>Last-mile delivery remains the most critical and costly segment of the supply chain. At Vyapto, we are investing in AI-driven route optimization, real-time tracking, and workforce management to make deliveries faster and more reliable.</p><p>From hub sequencing to rider allocation, every decision on the road compounds into customer trust. The winners will be teams that treat data as an operating system — not a report.</p>',
                 'author' => 'Vyapto Team',
-                'image' => 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80',
+                'image' => 'images/7slider.avif',
                 'published_at' => now()->subDays(14),
                 'sort_order' => 1,
             ],
@@ -646,7 +646,7 @@ class WebsiteSeeder extends Seeder
                 'excerpt' => 'Why consistent hub operations beat one-off speed — and how we design for evening peaks.',
                 'content' => '<p>A strong hub network is the backbone of on-time delivery. Clear sorting rules, trained crews, and predictable cut-off times keep packages moving even when volumes spike.</p>',
                 'author' => 'Operations',
-                'image' => 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=1200&q=80',
+                'image' => 'images/8slider.avif',
                 'published_at' => now()->subDays(10),
                 'sort_order' => 2,
             ],
@@ -656,7 +656,7 @@ class WebsiteSeeder extends Seeder
                 'excerpt' => 'How structured manpower deployment keeps logistics moving when demand flexes overnight.',
                 'content' => '<p>Logistics is a people business. Verification, onboarding, and deployment workflows are what turn headcount into reliable capacity on the floor and on the road.</p>',
                 'author' => 'People Ops',
-                'image' => 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80',
+                'image' => 'images/3slider.avif',
                 'published_at' => now()->subDays(7),
                 'sort_order' => 3,
             ],
@@ -666,7 +666,7 @@ class WebsiteSeeder extends Seeder
                 'excerpt' => 'Transparent tracking and clear SLAs turn freight brokerage into a trust product.',
                 'content' => '<p>Shippers do not just buy capacity — they buy confidence. Live status, proactive updates, and accountable partners change the entire experience of moving freight.</p>',
                 'author' => 'Freight Desk',
-                'image' => 'https://images.unsplash.com/photo-1601584115917-0f970f2f0e6b?auto=format&fit=crop&w=1200&q=80',
+                'image' => 'images/9slider.avif',
                 'published_at' => now()->subDays(4),
                 'sort_order' => 4,
             ],

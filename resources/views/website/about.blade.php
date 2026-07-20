@@ -30,7 +30,7 @@
                 @if($overview?->imageUrl())
                     <img src="{{ $overview->imageUrl() }}" alt="About us" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);">
                 @else
-                    <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&h=400&fit=crop" alt="Logistics operations" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);">
+                    <img src="{{ asset('images/5slider.avif') }}" alt="Logistics operations" style="border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);">
                 @endif
             </div>
         </div>

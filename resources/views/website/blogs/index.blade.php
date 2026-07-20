@@ -5,15 +5,14 @@
 @section('content')
 @php
     $hero = $sections->get('hero');
-    $heroImage = $hero?->imageUrl()
-        ?: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1600&q=85';
+    $heroImage = $hero?->imageUrl() ?: asset('images/4slider.avif');
     $defaultImages = [
-        'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=900&q=80',
-        'https://images.unsplash.com/photo-1601584115917-0f970f2f0e6b?auto=format&fit=crop&w=900&q=80',
-        'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=900&q=80',
-        'https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?auto=format&fit=crop&w=900&q=80',
-        'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=900&q=80',
-        'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=900&q=80',
+        asset('images/6slider.avif'),
+        asset('images/7slider.avif'),
+        asset('images/8slider.avif'),
+        asset('images/9slider.avif'),
+        asset('images/3slider.avif'),
+        asset('images/1slider.avif'),
     ];
     $posts = $blogs->getCollection();
     $featured = $posts->first();

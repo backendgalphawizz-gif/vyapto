@@ -4,12 +4,11 @@
 
 @section('content')
 @php
-    $img = $blog->imageUrl()
-        ?: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80';
+    $img = $blog->imageUrl() ?: asset('images/6slider.avif');
     $recentDefaults = [
-        'https://images.unsplash.com/photo-1601584115917-0f970f2f0e6b?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?auto=format&fit=crop&w=800&q=80',
+        asset('images/7slider.avif'),
+        asset('images/8slider.avif'),
+        asset('images/9slider.avif'),
     ];
 @endphp
 

@@ -5,8 +5,7 @@
 @section('content')
 @php
     $hero = $sections->get('hero');
-    $heroImage = $hero?->imageUrl()
-        ?: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=1600&q=85';
+    $heroImage = $hero?->imageUrl() ?: asset('images/vyapto-warehouse-bg.png');
     $foods = $products->firstWhere('slug', 'vyapto-foods') ?? $products->first();
     $vms = $products->firstWhere('slug', 'vyapto-vms') ?? $products->skip(1)->first();
 @endphp
@@ -25,8 +24,7 @@
 
 @if($foods)
 @php
-    $foodImage = $foods->imageUrl()
-        ?: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=900&q=80';
+    $foodImage = $foods->imageUrl() ?: asset('images/6slider.avif');
     $foodFeatures = $foods->featureList();
     $gallery = $foods->extraValue('gallery', []);
     $badges = $foods->extraValue('badges', []);
@@ -91,8 +89,8 @@
                     @php
                         $gImg = \App\Support\WebsiteMedia::url($item['image'] ?? null)
                             ?: ($loop->first
-                                ? 'https://images.unsplash.com/photo-1621939514649-16e1d15c1fbb?auto=format&fit=crop&w=900&q=80'
-                                : 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=900&q=80');
+                                ? asset('images/1slider.avif')
+                                : asset('images/2slider.avif'));
                     @endphp
                     <article class="flavor-card" data-reveal="{{ $loop->odd ? 'left' : 'right' }}">
                         <div class="flavor-img-wrap">
