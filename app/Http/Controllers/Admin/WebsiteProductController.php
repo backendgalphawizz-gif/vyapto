@@ -23,7 +23,7 @@ class WebsiteProductController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $this->validateProduct($request);
+        [$validated, $chips] = $this->validateProduct($request);
 
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('website/products', 'public');
@@ -32,6 +32,7 @@ class WebsiteProductController extends Controller
         $validated['slug'] = Str::slug($validated['title']);
         $validated['status'] = $request->boolean('status', true);
         $validated['sort_order'] = (int) ($validated['sort_order'] ?? 0);
+        $validated['extra'] = array_filter(['chips' => $chips]);
 
         WebsiteProduct::create($validated);
 
@@ -45,7 +46,7 @@ class WebsiteProductController extends Controller
 
     public function update(Request $request, WebsiteProduct $product)
     {
-        $validated = $this->validateProduct($request);
+        [$validated, $chips] = $this->validateProduct($request);
 
         if ($request->boolean('remove_image') && $product->image) {
             Storage::disk('public')->delete($product->image);
@@ -59,6 +60,10 @@ class WebsiteProductController extends Controller
 
         $validated['status'] = $request->boolean('status', true);
         $validated['sort_order'] = (int) ($validated['sort_order'] ?? 0);
+
+        $extra = $product->extra ?? [];
+        $extra['chips'] = $chips;
+        $validated['extra'] = $extra;
 
         $product->update($validated);
 
@@ -77,13 +82,32 @@ class WebsiteProductController extends Controller
 
     private function validateProduct(Request $request): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'category' => 'nullable|string|max:120',
+            'subtitle' => 'nullable|string|max:180',
             'description' => 'nullable|string',
             'content' => 'nullable|string',
+            'features' => 'nullable|string',
+            'chips' => 'nullable|string',
+            'icon' => 'nullable|string|max:100',
             'link' => 'nullable|url|max:500',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:5120',
             'sort_order' => 'nullable|integer|min:0',
         ]);
+
+        if (array_key_exists('features', $validated)) {
+            $lines = preg_split('/\r\n|\r|\n/', (string) $validated['features']) ?: [];
+            $validated['features'] = array_values(array_filter(array_map('trim', $lines)));
+        }
+
+        $chips = [];
+        if (array_key_exists('chips', $validated)) {
+            $chipLines = preg_split('/\r\n|\r|\n/', (string) ($validated['chips'] ?? '')) ?: [];
+            $chips = array_values(array_filter(array_map('trim', $chipLines)));
+            unset($validated['chips']);
+        }
+
+        return [$validated, $chips];
     }
 }

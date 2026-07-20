@@ -6,7 +6,7 @@
     color: #fff;
     text-align: center;
     overflow: hidden;
-    background: #0d1b3e;
+    background: #071a3d;
 }
 .page-hero-bg {
     position: absolute;
@@ -30,7 +30,7 @@
 .page-hero p { color: #8697af; max-width: 700px; margin: 0 auto; line-height: 1.7; }
 
 .content-section { background: #f8faf9; padding: 70px 0; }
-.content-section.dark { background: #0d1b3e; }
+.content-section.dark { background: #071a3d; }
 
 .cards-grid {
     display: grid;

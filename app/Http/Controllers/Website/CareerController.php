@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Website;
 
 use App\Models\WebsiteCareerItem;
+use App\Models\WebsiteContactMessage;
 use App\Models\WebsitePageSection;
+use Illuminate\Http\Request;
 
 class CareerController extends BaseWebsiteController
 {
@@ -38,5 +40,35 @@ class CareerController extends BaseWebsiteController
             'openings',
             'news'
         )));
+    }
+
+    public function apply(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|string|max:255',
+            'contact' => 'required|string|max:255',
+        ]);
+
+        $contact = trim($validated['contact']);
+        $isEmail = (bool) filter_var($contact, FILTER_VALIDATE_EMAIL);
+
+        WebsiteContactMessage::create([
+            'name' => $validated['name'],
+            'email' => $isEmail ? $contact : 'careers@vyapto.com',
+            'phone' => $isEmail ? null : $contact,
+            'subject' => 'Career Application: '.$validated['category'],
+            'message' => "Career application submitted via careers page.\n\n"
+                ."Name: {$validated['name']}\n"
+                ."Category: {$validated['category']}\n"
+                .'Contact: '.$contact,
+            'status' => WebsiteContactMessage::STATUS_NEW,
+            'ip_address' => $request->ip(),
+        ]);
+
+        return redirect()
+            ->route('website.careers')
+            ->with('career_applied', true)
+            ->withFragment('apply');
     }
 }

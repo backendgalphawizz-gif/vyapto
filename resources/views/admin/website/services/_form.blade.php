@@ -23,18 +23,32 @@
                             <input type="checkbox" name="status" value="1" class="form-check-input" {{ old('status', $service->status ?? true) ? 'checked' : '' }}>
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Category label</label>
+                        <input type="text" name="category" class="form-control" value="{{ old('category', $service->category ?? '') }}" placeholder="Logistics Network">
+                        <small class="text-muted">Shown as “SERVICE 01 — Logistics Network”</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Subtitle / tagline</label>
+                        <input type="text" name="subtitle" class="form-control" value="{{ old('subtitle', $service->subtitle ?? '') }}" placeholder="Reliable Logistics Network">
+                    </div>
                     <div class="col-md-4">
                         <label class="form-label">Icon (FA class)</label>
                         <input type="text" name="icon" class="form-control" value="{{ old('icon', $service->icon ?? '') }}" placeholder="fa-truck">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Image</label>
-                        <input type="file" name="image" class="form-control" accept="image/jpeg,image/jpg,image/png,image/webp">
+                        <input type="file" name="image" class="form-control" accept="image/jpeg,image/jpg,image/png,image/webp,image/avif">
                         @include('admin.website.partials.image-preview', ['record' => $service, 'fieldId' => 'service'])
                     </div>
                     <div class="col-12">
                         <label class="form-label">Short Description</label>
-                        <textarea name="description" rows="2" class="form-control">{{ old('description', $service->description ?? '') }}</textarea>
+                        <textarea name="description" rows="3" class="form-control">{{ old('description', $service->description ?? '') }}</textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">What's Included</label>
+                        <textarea name="features" rows="4" class="form-control" placeholder="One item per line">{{ old('features', isset($service) && is_array($service->features) ? implode("\n", $service->features) : ($service->features ?? '')) }}</textarea>
+                        <small class="text-muted">One feature per line — shown as orange arrows under the description.</small>
                     </div>
                     <div class="col-12">
                         <label class="form-label">Full Content (HTML)</label>

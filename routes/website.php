@@ -19,6 +19,7 @@ Route::name('website.')->group(function () {
     Route::get('/our-products', [ProductController::class, 'index'])->name('products');
     Route::get('/our-products/{slug}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/careers', [CareerController::class, 'index'])->name('careers');
+    Route::post('/careers/apply', [CareerController::class, 'apply'])->name('careers.apply');
     Route::get('/blogs', [BlogController::class, 'index'])->name('blogs');
     Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
     Route::get('/contact', [ContactController::class, 'index'])->name('contact');

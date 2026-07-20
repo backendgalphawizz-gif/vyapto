@@ -77,13 +77,23 @@ class WebsiteServiceController extends Controller
 
     private function validateService(Request $request): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'category' => 'nullable|string|max:120',
+            'subtitle' => 'nullable|string|max:180',
             'description' => 'nullable|string',
             'content' => 'nullable|string',
+            'features' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:5120',
             'sort_order' => 'nullable|integer|min:0',
         ]);
+
+        if (array_key_exists('features', $validated)) {
+            $lines = preg_split('/\r\n|\r|\n/', (string) $validated['features']) ?: [];
+            $validated['features'] = array_values(array_filter(array_map('trim', $lines)));
+        }
+
+        return $validated;
     }
 }

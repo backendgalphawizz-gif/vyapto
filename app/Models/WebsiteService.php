@@ -10,8 +10,11 @@ class WebsiteService extends Model
     protected $fillable = [
         'title',
         'slug',
+        'category',
+        'subtitle',
         'description',
         'content',
+        'features',
         'icon',
         'image',
         'sort_order',
@@ -20,7 +23,29 @@ class WebsiteService extends Model
 
     protected $casts = [
         'status' => 'boolean',
+        'features' => 'array',
     ];
+
+    /**
+     * Normalize features from JSON array or newline / comma-separated text.
+     */
+    public function featureList(): array
+    {
+        $features = $this->features;
+
+        if (is_string($features)) {
+            $features = preg_split('/\r\n|\r|\n/', $features) ?: [];
+        }
+
+        if (! is_array($features)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(
+            static fn ($item) => trim((string) $item),
+            $features
+        )));
+    }
 
     protected static function booted(): void
     {
