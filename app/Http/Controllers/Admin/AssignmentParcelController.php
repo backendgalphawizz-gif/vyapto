@@ -123,8 +123,21 @@ class AssignmentParcelController extends Controller
     public function store(Request $request)
     {
         $vehicleVendorColumn = $this->getVehicleVendorColumn();
+        $staffUser = User::find($request->input('user_id'));
+        $isStaffEmployee = $staffUser && StaffRoles::isStaffEmployeeRoleId($staffUser->role_id);
+        $isDriver = $staffUser && StaffRoles::isDriverRoleId($staffUser->role_id);
 
-        $validated = $request->validate([
+        // Staff Employee + Office: simple assign (no parcels / date / status UI)
+        if ($isStaffEmployee) {
+            $request->merge([
+                'parcel_quantity' => 0,
+                'parcel_ids' => [],
+                'assignment_date' => $request->input('assignment_date') ?: now()->toDateString(),
+                'status' => AssignmentParcel::STATUS_ASSIGNED,
+            ]);
+        }
+
+        $rules = [
             'vendor_id' => 'required|exists:vendors,id',
             'vehicle_id' => [
                 'required',
@@ -147,9 +160,7 @@ class AssignmentParcelController extends Controller
             'hub_id' => [
                 'nullable',
                 'exists:hubs,id',
-                function ($attribute, $value, $fail) use ($request) {
-                    $user = User::find($request->user_id);
-                    $isDriver = $user && StaffRoles::isDriverRoleId($user->role_id);
+                function ($attribute, $value, $fail) use ($isDriver) {
                     if ($isDriver && empty($value)) {
                         $fail('Hub is required for driver staff.');
                     }
@@ -158,16 +169,23 @@ class AssignmentParcelController extends Controller
             'office_id' => [
                 'nullable',
                 'exists:offices,id',
-                function ($attribute, $value, $fail) use ($request) {
-                    $user = User::find($request->user_id);
-                    $isStaff = $user && StaffRoles::isStaffEmployeeRoleId($user->role_id);
-                    if ($isStaff && empty($value)) {
+                function ($attribute, $value, $fail) use ($isStaffEmployee) {
+                    if ($isStaffEmployee && empty($value)) {
                         $fail('Office is required for staff employees.');
                     }
                 },
             ],
-            'parcel_quantity' => 'required|integer|min:1',
-            'parcel_ids' => [
+            'notes' => 'nullable|string|max:1000',
+        ];
+
+        if ($isStaffEmployee) {
+            $rules['parcel_quantity'] = 'nullable|integer|min:0';
+            $rules['parcel_ids'] = 'nullable|array';
+            $rules['assignment_date'] = 'nullable|date';
+            $rules['status'] = 'nullable|in:pending,assigned,in_transit,delivered,cancelled';
+        } else {
+            $rules['parcel_quantity'] = 'required|integer|min:1';
+            $rules['parcel_ids'] = [
                 'required',
                 'array',
                 'size:' . ($request->input('parcel_quantity') ?? 0),
@@ -175,34 +193,32 @@ class AssignmentParcelController extends Controller
                     if (!is_array($value)) {
                         return;
                     }
-                    
-                    // Check for empty values
+
                     foreach ($value as $id) {
                         if (empty(trim($id))) {
                             $fail('All parcel IDs are required.');
                             return;
                         }
                     }
-                    
-                    // Check for duplicates within this request
+
                     $unique = array_unique($value);
                     if (count($unique) !== count($value)) {
                         $fail('Parcel IDs must be unique. Please ensure no duplicate IDs.');
                         return;
                     }
-                    
-                    // Check if any parcel ID already exists in database
+
                     $existingIds = ParcelDetail::whereIn('parcel_id', $value)->pluck('parcel_id')->toArray();
                     if (!empty($existingIds)) {
                         $fail('The following parcel IDs already exist: ' . implode(', ', $existingIds));
                     }
                 },
-            ],
-            'parcel_ids.*' => 'required|string|min:1|max:100',
-            'assignment_date' => 'required|date|after_or_equal:today',
-            'status' => 'nullable|in:pending,assigned,in_transit,delivered,cancelled',
-            'notes' => 'nullable|string|max:1000',
-        ], [
+            ];
+            $rules['parcel_ids.*'] = 'required|string|min:1|max:100';
+            $rules['assignment_date'] = 'required|date|after_or_equal:today';
+            $rules['status'] = 'nullable|in:pending,assigned,in_transit,delivered,cancelled';
+        }
+
+        $validated = $request->validate($rules, [
             'vendor_id.required' => 'Vendor field is required.',
             'vehicle_id.required' => 'Vehicle field is required.',
             'user_id.required' => 'Staff field is required.',
@@ -220,20 +236,25 @@ class AssignmentParcelController extends Controller
         try {
             DB::beginTransaction();
 
-            $staffUser = User::find($validated['user_id']);
-            if ($staffUser && StaffRoles::isDriverRoleId($staffUser->role_id)) {
+            if ($isDriver) {
                 $validated['office_id'] = null;
-            } elseif ($staffUser && StaffRoles::isStaffEmployeeRoleId($staffUser->role_id)) {
+            } elseif ($isStaffEmployee) {
                 $validated['hub_id'] = null;
+                $validated['parcel_quantity'] = 0;
+                $validated['assignment_date'] = $validated['assignment_date'] ?? now()->toDateString();
+                $validated['status'] = AssignmentParcel::STATUS_ASSIGNED;
             }
             
             $assignment = AssignmentParcel::create($validated);
-            $this->createParcelDetails(
-                $assignment,
-                (int) $validated['user_id'],
-                (int) $validated['parcel_quantity'],
-                $validated['parcel_ids'],                
-            );
+
+            if (!$isStaffEmployee && (int) ($validated['parcel_quantity'] ?? 0) > 0) {
+                $this->createParcelDetails(
+                    $assignment,
+                    (int) $validated['user_id'],
+                    (int) $validated['parcel_quantity'],
+                    $validated['parcel_ids'] ?? [],
+                );
+            }
 
             User::find($validated['user_id'])->update(['status_count' =>0]);
             $user_details = User::find($validated['user_id']);
@@ -244,12 +265,12 @@ class AssignmentParcelController extends Controller
             $fcm_ids[]=$user_details->fcm_token;
             // print_r($fcm_ids);die;
             $title = 'Shippment Assignment';
-            $msg = "Shippment Assigned to you";
+            $msg = $isStaffEmployee ? 'Office assignment created for you' : 'Shippment Assigned to you';
 
             $fcmMsg = array(
                 'title' => $title,
                 'body' => $msg,
-                'type' => 'Hub Assign',
+                'type' => $isStaffEmployee ? 'Office Assign' : 'Hub Assign',
                 'android' => array(
                     // 'channelId' => 'high_importance_channel',
                     // 'importance' => 'high',

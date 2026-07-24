@@ -96,6 +96,8 @@
                 @error('office_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
+            <div class="col-12" id="driverParcelFields">
+            <div class="row g-3">
             <div class="col-md-6">
                 <label for="parcel_quantity" class="form-label fw-semibold">Parcel Quantity <span class="text-danger">*</span></label>
                 <input
@@ -147,10 +149,12 @@
                 </select>
                 @error('status')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
+            </div>
+            </div>
 
             <div class="col-12 d-flex gap-2 justify-content-end mt-2">
                 <a href="{{ route('admin.assignment-parcel.index') }}" class="btn btn-light border">Cancel</a>
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i> Create Assignment</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i> <span id="assignSubmitLabel">Create Assignment</span></button>
             </div>
         </form>
         </div>
@@ -361,6 +365,12 @@
             var roleType = opt ? (opt.getAttribute('data-role-type') || '') : '';
             var preferredHub = opt ? (opt.getAttribute('data-hub-id') || '') : '';
             var preferredOffice = opt ? (opt.getAttribute('data-office-id') || '') : '';
+            var driverFields = document.getElementById('driverParcelFields');
+            var parcelQty = document.getElementById('parcel_quantity');
+            var assignDate = document.getElementById('assignment_date');
+            var statusSelect = document.getElementById('status');
+            var submitLabel = document.getElementById('assignSubmitLabel');
+            var parcelIdsContainer = document.getElementById('parcelIdsContainer');
 
             if (roleType === 'staff') {
                 hubWrap.classList.add('d-none');
@@ -371,6 +381,12 @@
                 if (preferredOffice && !officeSelect.value) {
                     officeSelect.value = preferredOffice;
                 }
+                if (driverFields) driverFields.classList.add('d-none');
+                if (parcelQty) { parcelQty.removeAttribute('required'); parcelQty.value = ''; }
+                if (assignDate) assignDate.removeAttribute('required');
+                if (statusSelect) statusSelect.removeAttribute('required');
+                if (parcelIdsContainer) parcelIdsContainer.style.display = 'none';
+                if (submitLabel) submitLabel.textContent = 'Assign';
             } else if (roleType === 'driver') {
                 officeWrap.classList.add('d-none');
                 hubWrap.classList.remove('d-none');
@@ -380,12 +396,20 @@
                 if (preferredHub && !hubSelect.value) {
                     hubSelect.value = preferredHub;
                 }
+                if (driverFields) driverFields.classList.remove('d-none');
+                if (parcelQty) parcelQty.setAttribute('required', 'required');
+                if (assignDate) assignDate.setAttribute('required', 'required');
+                if (statusSelect) statusSelect.setAttribute('required', 'required');
+                if (submitLabel) submitLabel.textContent = 'Create Assignment';
+                if (typeof onParcelQuantityInput === 'function') onParcelQuantityInput();
             } else {
                 hubWrap.classList.remove('d-none');
                 officeWrap.classList.add('d-none');
                 hubSelect.removeAttribute('required');
                 officeSelect.removeAttribute('required');
                 officeSelect.value = '';
+                if (driverFields) driverFields.classList.remove('d-none');
+                if (submitLabel) submitLabel.textContent = 'Create Assignment';
             }
         }
 
