@@ -202,9 +202,18 @@
     <a href="{{ route('admin.hubs.index') }}"
        class="menu-item nav-link {{ request()->routeIs('admin.hubs.*') ? 'active' : '' }}"
        data-tooltip="Hubs">
-       
+
         <i class="bi bi-shop me-2"></i>
         <span>Hubs</span>
+    </a>
+</li>
+      <li class="nav-item mb-1">
+    <a href="{{ route('admin.offices.index') }}"
+       class="menu-item nav-link {{ request()->routeIs('admin.offices.*') ? 'active' : '' }}"
+       data-tooltip="Offices">
+
+        <i class="bi bi-building me-2"></i>
+        <span>Offices</span>
     </a>
 </li>
       <li class="nav-item mb-1">

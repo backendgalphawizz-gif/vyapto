@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\Admin\SalarySlipController;
 use App\Http\Controllers\Admin\HubController as AdminHubController;
+use App\Http\Controllers\Admin\OfficeController as AdminOfficeController;
 use App\Http\Controllers\Admin\AssignmentParcelController;
 use App\Http\Controllers\Admin\VehicleUsageController;
 use App\Http\Controllers\Admin\FaqController as AdminFaqController;
@@ -210,6 +211,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('hubs', AdminHubController::class);
     Route::get('hubs-map', [AdminHubController::class, 'map'])->name('hubs.map');
     Route::get('hubs-export', [AdminHubController::class, 'export'])->name('hubs.export');
+
+    Route::resource('offices', AdminOfficeController::class);
+    Route::get('offices-map', [AdminOfficeController::class, 'map'])->name('offices.map');
+    Route::get('offices-export', [AdminOfficeController::class, 'export'])->name('offices.export');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
