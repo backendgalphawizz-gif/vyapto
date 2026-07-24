@@ -174,7 +174,7 @@ class UserController extends Controller
             'address'    => 'required|string|max:500',
             'role_id'    => 'required|exists:roles,id',
             'department_id' => ['nullable', 'exists:departments,id', function ($attribute, $value, $fail) use ($request) {
-                // Drivers use hub; staff employees use office — department only for other roles
+                // Drivers / staff employees skip department (location is set on Assignments)
                 if ($this->isDriverRole($request->role_id) || $this->isStaffEmployeeRole($request->role_id)) {
                     return;
                 }
@@ -185,16 +185,6 @@ class UserController extends Controller
             'job_type'   => ['nullable', 'string', 'in:Full Time,Half Time', function ($attribute, $value, $fail) use ($request) {
                 if ($this->isStaffEmployeeRole($request->role_id) && empty($value)) {
                     $fail('The job type field is required for staff employees.');
-                }
-            }],
-            'office_id' => ['nullable', 'exists:offices,id', function ($attribute, $value, $fail) use ($request) {
-                if ($this->isStaffEmployeeRole($request->role_id) && empty($value) && Office::query()->exists()) {
-                    $fail('The office field is required for staff employees.');
-                }
-            }],
-            'hub_id' => ['nullable', 'exists:hubs,id', function ($attribute, $value, $fail) use ($request) {
-                if ($this->isDriverRole($request->role_id) && empty($value) && Hub::query()->exists()) {
-                    $fail('The hub field is required for drivers.');
                 }
             }],
             'date_of_birth' => 'required|date|before:today',
@@ -272,8 +262,8 @@ class UserController extends Controller
         $isStaff = $this->isStaffEmployeeRole($request->role_id);
         $isDriver = $this->isDriverRole($request->role_id);
         $user->department_id = ($isStaff || $isDriver) ? null : $request->department_id;
-        $user->office_id = $isStaff ? $request->office_id : null;
-        $user->hub_id = $isDriver ? $request->hub_id : null;
+        $user->office_id = null; // Hub/Office assigned on Assignments only
+        $user->hub_id = null;
         $user->job_type = $isStaff ? $request->job_type : null;
         $user->profile_image = $profileImage;
 
@@ -349,16 +339,6 @@ class UserController extends Controller
             'job_type' => ['nullable', 'string', 'in:Full Time,Half Time', function ($attribute, $value, $fail) use ($request) {
                 if ($this->isStaffEmployeeRole($request->role_id) && empty($value)) {
                     $fail('The job type field is required for staff employees.');
-                }
-            }],
-            'office_id' => ['nullable', 'exists:offices,id', function ($attribute, $value, $fail) use ($request) {
-                if ($this->isStaffEmployeeRole($request->role_id) && empty($value) && Office::query()->exists()) {
-                    $fail('The office field is required for staff employees.');
-                }
-            }],
-            'hub_id' => ['nullable', 'exists:hubs,id', function ($attribute, $value, $fail) use ($request) {
-                if ($this->isDriverRole($request->role_id) && empty($value) && Hub::query()->exists()) {
-                    $fail('The hub field is required for drivers.');
                 }
             }],
             'date_of_birth' => 'required|date|before:today',
@@ -453,8 +433,8 @@ class UserController extends Controller
         $isStaff = $this->isStaffEmployeeRole($request->role_id);
         $isDriver = $this->isDriverRole($request->role_id);
         $employee->department_id = ($isStaff || $isDriver) ? null : $request->department_id;
-        $employee->office_id = $isStaff ? $request->office_id : null;
-        $employee->hub_id = $isDriver ? $request->hub_id : null;
+        $employee->office_id = null; // Hub/Office assigned on Assignments only
+        $employee->hub_id = null;
         $employee->job_type = $isStaff ? $request->job_type : null;
         $employee->date_of_birth = $request->date_of_birth;
         $employee->gender = $request->gender;

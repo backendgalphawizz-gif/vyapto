@@ -115,7 +115,6 @@
                     pattern="[1-9][0-9]{0,2}"
                     title="Enter 1–999 (max 3 digits)"
                     autocomplete="off"
-                    required
                     data-parcel-qty-ajax-url="{{ $parcelQuantityAjaxUrl ?? '' }}"
                 >
                 <div class="form-text">Maximum 3 digits (1–999).</div>
@@ -140,13 +139,13 @@
             </div>
             <div class="col-md-6">
                 <label for="assignment_date" class="form-label fw-semibold">Assignment Date <span class="text-danger">*</span></label>
-                <input type="date" name="assignment_date" id="assignment_date" class="form-control @error('assignment_date') is-invalid @enderror" value="{{ old('assignment_date', date('Y-m-d')) }}" min="{{ date('Y-m-d') }}" required>
+                <input type="date" name="assignment_date" id="assignment_date" class="form-control @error('assignment_date') is-invalid @enderror" value="{{ old('assignment_date', date('Y-m-d')) }}" min="{{ date('Y-m-d') }}">
                 @error('assignment_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
             <div class="col-md-6">
                 <label for="status" class="form-label fw-semibold">Status <span class="text-danger">*</span></label>
-                <select name="status" id="status" class="form-select @error('status') is-invalid @enderror" required>
+                <select name="status" id="status" class="form-select @error('status') is-invalid @enderror">
                     @foreach($statuses as $key => $value)
                         <option value="{{ $key }}" {{ old('status', 'pending') == $key ? 'selected' : '' }}>{{ $value }}</option>
                     @endforeach
@@ -354,14 +353,22 @@
 
         filterVehiclesByVendor();
 
-        onParcelQuantityInput();
-
         // Driver → Hub, Staff Employee → Office
         var staffSelect = document.getElementById('user_id');
         var hubWrap = document.getElementById('hubFieldWrap');
         var officeWrap = document.getElementById('officeFieldWrap');
         var hubSelect = document.getElementById('hub_id');
         var officeSelect = document.getElementById('office_id');
+
+        function setDriverOnlyEnabled(enabled) {
+            var nodes = document.querySelectorAll('#driverLogisticsFields select, #driverLogisticsFields input, #driverParcelFields select, #driverParcelFields input, #parcelIdInputs input');
+            nodes.forEach(function(el) {
+                el.disabled = !enabled;
+                if (!enabled) {
+                    el.removeAttribute('required');
+                }
+            });
+        }
 
         function toggleLocationByStaff() {
             if (!staffSelect || !hubWrap || !officeWrap || !hubSelect || !officeSelect) return;
@@ -375,7 +382,7 @@
             var assignDate = document.getElementById('assignment_date');
             var statusSelect = document.getElementById('status');
             var submitLabel = document.getElementById('assignSubmitLabel');
-            var parcelIdsContainer = document.getElementById('parcelIdsContainer');
+            var parcelIdsBox = document.getElementById('parcelIdsContainer');
             var vendorSelectEl = document.getElementById('vendor_id');
             var vehicleSelectEl = document.getElementById('vehicle_id');
 
@@ -390,12 +397,15 @@
                 }
                 if (logisticsFields) logisticsFields.classList.add('d-none');
                 if (driverFields) driverFields.classList.add('d-none');
-                if (vendorSelectEl) { vendorSelectEl.removeAttribute('required'); vendorSelectEl.value = ''; }
-                if (vehicleSelectEl) { vehicleSelectEl.removeAttribute('required'); vehicleSelectEl.value = ''; }
-                if (parcelQty) { parcelQty.removeAttribute('required'); parcelQty.value = ''; }
-                if (assignDate) assignDate.removeAttribute('required');
-                if (statusSelect) statusSelect.removeAttribute('required');
-                if (parcelIdsContainer) parcelIdsContainer.style.display = 'none';
+                if (vendorSelectEl) vendorSelectEl.value = '';
+                if (vehicleSelectEl) vehicleSelectEl.value = '';
+                if (parcelQty) {
+                    parcelQty.value = '';
+                    parcelQty.removeAttribute('pattern');
+                }
+                if (parcelIdInputs) parcelIdInputs.innerHTML = '';
+                if (parcelIdsBox) parcelIdsBox.style.display = 'none';
+                setDriverOnlyEnabled(false);
                 if (submitLabel) submitLabel.textContent = 'Assign';
             } else if (roleType === 'driver') {
                 officeWrap.classList.add('d-none');
@@ -408,9 +418,13 @@
                 }
                 if (logisticsFields) logisticsFields.classList.remove('d-none');
                 if (driverFields) driverFields.classList.remove('d-none');
+                setDriverOnlyEnabled(true);
                 if (vendorSelectEl) vendorSelectEl.setAttribute('required', 'required');
                 if (vehicleSelectEl) vehicleSelectEl.setAttribute('required', 'required');
-                if (parcelQty) parcelQty.setAttribute('required', 'required');
+                if (parcelQty) {
+                    parcelQty.setAttribute('required', 'required');
+                    parcelQty.setAttribute('pattern', '[1-9][0-9]{0,2}');
+                }
                 if (assignDate) assignDate.setAttribute('required', 'required');
                 if (statusSelect) statusSelect.setAttribute('required', 'required');
                 if (submitLabel) submitLabel.textContent = 'Create Assignment';
@@ -423,6 +437,7 @@
                 officeSelect.value = '';
                 if (logisticsFields) logisticsFields.classList.remove('d-none');
                 if (driverFields) driverFields.classList.remove('d-none');
+                setDriverOnlyEnabled(true);
                 if (submitLabel) submitLabel.textContent = 'Create Assignment';
             }
         }
@@ -430,6 +445,12 @@
         if (staffSelect) {
             staffSelect.addEventListener('change', toggleLocationByStaff);
             toggleLocationByStaff();
+        }
+
+        // Restore parcel ID UI only for driver flow (staff must not keep hidden required inputs)
+        if (!(staffSelect && staffSelect.options[staffSelect.selectedIndex]
+            && staffSelect.options[staffSelect.selectedIndex].getAttribute('data-role-type') === 'staff')) {
+            onParcelQuantityInput();
         }
     });
 </script>

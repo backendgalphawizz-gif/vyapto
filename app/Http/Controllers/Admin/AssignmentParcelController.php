@@ -252,7 +252,10 @@ class AssignmentParcelController extends Controller
                 $validated['assignment_date'] = $validated['assignment_date'] ?? now()->toDateString();
                 $validated['status'] = AssignmentParcel::STATUS_ASSIGNED;
             }
-            
+
+            // Never mass-assign parcel_ids (not a DB column on assignment_parcel)
+            unset($validated['parcel_ids']);
+
             $assignment = AssignmentParcel::create($validated);
 
             if (!$isStaffEmployee && (int) ($validated['parcel_quantity'] ?? 0) > 0) {
@@ -310,15 +313,23 @@ class AssignmentParcelController extends Controller
                     continue;
                 }
 
-                $this->fcmNotificationService->sendNotification(
-                    $token,
-                    $title,
-                    $msg,
-                    [
-                        'user_id' => (string)$validated['user_id'],
-                        'type' => 'Hub Assign'
-                    ],$fcmMsg['android'] ?? []
-                );
+                try {
+                    $this->fcmNotificationService->sendNotification(
+                        $token,
+                        $title,
+                        $msg,
+                        [
+                            'user_id' => (string) $validated['user_id'],
+                            'type' => $isStaffEmployee ? 'Office Assign' : 'Hub Assign',
+                        ],
+                        $fcmMsg['android'] ?? []
+                    );
+                } catch (\Throwable $notifyError) {
+                    Log::warning('Assignment FCM failed', [
+                        'user_id' => $validated['user_id'],
+                        'error' => $notifyError->getMessage(),
+                    ]);
+                }
             }
 
             DB::commit();
