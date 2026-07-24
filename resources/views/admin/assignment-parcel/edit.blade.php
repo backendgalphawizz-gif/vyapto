@@ -73,6 +73,24 @@
                     @error('office_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
+                <div class="col-12 d-none" id="officeDateFields">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="from_date" class="form-label fw-semibold">From Date <span class="text-danger">*</span></label>
+                            <input type="date" name="from_date" id="from_date" class="form-control @error('from_date') is-invalid @enderror"
+                                value="{{ old('from_date', optional($assignmentParcel->from_date)->format('Y-m-d') ?? optional($assignmentParcel->assignment_date)->format('Y-m-d')) }}">
+                            @error('from_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="to_date" class="form-label fw-semibold">To Date <span class="text-danger">*</span></label>
+                            <input type="date" name="to_date" id="to_date" class="form-control @error('to_date') is-invalid @enderror"
+                                value="{{ old('to_date', optional($assignmentParcel->to_date)->format('Y-m-d')) }}">
+                            <div class="form-text">Staff stays assigned to this office until this date.</div>
+                            @error('to_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                </div>
+
                 <div class="col-12" id="driverLogisticsFields">
                 <div class="row g-3">
                 <div class="col-md-6">
@@ -171,6 +189,9 @@
             var submitLabel = document.getElementById('assignSubmitLabel');
             var vendorSelectEl = document.getElementById('vendor_id');
             var vehicleSelectEl = document.getElementById('vehicle_id');
+            var officeDateFields = document.getElementById('officeDateFields');
+            var fromDateEl = document.getElementById('from_date');
+            var toDateEl = document.getElementById('to_date');
 
             function setDriverOnlyEnabled(enabled) {
                 var nodes = document.querySelectorAll('#driverLogisticsFields select, #driverLogisticsFields input, #driverParcelFields select, #driverParcelFields input');
@@ -191,6 +212,15 @@
                 if (preferredOffice && !officeSelect.value) {
                     officeSelect.value = preferredOffice;
                 }
+                if (officeDateFields) officeDateFields.classList.remove('d-none');
+                if (fromDateEl) {
+                    fromDateEl.disabled = false;
+                    fromDateEl.setAttribute('required', 'required');
+                }
+                if (toDateEl) {
+                    toDateEl.disabled = false;
+                    toDateEl.setAttribute('required', 'required');
+                }
                 if (logisticsFields) logisticsFields.classList.add('d-none');
                 if (driverFields) driverFields.classList.add('d-none');
                 if (vendorSelectEl) vendorSelectEl.value = '';
@@ -205,6 +235,15 @@
                 hubSelect.setAttribute('required', 'required');
                 if (preferredHub && !hubSelect.value) {
                     hubSelect.value = preferredHub;
+                }
+                if (officeDateFields) officeDateFields.classList.add('d-none');
+                if (fromDateEl) {
+                    fromDateEl.removeAttribute('required');
+                    fromDateEl.disabled = true;
+                }
+                if (toDateEl) {
+                    toDateEl.removeAttribute('required');
+                    toDateEl.disabled = true;
                 }
                 if (logisticsFields) logisticsFields.classList.remove('d-none');
                 if (driverFields) driverFields.classList.remove('d-none');
@@ -221,6 +260,9 @@
                 hubSelect.removeAttribute('required');
                 officeSelect.removeAttribute('required');
                 officeSelect.value = '';
+                if (officeDateFields) officeDateFields.classList.add('d-none');
+                if (fromDateEl) { fromDateEl.removeAttribute('required'); fromDateEl.disabled = true; }
+                if (toDateEl) { toDateEl.removeAttribute('required'); toDateEl.disabled = true; }
                 if (logisticsFields) logisticsFields.classList.remove('d-none');
                 if (driverFields) driverFields.classList.remove('d-none');
                 setDriverOnlyEnabled(true);

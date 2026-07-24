@@ -20,12 +20,16 @@ class AssignmentParcel extends Model
         'office_id',
         'parcel_quantity',
         'assignment_date',
+        'from_date',
+        'to_date',
         'status',
         'notes'
     ];
 
     protected $casts = [
         'assignment_date' => 'date',
+        'from_date' => 'date',
+        'to_date' => 'date',
         'parcel_quantity' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

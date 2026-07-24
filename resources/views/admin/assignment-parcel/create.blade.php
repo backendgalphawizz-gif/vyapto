@@ -14,6 +14,16 @@
         <div class="card-body p-4">
         <form action="{{ route('admin.assignment-parcel.store') }}" method="POST" class="row g-3">
             @csrf
+            @if(session('error'))
+                <div class="col-12">
+                    <div class="alert alert-danger mb-0">{{ session('error') }}</div>
+                </div>
+            @endif
+            @if(session('success'))
+                <div class="col-12">
+                    <div class="alert alert-success mb-0">{{ session('success') }}</div>
+                </div>
+            @endif
             @if($errors->any())
                 <div class="col-12">
                     <div class="alert alert-danger">
@@ -67,6 +77,22 @@
                 </select>
                 <div class="form-text">Staff Employees are assigned to an Office location.</div>
                 @error('office_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+
+            <div class="col-12 d-none" id="officeDateFields">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="from_date" class="form-label fw-semibold">From Date <span class="text-danger">*</span></label>
+                        <input type="date" name="from_date" id="from_date" class="form-control @error('from_date') is-invalid @enderror" value="{{ old('from_date', date('Y-m-d')) }}" min="{{ date('Y-m-d') }}">
+                        @error('from_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label for="to_date" class="form-label fw-semibold">To Date <span class="text-danger">*</span></label>
+                        <input type="date" name="to_date" id="to_date" class="form-control @error('to_date') is-invalid @enderror" value="{{ old('to_date') }}" min="{{ date('Y-m-d') }}">
+                        <div class="form-text">Staff stays assigned to this office until this date.</div>
+                        @error('to_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                </div>
             </div>
 
             <div class="col-12" id="driverLogisticsFields">
@@ -177,6 +203,137 @@
         var parcelQtyAjaxTimer = null;
         var oldParcelIds = @json(old('parcel_ids', []));
         var canFilterByVendor = @json((bool) $vehicleVendorColumn);
+
+        // Role toggle must always run (even if vehicle UI elements are missing)
+        var staffSelect = document.getElementById('user_id');
+        var hubWrap = document.getElementById('hubFieldWrap');
+        var officeWrap = document.getElementById('officeFieldWrap');
+        var hubSelect = document.getElementById('hub_id');
+        var officeSelect = document.getElementById('office_id');
+
+        function setDriverOnlyEnabled(enabled) {
+            var nodes = document.querySelectorAll('#driverLogisticsFields select, #driverLogisticsFields input, #driverParcelFields select, #driverParcelFields input, #parcelIdInputs input');
+            nodes.forEach(function(el) {
+                el.disabled = !enabled;
+                if (!enabled) {
+                    el.removeAttribute('required');
+                }
+            });
+        }
+
+        function toggleLocationByStaff() {
+            if (!staffSelect || !hubWrap || !officeWrap || !hubSelect || !officeSelect) return;
+            var opt = staffSelect.options[staffSelect.selectedIndex];
+            var roleType = opt ? (opt.getAttribute('data-role-type') || '') : '';
+            var preferredHub = opt ? (opt.getAttribute('data-hub-id') || '') : '';
+            var preferredOffice = opt ? (opt.getAttribute('data-office-id') || '') : '';
+            var driverFields = document.getElementById('driverParcelFields');
+            var logisticsFields = document.getElementById('driverLogisticsFields');
+            var parcelQty = document.getElementById('parcel_quantity');
+            var assignDate = document.getElementById('assignment_date');
+            var statusSelect = document.getElementById('status');
+            var submitLabel = document.getElementById('assignSubmitLabel');
+            var parcelIdsBox = document.getElementById('parcelIdsContainer');
+            var vendorSelectEl = document.getElementById('vendor_id');
+            var vehicleSelectEl = document.getElementById('vehicle_id');
+            var officeDateFields = document.getElementById('officeDateFields');
+            var fromDateEl = document.getElementById('from_date');
+            var toDateEl = document.getElementById('to_date');
+
+            if (roleType === 'staff') {
+                hubWrap.classList.add('d-none');
+                officeWrap.classList.remove('d-none');
+                hubSelect.removeAttribute('required');
+                hubSelect.value = '';
+                officeSelect.setAttribute('required', 'required');
+                if (preferredOffice && !officeSelect.value) {
+                    officeSelect.value = preferredOffice;
+                }
+                if (officeDateFields) officeDateFields.classList.remove('d-none');
+                if (fromDateEl) {
+                    fromDateEl.disabled = false;
+                    fromDateEl.setAttribute('required', 'required');
+                    if (!fromDateEl.value) fromDateEl.value = new Date().toISOString().slice(0, 10);
+                }
+                if (toDateEl) {
+                    toDateEl.disabled = false;
+                    toDateEl.setAttribute('required', 'required');
+                }
+                if (logisticsFields) logisticsFields.classList.add('d-none');
+                if (driverFields) driverFields.classList.add('d-none');
+                if (vendorSelectEl) vendorSelectEl.value = '';
+                if (vehicleSelectEl) vehicleSelectEl.value = '';
+                if (parcelQty) {
+                    parcelQty.value = '';
+                    parcelQty.removeAttribute('pattern');
+                }
+                if (parcelIdInputs) parcelIdInputs.innerHTML = '';
+                if (parcelIdsBox) parcelIdsBox.style.display = 'none';
+                setDriverOnlyEnabled(false);
+                if (submitLabel) submitLabel.textContent = 'Assign';
+            } else if (roleType === 'driver') {
+                officeWrap.classList.add('d-none');
+                hubWrap.classList.remove('d-none');
+                officeSelect.removeAttribute('required');
+                officeSelect.value = '';
+                hubSelect.setAttribute('required', 'required');
+                if (preferredHub && !hubSelect.value) {
+                    hubSelect.value = preferredHub;
+                }
+                if (officeDateFields) officeDateFields.classList.add('d-none');
+                if (fromDateEl) {
+                    fromDateEl.removeAttribute('required');
+                    fromDateEl.value = '';
+                    fromDateEl.disabled = true;
+                }
+                if (toDateEl) {
+                    toDateEl.removeAttribute('required');
+                    toDateEl.value = '';
+                    toDateEl.disabled = true;
+                }
+                if (logisticsFields) logisticsFields.classList.remove('d-none');
+                if (driverFields) driverFields.classList.remove('d-none');
+                setDriverOnlyEnabled(true);
+                if (vendorSelectEl) vendorSelectEl.setAttribute('required', 'required');
+                if (vehicleSelectEl) vehicleSelectEl.setAttribute('required', 'required');
+                if (parcelQty) {
+                    parcelQty.setAttribute('required', 'required');
+                    parcelQty.setAttribute('pattern', '[1-9][0-9]{0,2}');
+                }
+                if (assignDate) assignDate.setAttribute('required', 'required');
+                if (statusSelect) statusSelect.setAttribute('required', 'required');
+                if (submitLabel) submitLabel.textContent = 'Create Assignment';
+                if (typeof onParcelQuantityInput === 'function') onParcelQuantityInput();
+            } else {
+                hubWrap.classList.remove('d-none');
+                officeWrap.classList.add('d-none');
+                hubSelect.removeAttribute('required');
+                officeSelect.removeAttribute('required');
+                officeSelect.value = '';
+                if (officeDateFields) officeDateFields.classList.add('d-none');
+                if (fromDateEl) { fromDateEl.removeAttribute('required'); fromDateEl.disabled = true; }
+                if (toDateEl) { toDateEl.removeAttribute('required'); toDateEl.disabled = true; }
+                if (logisticsFields) logisticsFields.classList.remove('d-none');
+                if (driverFields) driverFields.classList.remove('d-none');
+                setDriverOnlyEnabled(true);
+                if (submitLabel) submitLabel.textContent = 'Create Assignment';
+            }
+        }
+
+        if (staffSelect) {
+            staffSelect.addEventListener('change', toggleLocationByStaff);
+            toggleLocationByStaff();
+            var fromDateInput = document.getElementById('from_date');
+            var toDateInput = document.getElementById('to_date');
+            if (fromDateInput && toDateInput) {
+                fromDateInput.addEventListener('change', function() {
+                    toDateInput.min = fromDateInput.value || '';
+                    if (toDateInput.value && fromDateInput.value && toDateInput.value < fromDateInput.value) {
+                        toDateInput.value = fromDateInput.value;
+                    }
+                });
+            }
+        }
 
         if (!vendorSelect || !vehicleSelect || !parcelQuantityInput || !parcelIdsContainer || !parcelIdInputs) {
             return;
@@ -353,101 +510,7 @@
 
         filterVehiclesByVendor();
 
-        // Driver → Hub, Staff Employee → Office
-        var staffSelect = document.getElementById('user_id');
-        var hubWrap = document.getElementById('hubFieldWrap');
-        var officeWrap = document.getElementById('officeFieldWrap');
-        var hubSelect = document.getElementById('hub_id');
-        var officeSelect = document.getElementById('office_id');
-
-        function setDriverOnlyEnabled(enabled) {
-            var nodes = document.querySelectorAll('#driverLogisticsFields select, #driverLogisticsFields input, #driverParcelFields select, #driverParcelFields input, #parcelIdInputs input');
-            nodes.forEach(function(el) {
-                el.disabled = !enabled;
-                if (!enabled) {
-                    el.removeAttribute('required');
-                }
-            });
-        }
-
-        function toggleLocationByStaff() {
-            if (!staffSelect || !hubWrap || !officeWrap || !hubSelect || !officeSelect) return;
-            var opt = staffSelect.options[staffSelect.selectedIndex];
-            var roleType = opt ? (opt.getAttribute('data-role-type') || '') : '';
-            var preferredHub = opt ? (opt.getAttribute('data-hub-id') || '') : '';
-            var preferredOffice = opt ? (opt.getAttribute('data-office-id') || '') : '';
-            var driverFields = document.getElementById('driverParcelFields');
-            var logisticsFields = document.getElementById('driverLogisticsFields');
-            var parcelQty = document.getElementById('parcel_quantity');
-            var assignDate = document.getElementById('assignment_date');
-            var statusSelect = document.getElementById('status');
-            var submitLabel = document.getElementById('assignSubmitLabel');
-            var parcelIdsBox = document.getElementById('parcelIdsContainer');
-            var vendorSelectEl = document.getElementById('vendor_id');
-            var vehicleSelectEl = document.getElementById('vehicle_id');
-
-            if (roleType === 'staff') {
-                hubWrap.classList.add('d-none');
-                officeWrap.classList.remove('d-none');
-                hubSelect.removeAttribute('required');
-                hubSelect.value = '';
-                officeSelect.setAttribute('required', 'required');
-                if (preferredOffice && !officeSelect.value) {
-                    officeSelect.value = preferredOffice;
-                }
-                if (logisticsFields) logisticsFields.classList.add('d-none');
-                if (driverFields) driverFields.classList.add('d-none');
-                if (vendorSelectEl) vendorSelectEl.value = '';
-                if (vehicleSelectEl) vehicleSelectEl.value = '';
-                if (parcelQty) {
-                    parcelQty.value = '';
-                    parcelQty.removeAttribute('pattern');
-                }
-                if (parcelIdInputs) parcelIdInputs.innerHTML = '';
-                if (parcelIdsBox) parcelIdsBox.style.display = 'none';
-                setDriverOnlyEnabled(false);
-                if (submitLabel) submitLabel.textContent = 'Assign';
-            } else if (roleType === 'driver') {
-                officeWrap.classList.add('d-none');
-                hubWrap.classList.remove('d-none');
-                officeSelect.removeAttribute('required');
-                officeSelect.value = '';
-                hubSelect.setAttribute('required', 'required');
-                if (preferredHub && !hubSelect.value) {
-                    hubSelect.value = preferredHub;
-                }
-                if (logisticsFields) logisticsFields.classList.remove('d-none');
-                if (driverFields) driverFields.classList.remove('d-none');
-                setDriverOnlyEnabled(true);
-                if (vendorSelectEl) vendorSelectEl.setAttribute('required', 'required');
-                if (vehicleSelectEl) vehicleSelectEl.setAttribute('required', 'required');
-                if (parcelQty) {
-                    parcelQty.setAttribute('required', 'required');
-                    parcelQty.setAttribute('pattern', '[1-9][0-9]{0,2}');
-                }
-                if (assignDate) assignDate.setAttribute('required', 'required');
-                if (statusSelect) statusSelect.setAttribute('required', 'required');
-                if (submitLabel) submitLabel.textContent = 'Create Assignment';
-                if (typeof onParcelQuantityInput === 'function') onParcelQuantityInput();
-            } else {
-                hubWrap.classList.remove('d-none');
-                officeWrap.classList.add('d-none');
-                hubSelect.removeAttribute('required');
-                officeSelect.removeAttribute('required');
-                officeSelect.value = '';
-                if (logisticsFields) logisticsFields.classList.remove('d-none');
-                if (driverFields) driverFields.classList.remove('d-none');
-                setDriverOnlyEnabled(true);
-                if (submitLabel) submitLabel.textContent = 'Create Assignment';
-            }
-        }
-
-        if (staffSelect) {
-            staffSelect.addEventListener('change', toggleLocationByStaff);
-            toggleLocationByStaff();
-        }
-
-        // Restore parcel ID UI only for driver flow (staff must not keep hidden required inputs)
+        // Restore parcel ID UI only for driver flow
         if (!(staffSelect && staffSelect.options[staffSelect.selectedIndex]
             && staffSelect.options[staffSelect.selectedIndex].getAttribute('data-role-type') === 'staff')) {
             onParcelQuantityInput();

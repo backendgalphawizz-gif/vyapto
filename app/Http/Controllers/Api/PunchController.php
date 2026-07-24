@@ -317,15 +317,39 @@ class PunchController extends Controller
         return null;
     }
 
-    private function latestAssignmentForUser(int $employeeId)
+    private function latestAssignmentForUser(int $employeeId, ?string $locationColumn = null)
     {
         $assignmentTable = $this->assignmentTableName();
         if (!$assignmentTable) {
             return null;
         }
 
+        $today = date('Y-m-d');
         $assignmentQuery = DB::table($assignmentTable)->where('user_id', $employeeId);
 
+        if ($locationColumn && Schema::hasColumn($assignmentTable, $locationColumn)) {
+            $assignmentQuery->whereNotNull($locationColumn);
+        }
+
+        // Prefer assignments active for today (from_date / to_date)
+        if (Schema::hasColumn($assignmentTable, 'from_date') || Schema::hasColumn($assignmentTable, 'to_date')) {
+            $assignmentQuery->where(function ($q) use ($today, $assignmentTable) {
+                if (Schema::hasColumn($assignmentTable, 'from_date')) {
+                    $q->where(function ($inner) use ($today) {
+                        $inner->whereNull('from_date')->orWhereDate('from_date', '<=', $today);
+                    });
+                }
+                if (Schema::hasColumn($assignmentTable, 'to_date')) {
+                    $q->where(function ($inner) use ($today) {
+                        $inner->whereNull('to_date')->orWhereDate('to_date', '>=', $today);
+                    });
+                }
+            });
+        }
+
+        if (Schema::hasColumn($assignmentTable, 'from_date')) {
+            $assignmentQuery->orderByDesc('from_date');
+        }
         if (Schema::hasColumn($assignmentTable, 'assignment_date')) {
             $assignmentQuery->orderByDesc('assignment_date');
         }
@@ -333,7 +357,24 @@ class PunchController extends Controller
             $assignmentQuery->orderByDesc('created_at');
         }
 
-        return $assignmentQuery->first();
+        $active = $assignmentQuery->first();
+        if ($active) {
+            return $active;
+        }
+
+        // Fallback: latest assignment even if date range columns are missing/expired
+        $fallback = DB::table($assignmentTable)->where('user_id', $employeeId);
+        if ($locationColumn && Schema::hasColumn($assignmentTable, $locationColumn)) {
+            $fallback->whereNotNull($locationColumn);
+        }
+        if (Schema::hasColumn($assignmentTable, 'assignment_date')) {
+            $fallback->orderByDesc('assignment_date');
+        }
+        if (Schema::hasColumn($assignmentTable, 'created_at')) {
+            $fallback->orderByDesc('created_at');
+        }
+
+        return $fallback->first();
     }
 
     private function getAssignedOfficeCoordinates($employeeId)
@@ -353,12 +394,27 @@ class PunchController extends Controller
             ];
         }
 
-        $assignment = $this->latestAssignmentForUser((int) $employeeId);
+        $assignment = $this->latestAssignmentForUser((int) $employeeId, 'office_id');
 
         if (!$assignment || empty($assignment->office_id)) {
             return [
                 'status' => false,
-                'message' => 'No office assigned to this employee. Assign them to an Office first.',
+                'message' => 'No active office assignment for today. Assign this staff to an Office with From/To dates.',
+            ];
+        }
+
+        // If dates exist, enforce active range strictly
+        $today = date('Y-m-d');
+        if (!empty($assignment->from_date) && $today < $assignment->from_date) {
+            return [
+                'status' => false,
+                'message' => 'Office assignment has not started yet (from ' . $assignment->from_date . ').',
+            ];
+        }
+        if (!empty($assignment->to_date) && $today > $assignment->to_date) {
+            return [
+                'status' => false,
+                'message' => 'Office assignment ended on ' . $assignment->to_date . '.',
             ];
         }
 
@@ -407,7 +463,7 @@ class PunchController extends Controller
             ];
         }
 
-        $assignment = $this->latestAssignmentForUser((int) $employeeId);
+        $assignment = $this->latestAssignmentForUser((int) $employeeId, 'hub_id');
 
         if (!$assignment || empty($assignment->hub_id)) {
             return [

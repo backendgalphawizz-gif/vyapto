@@ -129,12 +129,14 @@ class AssignmentParcelController extends Controller
 
         // Staff Employee + Office: simple assign (no vendor / vehicle / parcels)
         if ($isStaffEmployee) {
+            $fromDate = $request->input('from_date') ?: now()->toDateString();
             $request->merge([
                 'vendor_id' => null,
                 'vehicle_id' => null,
                 'parcel_quantity' => 0,
                 'parcel_ids' => [],
-                'assignment_date' => $request->input('assignment_date') ?: now()->toDateString(),
+                'assignment_date' => $fromDate,
+                'from_date' => $fromDate,
                 'status' => AssignmentParcel::STATUS_ASSIGNED,
             ]);
         }
@@ -188,6 +190,8 @@ class AssignmentParcelController extends Controller
             $rules['parcel_quantity'] = 'nullable|integer|min:0';
             $rules['parcel_ids'] = 'nullable|array';
             $rules['assignment_date'] = 'nullable|date';
+            $rules['from_date'] = 'required|date';
+            $rules['to_date'] = 'required|date|after_or_equal:from_date';
             $rules['status'] = 'nullable|in:pending,assigned,in_transit,delivered,cancelled';
         } else {
             $rules['parcel_quantity'] = 'required|integer|min:1';
@@ -221,6 +225,8 @@ class AssignmentParcelController extends Controller
             ];
             $rules['parcel_ids.*'] = 'required|string|min:1|max:100';
             $rules['assignment_date'] = 'required|date|after_or_equal:today';
+            $rules['from_date'] = 'nullable|date';
+            $rules['to_date'] = 'nullable|date';
             $rules['status'] = 'nullable|in:pending,assigned,in_transit,delivered,cancelled';
         }
 
@@ -230,6 +236,9 @@ class AssignmentParcelController extends Controller
             'user_id.required' => 'Staff field is required.',
             'hub_id.required' => 'Hub field is required for drivers.',
             'office_id.required' => 'Office field is required for staff employees.',
+            'from_date.required' => 'From date is required for office assignment.',
+            'to_date.required' => 'To date is required for office assignment.',
+            'to_date.after_or_equal' => 'To date must be on or after From date.',
             'parcel_quantity.required' => 'Parcel quantity field is required.',
             'parcel_ids.required' => 'Parcel IDs field is required.',
             'parcel_ids.*.required' => 'Parcel ID field is required.',
@@ -244,36 +253,60 @@ class AssignmentParcelController extends Controller
 
             if ($isDriver) {
                 $validated['office_id'] = null;
+                $validated['from_date'] = null;
+                $validated['to_date'] = null;
             } elseif ($isStaffEmployee) {
                 $validated['hub_id'] = null;
                 $validated['vendor_id'] = null;
                 $validated['vehicle_id'] = null;
                 $validated['parcel_quantity'] = 0;
-                $validated['assignment_date'] = $validated['assignment_date'] ?? now()->toDateString();
+                $validated['from_date'] = $validated['from_date'] ?? now()->toDateString();
+                $validated['to_date'] = $validated['to_date'] ?? $validated['from_date'];
+                $validated['assignment_date'] = $validated['from_date'];
                 $validated['status'] = AssignmentParcel::STATUS_ASSIGNED;
             }
 
             // Never mass-assign parcel_ids (not a DB column on assignment_parcel)
             unset($validated['parcel_ids']);
 
-            $assignment = AssignmentParcel::create($validated);
+            if ($isStaffEmployee) {
+                // Explicit payload so missing/disabled driver fields cannot break insert
+                $assignment = AssignmentParcel::create([
+                    'user_id' => (int) $validated['user_id'],
+                    'office_id' => (int) $validated['office_id'],
+                    'hub_id' => null,
+                    'vendor_id' => null,
+                    'vehicle_id' => null,
+                    'parcel_quantity' => 0,
+                    'assignment_date' => $validated['from_date'],
+                    'from_date' => $validated['from_date'],
+                    'to_date' => $validated['to_date'],
+                    'status' => AssignmentParcel::STATUS_ASSIGNED,
+                    'notes' => $validated['notes'] ?? null,
+                ]);
+            } else {
+                $assignment = AssignmentParcel::create($validated);
+            }
 
             if (!$isStaffEmployee && (int) ($validated['parcel_quantity'] ?? 0) > 0) {
                 $this->createParcelDetails(
                     $assignment,
                     (int) $validated['user_id'],
                     (int) $validated['parcel_quantity'],
-                    $validated['parcel_ids'] ?? [],
+                    $request->input('parcel_ids', []),
                 );
             }
 
-            User::find($validated['user_id'])->update(['status_count' =>0]);
-            $user_details = User::find($validated['user_id']);
+            $assignedUser = User::find($validated['user_id']);
+            if ($assignedUser && Schema::hasColumn('users', 'status_count')) {
+                $assignedUser->update(['status_count' => 0]);
+            }
+            $user_details = $assignedUser;
             Log::debug('User details generated.', ['user_details' => $user_details]);
            
             $fcm_ids=[];
            
-            $fcm_ids[]=$user_details->fcm_token;
+            $fcm_ids[]= $user_details?->fcm_token;
             // print_r($fcm_ids);die;
             $title = 'Shippment Assignment';
             $msg = $isStaffEmployee ? 'Office assignment created for you' : 'Shippment Assigned to you';
@@ -339,6 +372,12 @@ class AssignmentParcelController extends Controller
                 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Failed to create assignment', [
+                'message' => $e->getMessage(),
+                'user_id' => $request->input('user_id'),
+                'office_id' => $request->input('office_id'),
+                'hub_id' => $request->input('hub_id'),
+            ]);
             return back()->with('error', 'Failed to create assignment. ' . $e->getMessage())
                 ->withInput();
         }
@@ -395,12 +434,15 @@ class AssignmentParcelController extends Controller
         $isDriver = $staffUser && StaffRoles::isDriverRoleId($staffUser->role_id);
 
         if ($isStaffEmployee) {
+            $fromDate = $request->input('from_date')
+                ?: (optional($assignmentParcel->from_date)->format('Y-m-d')
+                    ?: (optional($assignmentParcel->assignment_date)->format('Y-m-d') ?: now()->toDateString()));
             $request->merge([
                 'vendor_id' => null,
                 'vehicle_id' => null,
                 'parcel_quantity' => (int) ($assignmentParcel->parcel_quantity ?: 0),
-                'assignment_date' => $request->input('assignment_date')
-                    ?: (optional($assignmentParcel->assignment_date)->format('Y-m-d') ?: now()->toDateString()),
+                'from_date' => $fromDate,
+                'assignment_date' => $fromDate,
                 'status' => $request->input('status') ?: ($assignmentParcel->status ?: AssignmentParcel::STATUS_ASSIGNED),
             ]);
         }
@@ -449,23 +491,34 @@ class AssignmentParcelController extends Controller
             ],
             'parcel_quantity' => $isStaffEmployee ? 'nullable|integer|min:0' : 'required|integer|min:1',
             'assignment_date' => $isStaffEmployee ? 'nullable|date' : 'required|date',
+            'from_date' => $isStaffEmployee ? 'required|date' : 'nullable|date',
+            'to_date' => $isStaffEmployee ? 'required|date|after_or_equal:from_date' : 'nullable|date',
             'status' => $isStaffEmployee
                 ? 'nullable|in:pending,assigned,in_transit,delivered,cancelled'
                 : 'required|in:pending,assigned,in_transit,delivered,cancelled',
             'notes' => 'nullable|string|max:1000',
         ];
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, [
+            'from_date.required' => 'From date is required for office assignment.',
+            'to_date.required' => 'To date is required for office assignment.',
+            'to_date.after_or_equal' => 'To date must be on or after From date.',
+        ]);
 
         try {
             DB::beginTransaction();
 
             if ($isDriver) {
                 $validated['office_id'] = null;
+                $validated['from_date'] = null;
+                $validated['to_date'] = null;
             } elseif ($isStaffEmployee) {
                 $validated['hub_id'] = null;
                 $validated['vendor_id'] = null;
                 $validated['vehicle_id'] = null;
+                $validated['from_date'] = $validated['from_date'] ?? now()->toDateString();
+                $validated['to_date'] = $validated['to_date'] ?? $validated['from_date'];
+                $validated['assignment_date'] = $validated['from_date'];
             }
 
             $assignmentParcel->update($validated);
