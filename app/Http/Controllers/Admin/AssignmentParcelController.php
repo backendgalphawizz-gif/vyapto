@@ -127,9 +127,11 @@ class AssignmentParcelController extends Controller
         $isStaffEmployee = $staffUser && StaffRoles::isStaffEmployeeRoleId($staffUser->role_id);
         $isDriver = $staffUser && StaffRoles::isDriverRoleId($staffUser->role_id);
 
-        // Staff Employee + Office: simple assign (no parcels / date / status UI)
+        // Staff Employee + Office: simple assign (no vendor / vehicle / parcels)
         if ($isStaffEmployee) {
             $request->merge([
+                'vendor_id' => null,
+                'vehicle_id' => null,
                 'parcel_quantity' => 0,
                 'parcel_ids' => [],
                 'assignment_date' => $request->input('assignment_date') ?: now()->toDateString(),
@@ -138,24 +140,28 @@ class AssignmentParcelController extends Controller
         }
 
         $rules = [
-            'vendor_id' => 'required|exists:vendors,id',
-            'vehicle_id' => [
-                'required',
-                'exists:vehicles,id',
-                function ($attribute, $value, $fail) use ($request, $vehicleVendorColumn) {
-                    if (!$vehicleVendorColumn) {
-                        return;
-                    }
+            'vendor_id' => $isStaffEmployee
+                ? 'nullable|exists:vendors,id'
+                : 'required|exists:vendors,id',
+            'vehicle_id' => $isStaffEmployee
+                ? 'nullable|exists:vehicles,id'
+                : [
+                    'required',
+                    'exists:vehicles,id',
+                    function ($attribute, $value, $fail) use ($request, $vehicleVendorColumn) {
+                        if (!$vehicleVendorColumn) {
+                            return;
+                        }
 
-                    $vehicleVendorId = DB::table('vehicles')
-                        ->where('id', $value)
-                        ->value($vehicleVendorColumn);
+                        $vehicleVendorId = DB::table('vehicles')
+                            ->where('id', $value)
+                            ->value($vehicleVendorColumn);
 
-                    if ((string) $vehicleVendorId !== (string) $request->input('vendor_id')) {
-                        $fail('Selected vehicle does not belong to selected vendor.');
-                    }
-                },
-            ],
+                        if ((string) $vehicleVendorId !== (string) $request->input('vendor_id')) {
+                            $fail('Selected vehicle does not belong to selected vendor.');
+                        }
+                    },
+                ],
             'user_id' => ['required', Rule::exists('users', 'id')->whereIn('role_id', $this->assignableStaffRoleIds())],
             'hub_id' => [
                 'nullable',
@@ -240,6 +246,8 @@ class AssignmentParcelController extends Controller
                 $validated['office_id'] = null;
             } elseif ($isStaffEmployee) {
                 $validated['hub_id'] = null;
+                $validated['vendor_id'] = null;
+                $validated['vehicle_id'] = null;
                 $validated['parcel_quantity'] = 0;
                 $validated['assignment_date'] = $validated['assignment_date'] ?? now()->toDateString();
                 $validated['status'] = AssignmentParcel::STATUS_ASSIGNED;
@@ -371,33 +379,49 @@ class AssignmentParcelController extends Controller
     public function update(Request $request, AssignmentParcel $assignmentParcel)
     {
         $vehicleVendorColumn = $this->getVehicleVendorColumn();
+        $staffUser = User::find($request->input('user_id'));
+        $isStaffEmployee = $staffUser && StaffRoles::isStaffEmployeeRoleId($staffUser->role_id);
+        $isDriver = $staffUser && StaffRoles::isDriverRoleId($staffUser->role_id);
 
-        $validated = $request->validate([
-            'vendor_id' => 'required|exists:vendors,id',
-            'vehicle_id' => [
-                'required',
-                'exists:vehicles,id',
-                function ($attribute, $value, $fail) use ($request, $vehicleVendorColumn) {
-                    if (!$vehicleVendorColumn) {
-                        return;
-                    }
+        if ($isStaffEmployee) {
+            $request->merge([
+                'vendor_id' => null,
+                'vehicle_id' => null,
+                'parcel_quantity' => (int) ($assignmentParcel->parcel_quantity ?: 0),
+                'assignment_date' => $request->input('assignment_date')
+                    ?: (optional($assignmentParcel->assignment_date)->format('Y-m-d') ?: now()->toDateString()),
+                'status' => $request->input('status') ?: ($assignmentParcel->status ?: AssignmentParcel::STATUS_ASSIGNED),
+            ]);
+        }
 
-                    $vehicleVendorId = DB::table('vehicles')
-                        ->where('id', $value)
-                        ->value($vehicleVendorColumn);
+        $rules = [
+            'vendor_id' => $isStaffEmployee
+                ? 'nullable|exists:vendors,id'
+                : 'required|exists:vendors,id',
+            'vehicle_id' => $isStaffEmployee
+                ? 'nullable|exists:vehicles,id'
+                : [
+                    'required',
+                    'exists:vehicles,id',
+                    function ($attribute, $value, $fail) use ($request, $vehicleVendorColumn) {
+                        if (!$vehicleVendorColumn) {
+                            return;
+                        }
 
-                    if ((string) $vehicleVendorId !== (string) $request->input('vendor_id')) {
-                        $fail('Selected vehicle does not belong to selected vendor.');
-                    }
-                },
-            ],
+                        $vehicleVendorId = DB::table('vehicles')
+                            ->where('id', $value)
+                            ->value($vehicleVendorColumn);
+
+                        if ((string) $vehicleVendorId !== (string) $request->input('vendor_id')) {
+                            $fail('Selected vehicle does not belong to selected vendor.');
+                        }
+                    },
+                ],
             'user_id' => ['required', Rule::exists('users', 'id')->whereIn('role_id', $this->assignableStaffRoleIds())],
             'hub_id' => [
                 'nullable',
                 'exists:hubs,id',
-                function ($attribute, $value, $fail) use ($request) {
-                    $user = User::find($request->user_id);
-                    $isDriver = $user && StaffRoles::isDriverRoleId($user->role_id);
+                function ($attribute, $value, $fail) use ($isDriver) {
                     if ($isDriver && empty($value)) {
                         $fail('Hub is required for driver staff.');
                     }
@@ -406,28 +430,31 @@ class AssignmentParcelController extends Controller
             'office_id' => [
                 'nullable',
                 'exists:offices,id',
-                function ($attribute, $value, $fail) use ($request) {
-                    $user = User::find($request->user_id);
-                    $isStaff = $user && StaffRoles::isStaffEmployeeRoleId($user->role_id);
-                    if ($isStaff && empty($value)) {
+                function ($attribute, $value, $fail) use ($isStaffEmployee) {
+                    if ($isStaffEmployee && empty($value)) {
                         $fail('Office is required for staff employees.');
                     }
                 },
             ],
-            'parcel_quantity' => 'required|integer|min:1',
-            'assignment_date' => 'required|date',
-            'status' => 'required|in:pending,assigned,in_transit,delivered,cancelled',
+            'parcel_quantity' => $isStaffEmployee ? 'nullable|integer|min:0' : 'required|integer|min:1',
+            'assignment_date' => $isStaffEmployee ? 'nullable|date' : 'required|date',
+            'status' => $isStaffEmployee
+                ? 'nullable|in:pending,assigned,in_transit,delivered,cancelled'
+                : 'required|in:pending,assigned,in_transit,delivered,cancelled',
             'notes' => 'nullable|string|max:1000',
-        ]);
+        ];
+
+        $validated = $request->validate($rules);
 
         try {
             DB::beginTransaction();
 
-            $staffUser = User::find($validated['user_id']);
-            if ($staffUser && StaffRoles::isDriverRoleId($staffUser->role_id)) {
+            if ($isDriver) {
                 $validated['office_id'] = null;
-            } elseif ($staffUser && StaffRoles::isStaffEmployeeRoleId($staffUser->role_id)) {
+            } elseif ($isStaffEmployee) {
                 $validated['hub_id'] = null;
+                $validated['vendor_id'] = null;
+                $validated['vehicle_id'] = null;
             }
 
             $assignmentParcel->update($validated);

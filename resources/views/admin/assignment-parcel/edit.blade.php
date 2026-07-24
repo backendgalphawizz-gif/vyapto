@@ -29,17 +29,6 @@
                 @endif
 
                 <div class="col-md-6">
-                    <label for="vendor_id" class="form-label fw-semibold">Vendor <span class="text-danger">*</span></label>
-                    <select name="vendor_id" id="vendor_id" class="form-select @error('vendor_id') is-invalid @enderror" required>
-                        <option value="">Select Vendor</option>
-                        @foreach($vendors as $vendor)
-                            <option value="{{ $vendor->id }}" {{ old('vendor_id', $assignmentParcel->vendor_id) == $vendor->id ? 'selected' : '' }}>{{ $vendor->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('vendor_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-
-                <div class="col-md-6">
                     <label for="user_id" class="form-label fw-semibold">Staff <span class="text-danger">*</span></label>
                     <select name="user_id" id="user_id" class="form-select @error('user_id') is-invalid @enderror" required>
                         <option value="">Select Staff</option>
@@ -58,22 +47,6 @@
                         @endforeach
                     </select>
                     @error('user_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-
-                <div class="col-md-6">
-                    <label for="vehicle_id" class="form-label fw-semibold">Vehicle <span class="text-danger">*</span></label>
-                    <select name="vehicle_id" id="vehicle_id" class="form-select @error('vehicle_id') is-invalid @enderror" required>
-                        <option value="">Select Vehicle</option>
-                        @foreach($vehicles as $vehicle)
-                            <option
-                                value="{{ $vehicle->id }}"
-                                data-owner-id="{{ $vehicleOwnerColumn ? ($vehicle->{$vehicleOwnerColumn} ?? '') : '' }}"
-                                {{ old('vehicle_id', $assignmentParcel->vehicle_id) == $vehicle->id ? 'selected' : '' }}
-                            >{{ $vehicle->vehicle_number }} - {{ $vehicle->type ?? 'N/A' }}</option>
-                        @endforeach
-                    </select>
-                    <div class="form-text">Only vehicles added by selected staff are shown.</div>
-                    @error('vehicle_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-md-6" id="hubFieldWrap">
@@ -98,6 +71,37 @@
                     </select>
                     <div class="form-text">Shown for Staff Employee only.</div>
                     @error('office_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="col-12" id="driverLogisticsFields">
+                <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="vendor_id" class="form-label fw-semibold">Vendor <span class="text-danger">*</span></label>
+                    <select name="vendor_id" id="vendor_id" class="form-select @error('vendor_id') is-invalid @enderror">
+                        <option value="">Select Vendor</option>
+                        @foreach($vendors as $vendor)
+                            <option value="{{ $vendor->id }}" {{ old('vendor_id', $assignmentParcel->vendor_id) == $vendor->id ? 'selected' : '' }}>{{ $vendor->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('vendor_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="col-md-6">
+                    <label for="vehicle_id" class="form-label fw-semibold">Vehicle <span class="text-danger">*</span></label>
+                    <select name="vehicle_id" id="vehicle_id" class="form-select @error('vehicle_id') is-invalid @enderror">
+                        <option value="">Select Vehicle</option>
+                        @foreach($vehicles as $vehicle)
+                            <option
+                                value="{{ $vehicle->id }}"
+                                data-owner-id="{{ $vehicleOwnerColumn ? ($vehicle->{$vehicleOwnerColumn} ?? '') : '' }}"
+                                {{ old('vehicle_id', $assignmentParcel->vehicle_id) == $vehicle->id ? 'selected' : '' }}
+                            >{{ $vehicle->vehicle_number }} - {{ $vehicle->type ?? 'N/A' }}</option>
+                        @endforeach
+                    </select>
+                    <div class="form-text">Only vehicles added by selected staff are shown.</div>
+                    @error('vehicle_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                </div>
                 </div>
 
                 <div class="col-12" id="driverParcelFields">
@@ -160,10 +164,13 @@
             var preferredHub = opt ? (opt.getAttribute('data-hub-id') || '') : '';
             var preferredOffice = opt ? (opt.getAttribute('data-office-id') || '') : '';
             var driverFields = document.getElementById('driverParcelFields');
+            var logisticsFields = document.getElementById('driverLogisticsFields');
             var parcelQty = document.getElementById('parcel_quantity');
             var assignDate = document.getElementById('assignment_date');
             var statusSelect = document.getElementById('status');
             var submitLabel = document.getElementById('assignSubmitLabel');
+            var vendorSelectEl = document.getElementById('vendor_id');
+            var vehicleSelectEl = document.getElementById('vehicle_id');
 
             if (roleType === 'staff') {
                 hubWrap.classList.add('d-none');
@@ -174,7 +181,10 @@
                 if (preferredOffice && !officeSelect.value) {
                     officeSelect.value = preferredOffice;
                 }
+                if (logisticsFields) logisticsFields.classList.add('d-none');
                 if (driverFields) driverFields.classList.add('d-none');
+                if (vendorSelectEl) { vendorSelectEl.removeAttribute('required'); vendorSelectEl.value = ''; }
+                if (vehicleSelectEl) { vehicleSelectEl.removeAttribute('required'); vehicleSelectEl.value = ''; }
                 if (parcelQty) parcelQty.removeAttribute('required');
                 if (assignDate) assignDate.removeAttribute('required');
                 if (statusSelect) statusSelect.removeAttribute('required');
@@ -188,7 +198,10 @@
                 if (preferredHub && !hubSelect.value) {
                     hubSelect.value = preferredHub;
                 }
+                if (logisticsFields) logisticsFields.classList.remove('d-none');
                 if (driverFields) driverFields.classList.remove('d-none');
+                if (vendorSelectEl) vendorSelectEl.setAttribute('required', 'required');
+                if (vehicleSelectEl) vehicleSelectEl.setAttribute('required', 'required');
                 if (parcelQty) parcelQty.setAttribute('required', 'required');
                 if (assignDate) assignDate.setAttribute('required', 'required');
                 if (statusSelect) statusSelect.setAttribute('required', 'required');
@@ -199,6 +212,7 @@
                 hubSelect.removeAttribute('required');
                 officeSelect.removeAttribute('required');
                 officeSelect.value = '';
+                if (logisticsFields) logisticsFields.classList.remove('d-none');
                 if (driverFields) driverFields.classList.remove('d-none');
                 if (submitLabel) submitLabel.textContent = 'Update Assignment';
             }
