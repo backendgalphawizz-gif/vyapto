@@ -42,6 +42,25 @@ class BrandAssets
         return self::siteLogoUrl('site_logo_desktop', 'images/nav-logo.png');
     }
 
+    /**
+     * Logo optimized for dark admin sidebar (white wordmark + truck).
+     */
+    public static function siteLogoAdmin(): string
+    {
+        $sectionUrl = WebsitePageSection::sectionsFor('global')->get('site_logo_admin')?->imageUrl();
+
+        if ($sectionUrl) {
+            return $sectionUrl;
+        }
+
+        $dark = public_path('images/nav-logo-dark.png');
+        if (is_file($dark)) {
+            return asset('images/nav-logo-dark.png');
+        }
+
+        return self::siteLogoDesktop();
+    }
+
     public static function siteLogoMobile(): string
     {
         return self::siteLogoUrl('site_logo_mobile', 'images/nav-logo-mobile.png');

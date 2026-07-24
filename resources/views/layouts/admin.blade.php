@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <title>VYAPTO | @yield('title', 'Dashboard')</title>
   @php
-    $siteLogo = \App\Support\BrandAssets::siteLogoDesktop();
+    $siteLogo = \App\Support\BrandAssets::siteLogoAdmin();
     $companyName = \App\Support\BrandAssets::companyName();
   @endphp
   <link rel="icon" type="image/png" href="{{ $siteLogo }}">
@@ -17,7 +17,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
   <!--  style css -->
-  <link href="{{ asset('assets/admin/css/style.css') }}" rel="stylesheet">
+  <link href="{{ asset('assets/admin/css/style.css') }}?v=2" rel="stylesheet">
   {{-- Sidebar: extra vertical padding + line-height so descenders (g, j, p, y) are not clipped --}}
   <style>
     /* Override assets/admin/css/style.css if it tightens nav links */
@@ -39,6 +39,41 @@
     }
     .sidebar-brand {
       flex-shrink: 0;
+      padding: 0.25rem 0.15rem 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 0.75rem;
+    }
+    .sidebar-brand .system-logo {
+      max-width: 100%;
+      width: auto;
+      height: auto;
+      max-height: 56px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 0.65rem;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+    }
+    .sidebar-brand .system-name {
+      color: rgba(255, 255, 255, 0.88) !important;
+      font-size: 0.72rem !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.04em;
+      line-height: 1.35 !important;
+      text-transform: uppercase;
+      white-space: normal !important;
+      overflow: visible !important;
+      word-break: break-word;
+      max-width: 100%;
+      margin: 0 !important;
+      padding: 0 0.25rem;
+      opacity: 0.9;
+    }
+    .sidebar.collapsed .sidebar-brand .system-name {
+      display: none;
+    }
+    .sidebar.collapsed .sidebar-brand .system-logo {
+      max-height: 36px;
+      margin-bottom: 0;
     }
     .sidebar-menu {
       flex: 1 1 auto;
@@ -71,16 +106,12 @@
   <!-- Sidebar -->
   <nav class="sidebar d-flex flex-column p-3" id="sidebar">
     <div class="sidebar-brand text-center">
-      <!-- Logo -->
       <img
         src="{{ $siteLogo }}"
         alt="{{ $companyName }}"
-        class="system-logo mx-auto d-block mb-3"
-        style="max-height: 80px;"
-        onerror="this.src='{{ asset('images/nav-logo.png') }}';">
-
-      <!-- System Name -->
-      <h4 class="system-name text-white mb-3">{{ strtoupper($companyName) }}</h4>
+        class="system-logo"
+        onerror="this.src='{{ asset('images/nav-logo-dark.png') }}'; this.onerror=null;">
+      <div class="system-name">{{ $companyName }}</div>
     </div>
 
     <div class="sidebar-menu">

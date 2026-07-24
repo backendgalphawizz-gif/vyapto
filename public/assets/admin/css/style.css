@@ -23,26 +23,29 @@
 }
 
 .sidebar .system-logo {
-  max-height: 80px;
-
+  max-height: 56px;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
   margin-bottom: 10px;
-
   transition:
     max-height 0.3s ease,
     transform 0.3s ease;
 }
 
 .sidebar.collapsed .system-logo {
-  max-height: 40px;
-
-  transform: scale(0.9);
+  max-height: 36px;
+  transform: scale(0.95);
 }
 
 .sidebar .system-name {
-  font-weight: 700;
-
-  font-size: 1.2rem;
-
+  font-weight: 600;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  white-space: normal;
+  overflow: visible;
+  word-break: break-word;
   transition:
     opacity 0.3s ease,
     width 0.3s ease;
@@ -325,27 +328,26 @@
 }
 
 .system-logo {
-  max-height: 80px;
-
+  max-height: 56px;
+  max-width: 100%;
+  object-fit: contain;
   transition:
     max-height 0.3s ease,
     transform 0.3s ease;
 }
 
 .sidebar.collapsed .system-logo {
-  max-height: 40px !important;
-
-  transform: scale(0.9);
+  max-height: 36px !important;
+  transform: scale(0.95);
 }
 
 .system-name {
   transition:
     opacity 0.3s ease,
     width 0.3s ease;
-
-  white-space: nowrap;
-
-  overflow: hidden;
+  white-space: normal;
+  overflow: visible;
+  word-break: break-word;
 }
 
 .sidebar.collapsed .system-name {
