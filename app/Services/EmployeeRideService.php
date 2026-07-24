@@ -5,25 +5,25 @@ namespace App\Services;
 use App\Models\AssignmentParcel;
 use App\Models\Attendance;
 use App\Models\ParcelDetail;
-use App\Models\User;
 use App\Models\VehicleUsage;
 use Carbon\Carbon;
+use Illuminate\Contracts\Auth\Authenticatable;
 
 class EmployeeRideService
 {
-    public function todayUsageCount(User $user): int
+    public function todayUsageCount(Authenticatable $user): int
     {
-        return VehicleUsage::where('user_id', $user->id)
+        return VehicleUsage::where('user_id', $this->userId($user))
             ->whereDate('created_at', Carbon::today())
             ->count();
     }
 
-    public function isRideActive(User $user): bool
+    public function isRideActive(Authenticatable $user): bool
     {
         return ($this->todayUsageCount($user) % 2) === 1;
     }
 
-    public function rideStatus(User $user, ?Attendance $attendance = null): string
+    public function rideStatus(Authenticatable $user, ?Attendance $attendance = null): string
     {
         if (! $this->hasPunchedInToday($attendance)) {
             return 'not_punched_in';
@@ -36,7 +36,7 @@ class EmployeeRideService
         return $this->isRideActive($user) ? 'in_progress' : 'not_started';
     }
 
-    public function rideStatusLabel(User $user, ?Attendance $attendance = null): string
+    public function rideStatusLabel(Authenticatable $user, ?Attendance $attendance = null): string
     {
         return match ($this->rideStatus($user, $attendance)) {
             'in_progress' => 'In Progress',
@@ -46,45 +46,45 @@ class EmployeeRideService
         };
     }
 
-    public function canStartRide(User $user, ?Attendance $attendance = null): bool
+    public function canStartRide(Authenticatable $user, ?Attendance $attendance = null): bool
     {
         return $this->hasPunchedInToday($attendance)
             && ! $this->hasPunchedOutToday($attendance)
             && ! $this->isRideActive($user);
     }
 
-    public function canEndRide(User $user, ?Attendance $attendance = null): bool
+    public function canEndRide(Authenticatable $user, ?Attendance $attendance = null): bool
     {
         return $this->hasPunchedInToday($attendance)
             && ! $this->hasPunchedOutToday($attendance)
             && $this->isRideActive($user);
     }
 
-    public function canViewShipments(User $user, ?Attendance $attendance = null): bool
+    public function canViewShipments(Authenticatable $user, ?Attendance $attendance = null): bool
     {
         return $this->isRideActive($user)
             && $this->hasPunchedInToday($attendance)
             && ! $this->hasPunchedOutToday($attendance);
     }
 
-    public function nextRideAction(User $user): string
+    public function nextRideAction(Authenticatable $user): string
     {
         return ($this->todayUsageCount($user) % 2 === 0) ? 'start' : 'end';
     }
 
-    public function currentRideStartEntry(User $user): ?VehicleUsage
+    public function currentRideStartEntry(Authenticatable $user): ?VehicleUsage
     {
         if (! $this->isRideActive($user)) {
             return null;
         }
 
-        return VehicleUsage::where('user_id', $user->id)
+        return VehicleUsage::where('user_id', $this->userId($user))
             ->whereDate('created_at', Carbon::today())
             ->orderByDesc('id')
             ->first();
     }
 
-    public function validateEndRideKm(User $user, float $endKm): ?string
+    public function validateEndRideKm(Authenticatable $user, float $endKm): ?string
     {
         $startEntry = $this->currentRideStartEntry($user);
 
@@ -99,7 +99,7 @@ class EmployeeRideService
         return null;
     }
 
-    public function suggestedVehicleNumber(User $user, ?string $rideAction = null): ?string
+    public function suggestedVehicleNumber(Authenticatable $user, ?string $rideAction = null): ?string
     {
         $rideAction ??= $this->nextRideAction($user);
 
@@ -111,7 +111,7 @@ class EmployeeRideService
         return $this->resolveAssignedVehicleNumber($user);
     }
 
-    public function validateEndRideVehicleNumber(User $user, string $vehicleNumber): ?string
+    public function validateEndRideVehicleNumber(Authenticatable $user, string $vehicleNumber): ?string
     {
         $startEntry = $this->currentRideStartEntry($user);
 
@@ -126,10 +126,12 @@ class EmployeeRideService
         return null;
     }
 
-    private function resolveAssignedVehicleNumber(User $user): ?string
+    private function resolveAssignedVehicleNumber(Authenticatable $user): ?string
     {
+        $userId = $this->userId($user);
+
         $todayAssignment = AssignmentParcel::query()
-            ->where('user_id', $user->id)
+            ->where('user_id', $userId)
             ->whereNotNull('vehicle_id')
             ->whereDate('assignment_date', Carbon::today())
             ->with('vehicle:id,vehicle_number')
@@ -141,7 +143,7 @@ class EmployeeRideService
         }
 
         $todayParcel = ParcelDetail::query()
-            ->where('user_id', $user->id)
+            ->where('user_id', $userId)
             ->whereNotNull('assignment_parcel_id')
             ->whereDate('created_at', Carbon::today())
             ->with('assignmentParcel.vehicle:id,vehicle_number')
@@ -153,7 +155,7 @@ class EmployeeRideService
         }
 
         $latestAssignment = AssignmentParcel::query()
-            ->where('user_id', $user->id)
+            ->where('user_id', $userId)
             ->whereNotNull('vehicle_id')
             ->with('vehicle:id,vehicle_number')
             ->orderByDesc('assignment_date')
@@ -164,9 +166,14 @@ class EmployeeRideService
             return $latestAssignment->vehicle->vehicle_number;
         }
 
-        return VehicleUsage::where('user_id', $user->id)
+        return VehicleUsage::where('user_id', $userId)
             ->orderByDesc('id')
             ->value('vehicle_number');
+    }
+
+    private function userId(Authenticatable $user): int
+    {
+        return (int) $user->getAuthIdentifier();
     }
 
     private function hasPunchedInToday(?Attendance $attendance): bool

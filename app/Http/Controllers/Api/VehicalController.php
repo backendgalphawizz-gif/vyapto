@@ -4,13 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ParcelDetail;
+use App\Models\User;
 use App\Models\VehicleUsage;
 use App\Services\EmployeeRideService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\User;
-
+use Illuminate\Support\Facades\Schema;
 
 class VehicalController extends Controller
 {
@@ -53,13 +53,6 @@ class VehicalController extends Controller
 			}
 		}
 
-		// if ($todayEntryCount >= 2) {
-		// 	return response()->json([
-		// 		'status' => false,
-		// 		'message' => 'Vehicle usage can be marked maximum 2 times per day.',
-		// 	], 422);
-		// }
-
 		if (!$this->parcelStatusAllowsAssigned()) {
 			return response()->json([
 				'status' => false,
@@ -70,6 +63,7 @@ class VehicalController extends Controller
 		$path = $request->file('image')->store('vehicle-usage', 'public');
 		$statusToApply = ParcelDetail::STATUS_ASSIGNED;
 		$shouldUpdateParcelStatus = ($todayEntryCount === 0);
+		$updatedParcels = 0;
 
 		DB::beginTransaction();
 
@@ -81,9 +75,8 @@ class VehicalController extends Controller
 				'image' => $path,
 			]);
 
-			$todayEntryCountagain = $rideService->todayUsageCount($authUser);
+			$todayEntryCountAgain = $rideService->todayUsageCount($authUser);
 
-			$updatedParcels = 0;
 			if ($shouldUpdateParcelStatus) {
 				$updatedParcels = ParcelDetail::query()
 					->where('user_id', $authUser->id)
@@ -91,26 +84,27 @@ class VehicalController extends Controller
 					->whereNotIn('status', [ParcelDetail::STATUS_DELIVERED, ParcelDetail::STATUS_CANCELLED])
 					->update(['status' => $statusToApply]);
 			}
-			// return $todayEntryCount;
-			$res = User::find($authUser->id)->update([
-				'status_count' => ($todayEntryCountagain % 2 == 1) ? 1 : 2
-			]);
-			// return $res;
+
+			if (Schema::hasColumn('users', 'status_count')) {
+				User::where('id', $authUser->id)->update([
+					'status_count' => ($todayEntryCountAgain % 2 === 1) ? 1 : 2,
+				]);
+			}
 
 			DB::commit();
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			DB::rollBack();
 
 			return response()->json([
 				'status' => false,
 				'message' => 'Failed to save vehicle usage.',
-				'error' => $e->getMessage(),
+				'error' => config('app.debug') ? $e->getMessage() : null,
 			], 500);
 		}
 
 		return response()->json([
 			'status' => true,
-			'message' => ($todayEntryCount%2 == 0) ? 'Ride start successfully' : 'Ride end successfully',
+			'message' => ($todayEntryCount % 2 === 0) ? 'Ride start successfully' : 'Ride end successfully',
 			'today_entry_count' => $todayEntryCount + 1,
 			'status_update_applied' => $shouldUpdateParcelStatus,
 			'updated_parcel_count' => $updatedParcels,
@@ -184,9 +178,7 @@ class VehicalController extends Controller
 
 			return strpos($type, "'assigned'") !== false;
 		} catch (\Throwable $e) {
-			// If schema inspection fails, keep old behavior and let DB enforce constraints.
 			return true;
 		}
 	}
 }
-
