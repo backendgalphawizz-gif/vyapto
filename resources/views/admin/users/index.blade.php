@@ -302,6 +302,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             @endif
                             @if($isStaffView)
                             <div class="mb-2"><label class="small text-muted mb-0">Job Type</label><div class="fw-bold">{{ $user->job_type ?? 'N/A' }}</div></div>
+                            <div class="mb-2"><label class="small text-muted mb-0">Office</label><div class="fw-bold">{{ $user->office->name ?? 'N/A' }}</div></div>
                             @endif
                             @if(!$isStaffView)
                             <div class="mb-2"><label class="small text-muted mb-0">Father's Name</label><div class="fw-bold">{{ $user->father_name ?? 'N/A' }}</div></div>
@@ -474,6 +475,23 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                     <option value="Half Time" {{ old('job_type', $user->job_type) == 'Half Time' ? 'selected' : '' }}>Half Time</option>
                                 </select>
                                 @error('job_type', 'userUpdate'.$user->id)
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Office Dropdown (Edit — Staff Employee only) -->
+                            <div class="col-md-6 {{ (old('office_id', $user->office_id) || ($user->role && $user->role->name == 'Staff Employee')) ? '' : 'd-none' }}" id="editOfficeContainer{{ $user->id }}">
+                                <label class="form-label">Office <span class="text-danger">*</span></label>
+                                <select name="office_id" id="editOfficeSelect{{ $user->id }}" class="form-select @error('office_id', 'userUpdate'.$user->id) is-invalid @enderror"
+                                    {{ (old('office_id', $user->office_id) || ($user->role && $user->role->name == 'Staff Employee')) ? 'required' : '' }}>
+                                    <option value="" disabled {{ old('office_id', $user->office_id) ? '' : 'selected' }}>Select Office</option>
+                                    @foreach($offices ?? [] as $office)
+                                    <option value="{{ $office->id }}" {{ old('office_id', $user->office_id) == $office->id ? 'selected' : '' }}>
+                                        {{ $office->name }}@if($office->location) — {{ $office->location }}@endif
+                                    </option>
+                                    @endforeach
+                                </select>
+                                @error('office_id', 'userUpdate'.$user->id)
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -883,6 +901,22 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 <option value="Half Time" {{ old('job_type') == 'Half Time' ? 'selected' : '' }}>Half Time</option>
                             </select>
                             @error('job_type', 'userCreation')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <!-- Office (Only for Staff Employee) -->
+                        <div class="col-md-6 d-none" id="officeContainer">
+                            <label class="form-label">Office <span class="text-danger">*</span></label>
+                            <select name="office_id" id="officeSelect" class="form-select @error('office_id', 'userCreation') is-invalid @enderror">
+                                <option value="" selected disabled>Select Office</option>
+                                @foreach($offices ?? [] as $office)
+                                <option value="{{ $office->id }}" {{ old('office_id') == $office->id ? 'selected' : '' }}>
+                                    {{ $office->name }}@if($office->location) — {{ $office->location }}@endif
+                                </option>
+                                @endforeach
+                            </select>
+                            @error('office_id', 'userCreation')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -1379,8 +1413,10 @@ function toggleFieldsByRole(selectElement, opts) {
     const additionalFields = document.querySelectorAll('.additional-fields');
     const departmentContainer = document.getElementById('departmentContainer');
     const jobTypeContainer = document.getElementById('jobTypeContainer');
+    const officeContainer = document.getElementById('officeContainer');
     const departmentSelect = document.getElementById('departmentSelect');
     const jobTypeSelect = document.getElementById('jobTypeSelect');
+    const officeSelect = document.getElementById('officeSelect');
 
     function clearHiddenFieldInputs(container) {
         container.querySelectorAll('input, select, textarea').forEach(function(input) {
@@ -1435,11 +1471,22 @@ function toggleFieldsByRole(selectElement, opts) {
             if (!fromServer && !jobTypeSelect.value) jobTypeSelect.selectedIndex = 0;
         }
 
+        if (officeContainer) officeContainer.classList.remove('d-none');
+        if (officeSelect) {
+            officeSelect.disabled = false;
+            officeSelect.setAttribute('required', 'required');
+            if (!fromServer && !officeSelect.value) officeSelect.selectedIndex = 0;
+        }
+
         setDriverKycRequiredFields(document, false, false);
     } else {
         if (!fromServer && jobTypeSelect) {
             jobTypeSelect.removeAttribute('required');
             jobTypeSelect.value = '';
+        }
+        if (!fromServer && officeSelect) {
+            officeSelect.removeAttribute('required');
+            officeSelect.value = '';
         }
 
         additionalFields.forEach(function(field) {
@@ -1450,6 +1497,12 @@ function toggleFieldsByRole(selectElement, opts) {
         if (jobTypeSelect) {
             jobTypeSelect.removeAttribute('required');
             jobTypeSelect.disabled = true;
+        }
+
+        if (officeContainer) officeContainer.classList.add('d-none');
+        if (officeSelect) {
+            officeSelect.removeAttribute('required');
+            officeSelect.disabled = true;
         }
 
         if (departmentContainer) departmentContainer.style.display = 'block';
@@ -1505,6 +1558,8 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
     const departmentSelect = document.getElementById('editDepartmentSelect' + userId);
     const jobTypeContainer = document.getElementById('editJobTypeContainer' + userId);
     const jobTypeSelect = document.getElementById('editJobTypeSelect' + userId);
+    const officeContainer = document.getElementById('editOfficeContainer' + userId);
+    const officeSelect = document.getElementById('editOfficeSelect' + userId);
 
     function clearEditHiddenInputs(field) {
         field.querySelectorAll('input, select, textarea').forEach(function(input) {
@@ -1547,6 +1602,13 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
             if (!fromServer && !jobTypeSelect.value) jobTypeSelect.selectedIndex = 0;
         }
 
+        if (officeContainer) officeContainer.classList.remove('d-none');
+        if (officeSelect) {
+            officeSelect.disabled = false;
+            officeSelect.setAttribute('required', 'required');
+            if (!fromServer && !officeSelect.value) officeSelect.selectedIndex = 0;
+        }
+
         if (departmentContainer) departmentContainer.style.display = 'none';
         if (departmentSelect) {
             departmentSelect.removeAttribute('required');
@@ -1559,6 +1621,10 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
             jobTypeSelect.removeAttribute('required');
             jobTypeSelect.value = '';
         }
+        if (!fromServer && officeSelect) {
+            officeSelect.removeAttribute('required');
+            officeSelect.value = '';
+        }
 
         additionalFields.forEach(function(field) {
             field.style.display = 'block';
@@ -1568,6 +1634,12 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
         if (jobTypeSelect) {
             jobTypeSelect.removeAttribute('required');
             jobTypeSelect.disabled = true;
+        }
+
+        if (officeContainer) officeContainer.classList.add('d-none');
+        if (officeSelect) {
+            officeSelect.removeAttribute('required');
+            officeSelect.disabled = true;
         }
 
         if (departmentContainer) departmentContainer.style.display = 'block';

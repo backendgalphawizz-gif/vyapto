@@ -7,6 +7,7 @@ use App\Http\Controllers\Concerns\ExportsTabularData;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Department;
+use App\Models\Office;
 use App\CPU\ImageManager;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
@@ -40,7 +41,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $query = User::with('roles')
+        $query = User::with(['roles', 'office', 'department'])
             ->whereNotIn('role_id', [1, 2]);
 
         if ($request->filled('search')) {
@@ -88,8 +89,9 @@ class UserController extends Controller
 
         $roles = Role::whereNotIn('id', [1, 2])->get();
         $departments = Department::where('status', 1)->get();
+        $offices = Office::orderBy('name')->get();
 
-        return view('admin.users.index', compact('users', 'roles', 'departments'));
+        return view('admin.users.index', compact('users', 'roles', 'departments', 'offices'));
     }
 
 
@@ -177,6 +179,11 @@ class UserController extends Controller
                     $fail('The job type field is required for staff employees.');
                 }
             }],
+            'office_id' => ['nullable', 'exists:offices,id', function ($attribute, $value, $fail) use ($request) {
+                if ($request->role_id == $this->getStaffRoleId() && empty($value)) {
+                    $fail('The office field is required for staff employees.');
+                }
+            }],
             'date_of_birth' => 'required|date|before:today',
             'gender'     => 'required|in:male,female,other',
             'marital_status' => 'required|in:single,married,divorced,widowed',
@@ -249,8 +256,9 @@ class UserController extends Controller
         $user->phone = $request->phone;
         $user->address = $request->address;
         $user->role_id = $request->role_id;
-        $user->department_id = $request->department_id;
-        $user->job_type = $request->job_type;
+        $user->department_id = $request->role_id == $this->getStaffRoleId() ? null : $request->department_id;
+        $user->office_id = $request->role_id == $this->getStaffRoleId() ? $request->office_id : null;
+        $user->job_type = $request->role_id == $this->getStaffRoleId() ? $request->job_type : null;
         $user->profile_image = $profileImage;
 
         // PERSONAL
@@ -314,6 +322,11 @@ class UserController extends Controller
             'job_type' => ['nullable', 'string', 'in:Full Time,Half Time', function ($attribute, $value, $fail) use ($request) {
                 if ($request->role_id == $this->getStaffRoleId() && empty($value)) {
                     $fail('The job type field is required for staff employees.');
+                }
+            }],
+            'office_id' => ['nullable', 'exists:offices,id', function ($attribute, $value, $fail) use ($request) {
+                if ($request->role_id == $this->getStaffRoleId() && empty($value)) {
+                    $fail('The office field is required for staff employees.');
                 }
             }],
             'date_of_birth' => 'required|date|before:today',
@@ -405,8 +418,9 @@ class UserController extends Controller
         $employee->address = $request->address;
         $employee->password = $request->password ? Hash::make($request->password) : $employee->password;
         $employee->role_id = $request->role_id;
-        $employee->department_id = $request->department_id;
-        $employee->job_type = $request->job_type;
+        $employee->department_id = $request->role_id == $this->getStaffRoleId() ? null : $request->department_id;
+        $employee->office_id = $request->role_id == $this->getStaffRoleId() ? $request->office_id : null;
+        $employee->job_type = $request->role_id == $this->getStaffRoleId() ? $request->job_type : null;
         $employee->date_of_birth = $request->date_of_birth;
         $employee->gender = $request->gender;
         $employee->father_name = $request->father_name;
