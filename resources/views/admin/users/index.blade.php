@@ -139,7 +139,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             <th style="width: 5%;">ID</th>
                             <x-sortable-th name="name" label="Full Name" />
                             <x-sortable-th name="role" label="Employee Role" />
-                            <x-sortable-th name="department" label="Department" />
+                            <x-sortable-th name="department" label="Location" />
                             <th class="text-center" style="width: 80px;">Image</th>
                             <x-sortable-th name="status" label="Status" class="text-center" />
                             <th style="width: 10%;">Actions</th>
@@ -158,7 +158,18 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 <span class="badge bg-secondary">{{ $user->role->name ?? 'No Role' }}</span>
                             </td>
                             <td>
+                                @php
+                                    $roleName = strtolower((string) ($user->role->name ?? ''));
+                                    $isDriverRow = str_contains($roleName, 'driver');
+                                    $isStaffRow = $roleName === 'staff employee';
+                                @endphp
+                                @if($isDriverRow)
+                                <span class="badge bg-secondary">{{ $user->hub->name ?? 'No Hub' }}</span>
+                                @elseif($isStaffRow)
+                                <span class="badge bg-info">{{ $user->office->name ?? 'No Office' }}</span>
+                                @else
                                 <span class="badge bg-info">{{ $user->department->name ?? 'No Department' }}</span>
+                                @endif
                             </td>
                             <td class="text-center">
                                 <img src="{{ $user->profile_image ? asset($user->profile_image) : asset('assets/admin/images/no-image.png') }}"
@@ -433,6 +444,23 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 @enderror
                             </div>
 
+                            @php $isDriverEdit = ($user->role && stripos($user->role->name, 'driver') !== false) || (old('role_id') && optional($roles->firstWhere('id', old('role_id')))->name && stripos(optional($roles->firstWhere('id', old('role_id')))->name, 'driver') !== false); @endphp
+                            <div class="col-md-6 {{ $isDriverEdit || old('hub_id', $user->hub_id) ? '' : 'd-none' }}" id="editHubContainer{{ $user->id }}">
+                                <label class="form-label">Hub <span class="text-danger">*</span></label>
+                                <select name="hub_id" id="editHubSelect{{ $user->id }}" class="form-select @error('hub_id', 'userUpdate'.$user->id) is-invalid @enderror"
+                                    {{ ($isDriverEdit && ($hubs ?? collect())->isNotEmpty()) ? 'required' : '' }}>
+                                    <option value="" disabled {{ old('hub_id', $user->hub_id) ? '' : 'selected' }}>Select Hub</option>
+                                    @foreach($hubs ?? [] as $hub)
+                                    <option value="{{ $hub->id }}" {{ old('hub_id', $user->hub_id) == $hub->id ? 'selected' : '' }}>
+                                        {{ $hub->name }}@if($hub->location) — {{ $hub->location }}@endif
+                                    </option>
+                                    @endforeach
+                                </select>
+                                @error('hub_id', 'userUpdate'.$user->id)
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                             <div class="col-md-6">
                                 <label class="form-label">Email</label>
                                 <input type="email" name="email" class="form-control @error('email', 'userUpdate'.$user->id) is-invalid @enderror" placeholder="Email"
@@ -558,15 +586,20 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Password <small>(Leave blank if no change)</small></label>
-                                <input type="password" name="password" class="form-control @error('password', 'userUpdate'.$user->id) is-invalid @enderror" placeholder="Password">
+                                <label class="form-label">Password <small class="text-muted">(Leave blank if no change)</small></label>
+                                <input type="password" name="password" class="form-control @error('password', 'userUpdate'.$user->id) is-invalid @enderror"
+                                    placeholder="Password" autocomplete="new-password" minlength="6">
                                 @error('password', 'userUpdate'.$user->id)
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Confirm Password</label>
-                                <input type="password" name="password_confirmation" class="form-control" placeholder="Confirm Password">
+                                <input type="password" name="password_confirmation" class="form-control @error('password_confirmation', 'userUpdate'.$user->id) is-invalid @enderror"
+                                    placeholder="Confirm Password" autocomplete="new-password" minlength="6">
+                                @error('password_confirmation', 'userUpdate'.$user->id)
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address</label>
@@ -881,7 +914,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             @enderror
                         </div>
 
-                        <!-- Department (Always Visible but required for non-staff) -->
+                        <!-- Department (other roles) -->
                         <div class="col-md-6" id="departmentContainer">
                             <label class="form-label">Department <span class="text-danger">*</span></label>
                             <select name="department_id" id="departmentSelect" class="form-select @error('department_id', 'userCreation') is-invalid @enderror">
@@ -893,6 +926,22 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 @endforeach
                             </select>
                             @error('department_id', 'userCreation')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <!-- Hub (Driver only) -->
+                        <div class="col-md-6 d-none" id="hubContainer">
+                            <label class="form-label">Hub <span class="text-danger">*</span></label>
+                            <select name="hub_id" id="hubSelect" class="form-select @error('hub_id', 'userCreation') is-invalid @enderror">
+                                <option value="" selected disabled>Select Hub</option>
+                                @foreach($hubs ?? [] as $hub)
+                                <option value="{{ $hub->id }}" {{ old('hub_id') == $hub->id ? 'selected' : '' }}>
+                                    {{ $hub->name }}@if($hub->location) — {{ $hub->location }}@endif
+                                </option>
+                                @endforeach
+                            </select>
+                            @error('hub_id', 'userCreation')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -1145,12 +1194,18 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
 
         try {
             const state = JSON.parse(savedState);
-            if (state.password) {
+            if (state.password && state.password_confirmation && state.password === state.password_confirmation) {
                 const passwordInput = form.querySelector('input[name="password"]');
                 if (passwordInput) passwordInput.value = state.password;
+                const confirmInput = form.querySelector('input[name="password_confirmation"]');
+                if (confirmInput) confirmInput.value = state.password_confirmation;
+            } else {
+                // Never restore a half-filled password pair (causes confirmation mismatch)
+                const passwordInput = form.querySelector('input[name="password"]');
+                const confirmInput = form.querySelector('input[name="password_confirmation"]');
+                if (passwordInput) passwordInput.value = '';
+                if (confirmInput) confirmInput.value = '';
             }
-            const confirmInput = form.querySelector('input[name="password_confirmation"]');
-            if (confirmInput && state.password_confirmation) confirmInput.value = state.password_confirmation;
         } catch (e) {
             console.warn('Failed to restore form state', e);
         }
@@ -1246,6 +1301,17 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
             const updateAction = form.getAttribute('action');
             const userId = form.getAttribute('data-user-id');
             form.addEventListener('submit', function(event) {
+                // Browser often autofills password but leaves confirm empty → treat as "no change"
+                var pwd = form.querySelector('input[name="password"]');
+                var conf = form.querySelector('input[name="password_confirmation"]');
+                if (pwd && conf) {
+                    if (!pwd.value || !conf.value || pwd.value !== conf.value) {
+                        if (!pwd.value || !conf.value) {
+                            pwd.value = '';
+                            conf.value = '';
+                        }
+                    }
+                }
                 relaxHiddenFieldValidation(form);
                 saveFormState('form[action="' + updateAction + '"]', userId);
                 if (!form.checkValidity()) {
@@ -1442,9 +1508,11 @@ function toggleFieldsByRole(selectElement, opts) {
 
     const additionalFields = document.querySelectorAll('.additional-fields');
     const departmentContainer = document.getElementById('departmentContainer');
+    const hubContainer = document.getElementById('hubContainer');
     const jobTypeContainer = document.getElementById('jobTypeContainer');
     const officeContainer = document.getElementById('officeContainer');
     const departmentSelect = document.getElementById('departmentSelect');
+    const hubSelect = document.getElementById('hubSelect');
     const jobTypeSelect = document.getElementById('jobTypeSelect');
     const officeSelect = document.getElementById('officeSelect');
 
@@ -1476,6 +1544,34 @@ function toggleFieldsByRole(selectElement, opts) {
         });
     }
 
+    function hideSelect(container, select) {
+        if (container) {
+            container.classList.add('d-none');
+            container.style.display = 'none';
+        }
+        if (select) {
+            select.removeAttribute('required');
+            select.disabled = true;
+            if (!fromServer) select.value = '';
+        }
+    }
+
+    function showSelect(container, select, requireIfOptions) {
+        if (container) {
+            container.classList.remove('d-none');
+            container.style.display = 'block';
+        }
+        if (select) {
+            select.disabled = false;
+            if (requireIfOptions && select.options.length > 1) {
+                select.setAttribute('required', 'required');
+            } else {
+                select.removeAttribute('required');
+            }
+            if (!fromServer && !select.value) select.selectedIndex = 0;
+        }
+    }
+
     if (isStaff) {
         if (!fromServer) {
             additionalFields.forEach(function(field) { clearHiddenFieldInputs(field); });
@@ -1491,32 +1587,25 @@ function toggleFieldsByRole(selectElement, opts) {
             });
         });
 
-        if (departmentContainer) departmentContainer.style.display = 'none';
-        if (departmentSelect) {
-            departmentSelect.removeAttribute('required');
-            departmentSelect.disabled = true;
-            if (!fromServer) departmentSelect.value = '';
-        }
-
-        if (jobTypeContainer) jobTypeContainer.classList.remove('d-none');
-        if (jobTypeSelect) {
-            jobTypeSelect.disabled = false;
-            jobTypeSelect.setAttribute('required', 'required');
-            if (!fromServer && !jobTypeSelect.value) jobTypeSelect.selectedIndex = 0;
-        }
-
-        if (officeContainer) officeContainer.classList.remove('d-none');
-        if (officeSelect) {
-            officeSelect.disabled = false;
-            if (officeSelect.options.length > 1) {
-                officeSelect.setAttribute('required', 'required');
-            } else {
-                officeSelect.removeAttribute('required');
-            }
-            if (!fromServer && !officeSelect.value) officeSelect.selectedIndex = 0;
-        }
-
+        hideSelect(departmentContainer, departmentSelect);
+        hideSelect(hubContainer, hubSelect);
+        showSelect(jobTypeContainer, jobTypeSelect, true);
+        showSelect(officeContainer, officeSelect, true);
         setDriverKycRequiredFields(document, false, false);
+    } else if (isDriver) {
+        additionalFields.forEach(function(field) {
+            field.style.display = 'block';
+            field.querySelectorAll('input, select, textarea').forEach(function(input) {
+                if (input.getAttribute('data-saved-pattern')) {
+                    input.setAttribute('pattern', input.getAttribute('data-saved-pattern'));
+                }
+            });
+        });
+        hideSelect(departmentContainer, departmentSelect);
+        hideSelect(jobTypeContainer, jobTypeSelect);
+        hideSelect(officeContainer, officeSelect);
+        showSelect(hubContainer, hubSelect, true);
+        setDriverKycRequiredFields(document, true, false);
     } else {
         if (!fromServer && jobTypeSelect) {
             jobTypeSelect.removeAttribute('required');
@@ -1525,6 +1614,10 @@ function toggleFieldsByRole(selectElement, opts) {
         if (!fromServer && officeSelect) {
             officeSelect.removeAttribute('required');
             officeSelect.value = '';
+        }
+        if (!fromServer && hubSelect) {
+            hubSelect.removeAttribute('required');
+            hubSelect.value = '';
         }
 
         additionalFields.forEach(function(field) {
@@ -1536,25 +1629,11 @@ function toggleFieldsByRole(selectElement, opts) {
             });
         });
 
-        if (jobTypeContainer) jobTypeContainer.classList.add('d-none');
-        if (jobTypeSelect) {
-            jobTypeSelect.removeAttribute('required');
-            jobTypeSelect.disabled = true;
-        }
-
-        if (officeContainer) officeContainer.classList.add('d-none');
-        if (officeSelect) {
-            officeSelect.removeAttribute('required');
-            officeSelect.disabled = true;
-        }
-
-        if (departmentContainer) departmentContainer.style.display = 'block';
-        if (departmentSelect) {
-            departmentSelect.disabled = false;
-            departmentSelect.setAttribute('required', 'required');
-        }
-
-        setDriverKycRequiredFields(document, isDriver, false);
+        hideSelect(hubContainer, hubSelect);
+        hideSelect(jobTypeContainer, jobTypeSelect);
+        hideSelect(officeContainer, officeSelect);
+        showSelect(departmentContainer, departmentSelect, true);
+        setDriverKycRequiredFields(document, false, false);
     }
 }
 
@@ -1599,6 +1678,8 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
     const additionalFields = modal.querySelectorAll('.edit-additional-fields-' + userId);
     const departmentContainer = document.getElementById('editDepartmentContainer' + userId);
     const departmentSelect = document.getElementById('editDepartmentSelect' + userId);
+    const hubContainer = document.getElementById('editHubContainer' + userId);
+    const hubSelect = document.getElementById('editHubSelect' + userId);
     const jobTypeContainer = document.getElementById('editJobTypeContainer' + userId);
     const jobTypeSelect = document.getElementById('editJobTypeSelect' + userId);
     const officeContainer = document.getElementById('editOfficeContainer' + userId);
@@ -1628,6 +1709,34 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
         });
     }
 
+    function hideEditSelect(container, select) {
+        if (container) {
+            container.classList.add('d-none');
+            container.style.display = 'none';
+        }
+        if (select) {
+            select.removeAttribute('required');
+            select.disabled = true;
+            if (!fromServer) select.value = '';
+        }
+    }
+
+    function showEditSelect(container, select, requireIfOptions) {
+        if (container) {
+            container.classList.remove('d-none');
+            container.style.display = 'block';
+        }
+        if (select) {
+            select.disabled = false;
+            if (requireIfOptions && select.options.length > 1) {
+                select.setAttribute('required', 'required');
+            } else {
+                select.removeAttribute('required');
+            }
+            if (!fromServer && !select.value) select.selectedIndex = 0;
+        }
+    }
+
     if (isStaff) {
         if (!fromServer) {
             additionalFields.forEach(function(field) { clearEditHiddenInputs(field); });
@@ -1642,31 +1751,28 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
                 }
             });
         });
-
-        if (jobTypeContainer) jobTypeContainer.classList.remove('d-none');
-        if (jobTypeSelect) {
-            jobTypeSelect.setAttribute('required', 'required');
-            if (!fromServer && !jobTypeSelect.value) jobTypeSelect.selectedIndex = 0;
-        }
-
-        if (officeContainer) officeContainer.classList.remove('d-none');
-        if (officeSelect) {
-            officeSelect.disabled = false;
-            if (officeSelect.options.length > 1) {
-                officeSelect.setAttribute('required', 'required');
-            } else {
-                officeSelect.removeAttribute('required');
-            }
-            if (!fromServer && !officeSelect.value) officeSelect.selectedIndex = 0;
-        }
-
-        if (departmentContainer) departmentContainer.style.display = 'none';
-        if (departmentSelect) {
-            departmentSelect.removeAttribute('required');
-            departmentSelect.disabled = true;
-            if (!fromServer) departmentSelect.value = '';
-        }
+        hideEditSelect(departmentContainer, departmentSelect);
+        hideEditSelect(hubContainer, hubSelect);
+        showEditSelect(jobTypeContainer, jobTypeSelect, true);
+        showEditSelect(officeContainer, officeSelect, true);
         setDriverKycRequiredFields(modal, false, true);
+    } else if (isDriver) {
+        additionalFields.forEach(function(field) {
+            field.style.display = 'block';
+            field.querySelectorAll('input, select, textarea').forEach(function(input) {
+                if (input.getAttribute('data-saved-pattern')) {
+                    input.setAttribute('pattern', input.getAttribute('data-saved-pattern'));
+                }
+            });
+        });
+        hideEditSelect(departmentContainer, departmentSelect);
+        hideEditSelect(jobTypeContainer, jobTypeSelect);
+        hideEditSelect(officeContainer, officeSelect);
+        showEditSelect(hubContainer, hubSelect, true);
+        modal.querySelectorAll('input[data-preview-wrap]').forEach(function(inp) {
+            renderFilePreview(inp);
+        });
+        setDriverKycRequiredFields(modal, true, true);
     } else {
         if (!fromServer && jobTypeSelect) {
             jobTypeSelect.removeAttribute('required');
@@ -1675,6 +1781,10 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
         if (!fromServer && officeSelect) {
             officeSelect.removeAttribute('required');
             officeSelect.value = '';
+        }
+        if (!fromServer && hubSelect) {
+            hubSelect.removeAttribute('required');
+            hubSelect.value = '';
         }
 
         additionalFields.forEach(function(field) {
@@ -1686,29 +1796,16 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
             });
         });
 
-        if (jobTypeContainer) jobTypeContainer.classList.add('d-none');
-        if (jobTypeSelect) {
-            jobTypeSelect.removeAttribute('required');
-            jobTypeSelect.disabled = true;
-        }
-
-        if (officeContainer) officeContainer.classList.add('d-none');
-        if (officeSelect) {
-            officeSelect.removeAttribute('required');
-            officeSelect.disabled = true;
-        }
-
-        if (departmentContainer) departmentContainer.style.display = 'block';
-        if (departmentSelect) {
-            departmentSelect.disabled = false;
-            departmentSelect.setAttribute('required', 'required');
-        }
+        hideEditSelect(hubContainer, hubSelect);
+        hideEditSelect(jobTypeContainer, jobTypeSelect);
+        hideEditSelect(officeContainer, officeSelect);
+        showEditSelect(departmentContainer, departmentSelect, true);
 
         modal.querySelectorAll('input[data-preview-wrap]').forEach(function(inp) {
             renderFilePreview(inp);
         });
 
-        setDriverKycRequiredFields(modal, isDriver, true);
+        setDriverKycRequiredFields(modal, false, true);
     }
 }
 

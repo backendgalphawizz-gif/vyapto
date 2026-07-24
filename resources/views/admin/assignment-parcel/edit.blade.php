@@ -44,7 +44,17 @@
                     <select name="user_id" id="user_id" class="form-select @error('user_id') is-invalid @enderror" required>
                         <option value="">Select Staff</option>
                         @foreach($users as $user)
-                            <option value="{{ $user->id }}" {{ old('user_id', $assignmentParcel->user_id) == $user->id ? 'selected' : '' }}>{{ $user->name }} - {{ $user->email }}</option>
+                            @php
+                                $roleName = (string) ($user->role->name ?? '');
+                                $locType = \App\Support\StaffRoles::locationTypeForRoleId($user->role_id) ?? 'driver';
+                            @endphp
+                            <option
+                                value="{{ $user->id }}"
+                                data-role-type="{{ $locType }}"
+                                data-hub-id="{{ $user->hub_id }}"
+                                data-office-id="{{ $user->office_id }}"
+                                {{ old('user_id', $assignmentParcel->user_id) == $user->id ? 'selected' : '' }}
+                            >{{ $user->name }} - {{ $user->email }} ({{ $roleName ?: 'Staff' }})</option>
                         @endforeach
                     </select>
                     @error('user_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -66,15 +76,28 @@
                     @error('vehicle_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6" id="hubFieldWrap">
                     <label for="hub_id" class="form-label fw-semibold">Hub <span class="text-danger">*</span></label>
-                    <select name="hub_id" id="hub_id" class="form-select @error('hub_id') is-invalid @enderror" required>
+                    <select name="hub_id" id="hub_id" class="form-select @error('hub_id') is-invalid @enderror">
                         <option value="">Select Hub</option>
                         @foreach($hubs as $hub)
                             <option value="{{ $hub->id }}" {{ old('hub_id', $assignmentParcel->hub_id) == $hub->id ? 'selected' : '' }}>{{ $hub->name }}</option>
                         @endforeach
                     </select>
+                    <div class="form-text">Shown for Driver staff only.</div>
                     @error('hub_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="col-md-6 d-none" id="officeFieldWrap">
+                    <label for="office_id" class="form-label fw-semibold">Office <span class="text-danger">*</span></label>
+                    <select name="office_id" id="office_id" class="form-select @error('office_id') is-invalid @enderror">
+                        <option value="">Select Office</option>
+                        @foreach($offices ?? [] as $office)
+                            <option value="{{ $office->id }}" {{ old('office_id', $assignmentParcel->office_id) == $office->id ? 'selected' : '' }}>{{ $office->name }}</option>
+                        @endforeach
+                    </select>
+                    <div class="form-text">Shown for Staff Employee only.</div>
+                    @error('office_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-md-6">
@@ -121,12 +144,51 @@
         var staffSelect = document.getElementById('user_id');
         var vehicleSelect = document.getElementById('vehicle_id');
         var canFilterByStaff = @json((bool) $vehicleOwnerColumn);
+        var hubWrap = document.getElementById('hubFieldWrap');
+        var officeWrap = document.getElementById('officeFieldWrap');
+        var hubSelect = document.getElementById('hub_id');
+        var officeSelect = document.getElementById('office_id');
 
-        if (!staffSelect || !vehicleSelect) {
-            return;
+        function toggleLocationByStaff() {
+            if (!staffSelect || !hubWrap || !officeWrap || !hubSelect || !officeSelect) return;
+            var opt = staffSelect.options[staffSelect.selectedIndex];
+            var roleType = opt ? (opt.getAttribute('data-role-type') || '') : '';
+            var preferredHub = opt ? (opt.getAttribute('data-hub-id') || '') : '';
+            var preferredOffice = opt ? (opt.getAttribute('data-office-id') || '') : '';
+
+            if (roleType === 'staff') {
+                hubWrap.classList.add('d-none');
+                officeWrap.classList.remove('d-none');
+                hubSelect.removeAttribute('required');
+                hubSelect.value = '';
+                officeSelect.setAttribute('required', 'required');
+                if (preferredOffice && !officeSelect.value) {
+                    officeSelect.value = preferredOffice;
+                }
+            } else if (roleType === 'driver') {
+                officeWrap.classList.add('d-none');
+                hubWrap.classList.remove('d-none');
+                officeSelect.removeAttribute('required');
+                officeSelect.value = '';
+                hubSelect.setAttribute('required', 'required');
+                if (preferredHub && !hubSelect.value) {
+                    hubSelect.value = preferredHub;
+                }
+            } else {
+                hubWrap.classList.remove('d-none');
+                officeWrap.classList.add('d-none');
+                hubSelect.removeAttribute('required');
+                officeSelect.removeAttribute('required');
+                officeSelect.value = '';
+            }
         }
 
-        if (!canFilterByStaff) {
+        if (staffSelect) {
+            staffSelect.addEventListener('change', toggleLocationByStaff);
+            toggleLocationByStaff();
+        }
+
+        if (!staffSelect || !vehicleSelect || !canFilterByStaff) {
             return;
         }
 

@@ -106,12 +106,15 @@ class AssignmentParcelController extends Controller
         $vehicleOwnerColumn = $this->getVehicleOwnerColumn();
         $vehicleVendorColumn = $this->getVehicleVendorColumn();
         $vehicles = Vehicle::orderBy('vehicle_number')->get();
-        $users = $this->assignableStaffQuery(excludeAlreadyAssigned: true)->get();
+        $users = $this->assignableStaffQuery(excludeAlreadyAssigned: true)
+            ->with(['role', 'hub', 'office'])
+            ->get();
        
         $hubs = Hub::orderBy('name')->get();
+        $offices = \App\Models\Office::orderBy('name')->get();
         $statuses = AssignmentParcel::getStatuses();
 
-        return view('admin.assignment-parcel.create', compact('vendors', 'vehicles', 'users', 'hubs', 'statuses', 'vehicleOwnerColumn', 'vehicleVendorColumn'));
+        return view('admin.assignment-parcel.create', compact('vendors', 'vehicles', 'users', 'hubs', 'offices', 'statuses', 'vehicleOwnerColumn', 'vehicleVendorColumn'));
     }
 
     /**
@@ -141,7 +144,28 @@ class AssignmentParcelController extends Controller
                 },
             ],
             'user_id' => ['required', Rule::exists('users', 'id')->whereIn('role_id', $this->assignableStaffRoleIds())],
-            'hub_id' => 'required|exists:hubs,id',
+            'hub_id' => [
+                'nullable',
+                'exists:hubs,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $user = User::find($request->user_id);
+                    $isDriver = $user && StaffRoles::isDriverRoleId($user->role_id);
+                    if ($isDriver && empty($value)) {
+                        $fail('Hub is required for driver staff.');
+                    }
+                },
+            ],
+            'office_id' => [
+                'nullable',
+                'exists:offices,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $user = User::find($request->user_id);
+                    $isStaff = $user && StaffRoles::isStaffEmployeeRoleId($user->role_id);
+                    if ($isStaff && empty($value)) {
+                        $fail('Office is required for staff employees.');
+                    }
+                },
+            ],
             'parcel_quantity' => 'required|integer|min:1',
             'parcel_ids' => [
                 'required',
@@ -182,7 +206,8 @@ class AssignmentParcelController extends Controller
             'vendor_id.required' => 'Vendor field is required.',
             'vehicle_id.required' => 'Vehicle field is required.',
             'user_id.required' => 'Staff field is required.',
-            'hub_id.required' => 'Hub field is required.',
+            'hub_id.required' => 'Hub field is required for drivers.',
+            'office_id.required' => 'Office field is required for staff employees.',
             'parcel_quantity.required' => 'Parcel quantity field is required.',
             'parcel_ids.required' => 'Parcel IDs field is required.',
             'parcel_ids.*.required' => 'Parcel ID field is required.',
@@ -194,6 +219,13 @@ class AssignmentParcelController extends Controller
 
         try {
             DB::beginTransaction();
+
+            $staffUser = User::find($validated['user_id']);
+            if ($staffUser && StaffRoles::isDriverRoleId($staffUser->role_id)) {
+                $validated['office_id'] = null;
+            } elseif ($staffUser && StaffRoles::isStaffEmployeeRoleId($staffUser->role_id)) {
+                $validated['hub_id'] = null;
+            }
             
             $assignment = AssignmentParcel::create($validated);
             $this->createParcelDetails(
@@ -302,11 +334,14 @@ class AssignmentParcelController extends Controller
         $vehicleOwnerColumn = $this->getVehicleOwnerColumn();
         $vehicleVendorColumn = $this->getVehicleVendorColumn();
         $vehicles = Vehicle::orderBy('vehicle_number')->get();
-        $users = $this->assignableStaffQuery(excludeAlreadyAssigned: false)->get();
+        $users = $this->assignableStaffQuery(excludeAlreadyAssigned: false)
+            ->with(['role', 'hub', 'office'])
+            ->get();
         $hubs = Hub::orderBy('name')->get();
+        $offices = \App\Models\Office::orderBy('name')->get();
         $statuses = AssignmentParcel::getStatuses();
 
-        return view('admin.assignment-parcel.edit', compact('assignmentParcel', 'vendors', 'vehicles', 'users', 'hubs', 'statuses', 'vehicleOwnerColumn', 'vehicleVendorColumn'));
+        return view('admin.assignment-parcel.edit', compact('assignmentParcel', 'vendors', 'vehicles', 'users', 'hubs', 'offices', 'statuses', 'vehicleOwnerColumn', 'vehicleVendorColumn'));
     }
 
     /**
@@ -336,7 +371,28 @@ class AssignmentParcelController extends Controller
                 },
             ],
             'user_id' => ['required', Rule::exists('users', 'id')->whereIn('role_id', $this->assignableStaffRoleIds())],
-            'hub_id' => 'required|exists:hubs,id',
+            'hub_id' => [
+                'nullable',
+                'exists:hubs,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $user = User::find($request->user_id);
+                    $isDriver = $user && StaffRoles::isDriverRoleId($user->role_id);
+                    if ($isDriver && empty($value)) {
+                        $fail('Hub is required for driver staff.');
+                    }
+                },
+            ],
+            'office_id' => [
+                'nullable',
+                'exists:offices,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $user = User::find($request->user_id);
+                    $isStaff = $user && StaffRoles::isStaffEmployeeRoleId($user->role_id);
+                    if ($isStaff && empty($value)) {
+                        $fail('Office is required for staff employees.');
+                    }
+                },
+            ],
             'parcel_quantity' => 'required|integer|min:1',
             'assignment_date' => 'required|date',
             'status' => 'required|in:pending,assigned,in_transit,delivered,cancelled',
@@ -345,6 +401,13 @@ class AssignmentParcelController extends Controller
 
         try {
             DB::beginTransaction();
+
+            $staffUser = User::find($validated['user_id']);
+            if ($staffUser && StaffRoles::isDriverRoleId($staffUser->role_id)) {
+                $validated['office_id'] = null;
+            } elseif ($staffUser && StaffRoles::isStaffEmployeeRoleId($staffUser->role_id)) {
+                $validated['hub_id'] = null;
+            }
 
             $assignmentParcel->update($validated);
 

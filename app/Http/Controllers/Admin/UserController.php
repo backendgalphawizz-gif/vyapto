@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Department;
 use App\Models\Office;
+use App\Models\Hub;
+use App\Support\StaffRoles;
 use App\CPU\ImageManager;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
@@ -31,17 +33,18 @@ class UserController extends Controller
 
     private function isDriverRole($roleId)
     {
-        if (empty($roleId)) {
-            return false;
-        }
+        return StaffRoles::isDriverRoleId($roleId);
+    }
 
-        $role = Role::find($roleId);
-        return $role && stripos($role->name, 'driver') !== false;
+    private function isStaffEmployeeRole($roleId)
+    {
+        return StaffRoles::isStaffEmployeeRoleId($roleId)
+            || (int) $roleId === (int) $this->getStaffRoleId();
     }
 
     public function index(Request $request)
     {
-        $query = User::with(['roles', 'office', 'department'])
+        $query = User::with(['roles', 'office', 'hub', 'department'])
             ->whereNotIn('role_id', [1, 2]);
 
         if ($request->filled('search')) {
@@ -90,8 +93,9 @@ class UserController extends Controller
         $roles = Role::whereNotIn('id', [1, 2])->get();
         $departments = Department::where('status', 1)->get();
         $offices = Office::orderBy('name')->get();
+        $hubs = Hub::orderBy('name')->get();
 
-        return view('admin.users.index', compact('users', 'roles', 'departments', 'offices'));
+        return view('admin.users.index', compact('users', 'roles', 'departments', 'offices', 'hubs'));
     }
 
 
@@ -170,18 +174,27 @@ class UserController extends Controller
             'address'    => 'required|string|max:500',
             'role_id'    => 'required|exists:roles,id',
             'department_id' => ['nullable', 'exists:departments,id', function ($attribute, $value, $fail) use ($request) {
-                if ($request->role_id != $this->getStaffRoleId() && empty($value)) {
-                    $fail('The department field is required for non-staff employees.');
+                // Drivers use hub; staff employees use office — department only for other roles
+                if ($this->isDriverRole($request->role_id) || $this->isStaffEmployeeRole($request->role_id)) {
+                    return;
+                }
+                if (empty($value)) {
+                    $fail('The department field is required.');
                 }
             }],
             'job_type'   => ['nullable', 'string', 'in:Full Time,Half Time', function ($attribute, $value, $fail) use ($request) {
-                if ($request->role_id == $this->getStaffRoleId() && empty($value)) {
+                if ($this->isStaffEmployeeRole($request->role_id) && empty($value)) {
                     $fail('The job type field is required for staff employees.');
                 }
             }],
             'office_id' => ['nullable', 'exists:offices,id', function ($attribute, $value, $fail) use ($request) {
-                if ($request->role_id == $this->getStaffRoleId() && empty($value) && Office::query()->exists()) {
+                if ($this->isStaffEmployeeRole($request->role_id) && empty($value) && Office::query()->exists()) {
                     $fail('The office field is required for staff employees.');
+                }
+            }],
+            'hub_id' => ['nullable', 'exists:hubs,id', function ($attribute, $value, $fail) use ($request) {
+                if ($this->isDriverRole($request->role_id) && empty($value) && Hub::query()->exists()) {
+                    $fail('The hub field is required for drivers.');
                 }
             }],
             'date_of_birth' => 'required|date|before:today',
@@ -256,9 +269,12 @@ class UserController extends Controller
         $user->phone = $request->phone;
         $user->address = $request->address;
         $user->role_id = $request->role_id;
-        $user->department_id = $request->role_id == $this->getStaffRoleId() ? null : $request->department_id;
-        $user->office_id = $request->role_id == $this->getStaffRoleId() ? $request->office_id : null;
-        $user->job_type = $request->role_id == $this->getStaffRoleId() ? $request->job_type : null;
+        $isStaff = $this->isStaffEmployeeRole($request->role_id);
+        $isDriver = $this->isDriverRole($request->role_id);
+        $user->department_id = ($isStaff || $isDriver) ? null : $request->department_id;
+        $user->office_id = $isStaff ? $request->office_id : null;
+        $user->hub_id = $isDriver ? $request->hub_id : null;
+        $user->job_type = $isStaff ? $request->job_type : null;
         $user->profile_image = $profileImage;
 
         // PERSONAL
@@ -304,6 +320,14 @@ class UserController extends Controller
             'ifsc_code' => $request->filled('ifsc_code') ? strtoupper($request->ifsc_code) : $request->ifsc_code,
         ]);
 
+        // Leave blank = keep current password (also ignores browser autofill when confirm is empty)
+        if (!$request->filled('password') || !$request->filled('password_confirmation')) {
+            $request->merge([
+                'password' => null,
+                'password_confirmation' => null,
+            ]);
+        }
+
         $validator = Validator::make($request->all(), [
             'fullname' => ['required', 'string', 'max:255', 'regex:/^[A-Za-z\s]+$/'],
             'email'    => 'required|email|unique:users,email,' . $employee->id,
@@ -315,18 +339,26 @@ class UserController extends Controller
             'address'  => 'required|string|max:500',
             'role_id'  => 'required|exists:roles,id',
             'department_id' => ['nullable', 'exists:departments,id', function ($attribute, $value, $fail) use ($request) {
-                if ($request->role_id != $this->getStaffRoleId() && empty($value)) {
-                    $fail('The department field is required for non-staff employees.');
+                if ($this->isDriverRole($request->role_id) || $this->isStaffEmployeeRole($request->role_id)) {
+                    return;
+                }
+                if (empty($value)) {
+                    $fail('The department field is required.');
                 }
             }],
             'job_type' => ['nullable', 'string', 'in:Full Time,Half Time', function ($attribute, $value, $fail) use ($request) {
-                if ($request->role_id == $this->getStaffRoleId() && empty($value)) {
+                if ($this->isStaffEmployeeRole($request->role_id) && empty($value)) {
                     $fail('The job type field is required for staff employees.');
                 }
             }],
             'office_id' => ['nullable', 'exists:offices,id', function ($attribute, $value, $fail) use ($request) {
-                if ($request->role_id == $this->getStaffRoleId() && empty($value) && Office::query()->exists()) {
+                if ($this->isStaffEmployeeRole($request->role_id) && empty($value) && Office::query()->exists()) {
                     $fail('The office field is required for staff employees.');
+                }
+            }],
+            'hub_id' => ['nullable', 'exists:hubs,id', function ($attribute, $value, $fail) use ($request) {
+                if ($this->isDriverRole($request->role_id) && empty($value) && Hub::query()->exists()) {
+                    $fail('The hub field is required for drivers.');
                 }
             }],
             'date_of_birth' => 'required|date|before:today',
@@ -338,7 +370,7 @@ class UserController extends Controller
                 }
             }],
             'place_of_birth' => ['required', 'string', 'max:255', 'regex:/^[A-Za-z\s]+$/'],
-            'password' => 'nullable|confirmed|min:6',
+            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
 
             'aadhar_card_no' => ['nullable', 'digits:12', 'unique:users,aadhar_card_no,' . $employee->id, function ($attribute, $value, $fail) use ($request) {
@@ -418,9 +450,12 @@ class UserController extends Controller
         $employee->address = $request->address;
         $employee->password = $request->password ? Hash::make($request->password) : $employee->password;
         $employee->role_id = $request->role_id;
-        $employee->department_id = $request->role_id == $this->getStaffRoleId() ? null : $request->department_id;
-        $employee->office_id = $request->role_id == $this->getStaffRoleId() ? $request->office_id : null;
-        $employee->job_type = $request->role_id == $this->getStaffRoleId() ? $request->job_type : null;
+        $isStaff = $this->isStaffEmployeeRole($request->role_id);
+        $isDriver = $this->isDriverRole($request->role_id);
+        $employee->department_id = ($isStaff || $isDriver) ? null : $request->department_id;
+        $employee->office_id = $isStaff ? $request->office_id : null;
+        $employee->hub_id = $isDriver ? $request->hub_id : null;
+        $employee->job_type = $isStaff ? $request->job_type : null;
         $employee->date_of_birth = $request->date_of_birth;
         $employee->gender = $request->gender;
         $employee->father_name = $request->father_name;

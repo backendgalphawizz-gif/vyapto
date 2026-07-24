@@ -17,6 +17,7 @@ class AssignmentParcel extends Model
         'vehicle_id',
         'user_id',
         'hub_id',
+        'office_id',
         'parcel_quantity',
         'assignment_date',
         'status',
@@ -67,6 +68,11 @@ class AssignmentParcel extends Model
     public function hub()
     {
         return $this->belongsTo(Hub::class, 'hub_id');
+    }
+
+    public function office()
+    {
+        return $this->belongsTo(Office::class, 'office_id');
     }
 
     // Accessor for status badge

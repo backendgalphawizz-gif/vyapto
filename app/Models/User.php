@@ -28,6 +28,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'role_id',
         'department_id',
         'office_id',
+        'hub_id',
         'job_type',
         'password',
         'email_verified_at',
@@ -96,6 +97,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function office()
     {
         return $this->belongsTo(Office::class);
+    }
+
+    public function hub()
+    {
+        return $this->belongsTo(Hub::class);
     }
 
     public function attendance()
