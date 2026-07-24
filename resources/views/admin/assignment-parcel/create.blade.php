@@ -54,7 +54,7 @@
                         <option value="{{ $hub->id }}" {{ old('hub_id') == $hub->id ? 'selected' : '' }}>{{ $hub->name }}</option>
                     @endforeach
                 </select>
-                <div class="form-text">Shown for Driver staff only.</div>
+                <div class="form-text">Drivers are assigned to a Hub location.</div>
                 @error('hub_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-md-6 d-none" id="officeFieldWrap">
@@ -65,7 +65,7 @@
                         <option value="{{ $office->id }}" {{ old('office_id') == $office->id ? 'selected' : '' }}>{{ $office->name }}</option>
                     @endforeach
                 </select>
-                <div class="form-text">Shown for Staff Employee only.</div>
+                <div class="form-text">Staff Employees are assigned to an Office location.</div>
                 @error('office_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
