@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
+use App\Support\StaffRoles;
 
 class AdminController extends Controller
 {
@@ -14,11 +15,7 @@ class AdminController extends Controller
     {
         $userCount = User::count();
         $learnerCount = $this->tableCount('learners');
-        $employeeCount = DB::table('users')
-            ->where(function ($query) {
-                $query->where('role_id', 3)->orWhere('role_id', 4);
-            })
-            ->count();
+        $employeeCount = User::whereIn('role_id', StaffRoles::assignableIds())->count();
 
         $mailLogCount = $this->tableCount('email_logs');
         $announcementCount = $this->tableCount('announcements');

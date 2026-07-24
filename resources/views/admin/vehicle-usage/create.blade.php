@@ -38,9 +38,6 @@
                         <select name="user_id" class="form-select @error('user_id') is-invalid @enderror" required>
                             <option value="">Select Driver</option>
                             @foreach($users as $user)
-                            @if((int) ($user->role_id ?? 0) !== 3)
-                            @continue
-                            @endif
                             <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }} - {{ $user->email }}</option>
                             @endforeach
                         </select>

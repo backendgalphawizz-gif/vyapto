@@ -267,18 +267,36 @@ class SalarySlipController extends Controller
 
 
         SalarySlip::create([
-
             'employee_id' => $request->employee_id,
-
             'month' => $request->month,
-
             'year' => $request->year,
-
             'file_path' => 'storage/' . $filePath,
-
         ]);
 
+        // Keep portal salary list in sync (employee_salary)
+        $salaryDate = sprintf('%04d-%02d-01', (int) $request->year, (int) $request->month);
+        $existingEntry = DB::table('employee_salary')
+            ->where('employee_id', $request->employee_id)
+            ->where('date', $salaryDate)
+            ->first();
 
+        if ($existingEntry) {
+            DB::table('employee_salary')
+                ->where('id', $existingEntry->id)
+                ->update(['updated_at' => now()]);
+        } else {
+            DB::table('employee_salary')->insert([
+                'employee_id' => $request->employee_id,
+                'date' => $salaryDate,
+                'basic_salary' => 0,
+                'gross_salary' => 0,
+                'net_salary' => 0,
+                'total_salary' => 0,
+                'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         return redirect()->route('salary-slips.index')->with('success', 'Salary slip created successfully.');
 
@@ -466,15 +484,24 @@ class SalarySlipController extends Controller
 
         $slip = SalarySlip::findOrFail($id);
 
+        $salaryDate = sprintf('%04d-%02d-01', (int) $slip->year, (int) $slip->month);
 
+        if ($slip->file_path) {
+            $relative = str_starts_with($slip->file_path, 'storage/')
+                ? substr($slip->file_path, strlen('storage/'))
+                : ltrim($slip->file_path, '/');
 
-        if ($slip->file_path && file_exists(public_path($slip->file_path))) {
-
-            unlink(public_path($slip->file_path));
-
+            if (Storage::disk('public')->exists($relative)) {
+                Storage::disk('public')->delete($relative);
+            } elseif (file_exists(public_path($slip->file_path))) {
+                @unlink(public_path($slip->file_path));
+            }
         }
 
-
+        DB::table('employee_salary')
+            ->where('employee_id', $slip->employee_id)
+            ->where('date', $salaryDate)
+            ->delete();
 
         $slip->delete();
 
@@ -770,10 +797,18 @@ class SalarySlipController extends Controller
             'effective_from' => $request->effective_from ?: null,
         ]);
 
-        // Keep salary_slips.basic_salary aligned so stored slips and PDFs reflect the new base (show() also reads UserSalary).
-        SalarySlip::where('employee_id', $request->user_id)->update([
-            'basic_salary' => (float) $request->salary_amount,
-        ]);
+        // Align only current/future month slips — do not rewrite historical payslips.
+        $now = now();
+        SalarySlip::where('employee_id', $request->user_id)
+            ->where(function ($q) use ($now) {
+                $q->where('year', '>', $now->year)
+                    ->orWhere(function ($q2) use ($now) {
+                        $q2->where('year', $now->year)->where('month', '>=', $now->month);
+                    });
+            })
+            ->update([
+                'basic_salary' => (float) $request->salary_amount,
+            ]);
 
         return redirect()->route('user-salaries.index')->with('success', 'Salary record updated successfully.');
     }
@@ -996,7 +1031,7 @@ class SalarySlipController extends Controller
         ];
 
         $earnings['gross'] = $earnings['basic'] + $earnings['hra']
-            + $earnings['special_allow'] + $earnings['stat_bonus'];
+            + $earnings['special_allow'] + $earnings['stat_bonus'] + $earnings['perquisite'];
 
         $deductions = [
             'pt' => $resolve($slip->pt_value, $slip->pt_type, $basic),

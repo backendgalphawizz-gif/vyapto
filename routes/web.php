@@ -79,7 +79,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::group(['middleware' => ['permission:manage_vehicles']], function () {
-        Route::resource('vehicles', VehicleController::class);
+        Route::resource('vehicles', VehicleController::class)->except(['create', 'edit', 'show']);
         Route::post('vehicles/update-status', [VehicleController::class, 'updateStatus'])
             ->name('vehicles.updateStatus');
         Route::get('vehicles-export', [VehicleController::class, 'export'])
@@ -89,17 +89,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::group(['middleware' => ['permission:manage_attendance']], function () {
         Route::post('attendance/filter', [AttendanceController::class, 'filter'])->name('attendance.filter');
         Route::get('attendance-report', [AttendanceController::class, 'report'])->name('attendance.report');
-        Route::resource('attendance', AttendanceController::class);
+        Route::resource('attendance', AttendanceController::class)->except(['create', 'edit', 'show']);
     });
 
     Route::group(['middleware' => ['permission:manage_vendors']], function () {
         Route::post('/vendors/update-status', [VendorController::class, 'updateStatus'])->name('vendors.updateStatus');
         Route::get('/vendors-export', [VendorController::class, 'export'])->name('vendors.export');
-        Route::resource('vendors', VendorController::class);
+        Route::resource('vendors', VendorController::class)->except(['create', 'edit', 'show']);
     });
 
     Route::group(['middleware' => ['permission:manage_salary_slips']], function () {
-        Route::resource('salary-slips', SalarySlipController::class);
+        Route::resource('salary-slips', SalarySlipController::class)->except(['create', 'edit']);
 
         // User Salary CRUD
         Route::get('user-salaries',                          [SalarySlipController::class, 'salaryIndex'])->name('user-salaries.index');
@@ -112,13 +112,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::group(['middleware' => ['permission:manage_employees']], function () {
         Route::post('/employees/update-status', [UserController::class, 'updateStatus'])->name('employees.updateStatus');
         Route::get('/employees-report', [UserController::class, 'report'])->name('employees.report');
-        Route::resource('employees', UserController::class);
+        Route::resource('employees', UserController::class)->except(['create', 'edit', 'show']);
     });
    
     // deprtments
     Route::post('/departments/update-status', [DepartmentController::class, 'updateStatus'])->name('departments.updateStatus');
     Route::get('/departments-export', [DepartmentController::class, 'export'])->name('departments.export');
-    Route::resource('departments', DepartmentController::class);
+    Route::resource('departments', DepartmentController::class)->except(['create', 'edit', 'show']);
 
 
 
@@ -152,10 +152,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Email Logs
     Route::get('/email-logs', [EmailLogController::class, 'index'])->name('email.logs');
-
-    // Custom Email
-    Route::get('/custom-email', [UserController::class, 'customEmailForm'])->name('email.custom.form');
-    Route::post('/custom-email/send', [UserController::class, 'sendCustomEmail'])->name('email.custom.send');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -206,8 +202,8 @@ Route::middleware(['auth', 'verified'])
 
 
 
-// Admin routes
-Route::prefix('admin')->name('admin.')->group(function () {
+// Admin operational modules (require login)
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('hubs', AdminHubController::class);
     Route::get('hubs-map', [AdminHubController::class, 'map'])->name('hubs.map');
     Route::get('hubs-export', [AdminHubController::class, 'export'])->name('hubs.export');
@@ -215,27 +211,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('offices', AdminOfficeController::class);
     Route::get('offices-map', [AdminOfficeController::class, 'map'])->name('offices.map');
     Route::get('offices-export', [AdminOfficeController::class, 'export'])->name('offices.export');
-});
 
-Route::prefix('admin')->name('admin.')->group(function () {
-    // Existing routes...
-    
-    // Assignment Parcel routes
     Route::resource('assignment-parcel', AssignmentParcelController::class);
     Route::post('assignment-parcel/{assignmentParcel}/update-status', [AssignmentParcelController::class, 'updateStatus'])->name('assignment-parcel.update-status');
     Route::get('assignment-parcel-report', [AssignmentParcelController::class, 'report'])->name('assignment-parcel.report');
     Route::get('assignment-parcel-export', [AssignmentParcelController::class, 'export'])->name('assignment-parcel.export');
+
     Route::get('vehicle-usage-today-km-summary', [VehicleUsageController::class, 'todayKmSummary'])
         ->name('vehicle-usage.today-km-summary');
     Route::resource('vehicle-usage', VehicleUsageController::class);
     Route::get('vehicle-usage-export', [VehicleUsageController::class, 'export'])->name('vehicle-usage.export');
+
     Route::resource('faq-categories', AdminFaqCategoryController::class);
     Route::resource('faqs', AdminFaqController::class);
 });
 
 
 // Temporarily allow public access for testing purposes~
-Route::resource('learners', LearnerController::class)->names('admin.learners');
+Route::middleware(['auth'])->resource('learners', LearnerController::class)->names('admin.learners');
 // Route::resource('employees', EmployeeController::class);
 // Route::resource('attendance', AttendanceController::class);
 // Route::resource('announcements', AnnouncementController::class);

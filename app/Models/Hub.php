@@ -28,17 +28,22 @@ class Hub extends Model
         'closing_time' => 'datetime',
     ];
 
-    // Accessor to check if hub is currently open
+    // Accessor to check if hub is currently open (time-of-day only)
     public function getIsOpenAttribute()
     {
-        $now = now();
-        $opening = $this->opening_time;
-        $closing = $this->closing_time;
-
-        if (!$opening || !$closing) {
+        if (!$this->opening_time || !$this->closing_time) {
             return false;
         }
 
-        return $now->between($opening, $closing);
+        $now = now()->format('H:i:s');
+        $opening = \Carbon\Carbon::parse($this->opening_time)->format('H:i:s');
+        $closing = \Carbon\Carbon::parse($this->closing_time)->format('H:i:s');
+
+        if ($opening <= $closing) {
+            return $now >= $opening && $now <= $closing;
+        }
+
+        // Overnight window (e.g. 22:00 → 06:00)
+        return $now >= $opening || $now <= $closing;
     }
 }

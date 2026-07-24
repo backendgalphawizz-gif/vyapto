@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\ExportsTabularData;
 use App\Models\VehicleUsage;
 use App\Models\User;
+use App\Support\StaffRoles;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +16,11 @@ use Illuminate\Validation\Rule;
 class VehicleUsageController extends Controller
 {
     use ExportsTabularData;
+
+    private function staffUserRule()
+    {
+        return Rule::exists('users', 'id')->whereIn('role_id', StaffRoles::assignableIds());
+    }
 
     /**
      * Display a listing of vehicle usage records.
@@ -60,8 +66,9 @@ class VehicleUsageController extends Controller
      */
     public function create()
     {
-        $users = User::where('role_id', 3)->orderBy('name')->get();
-        return view('admin.vehicle-usage.create', compact('users'));
+        $users = StaffRoles::employeesQuery()->get();
+        $assignableRoleIds = StaffRoles::assignableIds();
+        return view('admin.vehicle-usage.create', compact('users', 'assignableRoleIds'));
     }
 
     /**
@@ -71,7 +78,7 @@ class VehicleUsageController extends Controller
     {
         $validated = $request->validate([
             'vehicle_number' => 'required|string|max:50',
-            'user_id' => ['required', Rule::exists('users', 'id')->where('role_id', 3)],
+            'user_id' => ['required', $this->staffUserRule()],
             'kms' => 'nullable|numeric|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
@@ -108,8 +115,9 @@ class VehicleUsageController extends Controller
      */
     public function edit(VehicleUsage $vehicleUsage)
     {
-        $users = User::where('role_id', 3)->orderBy('name')->get();
-        return view('admin.vehicle-usage.edit', compact('vehicleUsage', 'users'));
+        $users = StaffRoles::employeesQuery()->get();
+        $assignableRoleIds = StaffRoles::assignableIds();
+        return view('admin.vehicle-usage.edit', compact('vehicleUsage', 'users', 'assignableRoleIds'));
     }
 
     /**
@@ -119,7 +127,7 @@ class VehicleUsageController extends Controller
     {
         $validated = $request->validate([
             'vehicle_number' => 'required|string|max:50',
-            'user_id' => ['required', Rule::exists('users', 'id')->where('role_id', 3)],
+            'user_id' => ['required', $this->staffUserRule()],
             'kms' => 'nullable|numeric|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);

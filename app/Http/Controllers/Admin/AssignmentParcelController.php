@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use App\Services\FcmNotificationService;
 use Illuminate\Support\Facades\Log;
-use Spatie\Permission\Models\Role;
+use App\Support\StaffRoles;
 
 class AssignmentParcelController extends Controller
 {
@@ -24,37 +24,14 @@ class AssignmentParcelController extends Controller
 
     private $fcmNotificationService;
 
-    /**
-     * Role IDs allowed in the Staff dropdown (assignments).
-     * Prefer role names so it still works if IDs differ across environments.
-     */
     private function assignableStaffRoleIds(): array
     {
-        $ids = Role::query()
-            ->where(function ($q) {
-                $q->where('name', 'Staff Employee')
-                    ->orWhere('name', 'like', '%Driver%');
-            })
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        // Legacy fallback used across the app
-        if (empty($ids)) {
-            $ids = [3];
-        }
-
-        return array_values(array_unique($ids));
+        return StaffRoles::assignableIds();
     }
 
     private function assignableStaffQuery(bool $excludeAlreadyAssigned = false)
     {
-        $query = User::query()
-            ->whereIn('role_id', $this->assignableStaffRoleIds())
-            ->where(function ($q) {
-                $q->where('status', 1)->orWhereNull('status');
-            })
-            ->orderBy('name');
+        $query = StaffRoles::employeesQuery();
 
         if ($excludeAlreadyAssigned) {
             $query->whereNotIn('id', function ($sub) {

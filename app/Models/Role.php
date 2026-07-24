@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Role extends Authenticatable implements MustVerifyEmail
-{ 
-    use HasFactory, Notifiable, HasRoles;
+class Role extends Model
+{
+    protected $table = 'roles';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    protected $fillable = [
+        'name',
+        'guard_name',
+    ];
+
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class, 'role_id');
+    }
 }
