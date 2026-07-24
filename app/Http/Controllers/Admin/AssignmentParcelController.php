@@ -15,13 +15,57 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use App\Services\FcmNotificationService;
-use Illuminate\Support\Facades\Log; 
+use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Role;
 
 class AssignmentParcelController extends Controller
 {
     use ExportsTabularData;
 
     private $fcmNotificationService;
+
+    /**
+     * Role IDs allowed in the Staff dropdown (assignments).
+     * Prefer role names so it still works if IDs differ across environments.
+     */
+    private function assignableStaffRoleIds(): array
+    {
+        $ids = Role::query()
+            ->where(function ($q) {
+                $q->where('name', 'Staff Employee')
+                    ->orWhere('name', 'like', '%Driver%');
+            })
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        // Legacy fallback used across the app
+        if (empty($ids)) {
+            $ids = [3];
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    private function assignableStaffQuery(bool $excludeAlreadyAssigned = false)
+    {
+        $query = User::query()
+            ->whereIn('role_id', $this->assignableStaffRoleIds())
+            ->where(function ($q) {
+                $q->where('status', 1)->orWhereNull('status');
+            })
+            ->orderBy('name');
+
+        if ($excludeAlreadyAssigned) {
+            $query->whereNotIn('id', function ($sub) {
+                $sub->select('user_id')
+                    ->from('parcel_detail')
+                    ->where('status', 'assigned');
+            });
+        }
+
+        return $query;
+    }
 
     public function __construct(FcmNotificationService $fcmNotificationService)
     {
@@ -85,14 +129,7 @@ class AssignmentParcelController extends Controller
         $vehicleOwnerColumn = $this->getVehicleOwnerColumn();
         $vehicleVendorColumn = $this->getVehicleVendorColumn();
         $vehicles = Vehicle::orderBy('vehicle_number')->get();
-        $users = User::where('role_id', 3)
-            ->whereNotIn('id', function ($query) {
-                $query->select('user_id')
-                    ->from('parcel_detail')
-                    ->where('status', 'assigned');
-            })
-            ->orderBy('name')
-            ->get();
+        $users = $this->assignableStaffQuery(excludeAlreadyAssigned: true)->get();
        
         $hubs = Hub::orderBy('name')->get();
         $statuses = AssignmentParcel::getStatuses();
@@ -126,7 +163,7 @@ class AssignmentParcelController extends Controller
                     }
                 },
             ],
-            'user_id' => ['required', Rule::exists('users', 'id')->where('role_id', 3)],
+            'user_id' => ['required', Rule::exists('users', 'id')->whereIn('role_id', $this->assignableStaffRoleIds())],
             'hub_id' => 'required|exists:hubs,id',
             'parcel_quantity' => 'required|integer|min:1',
             'parcel_ids' => [
@@ -288,7 +325,7 @@ class AssignmentParcelController extends Controller
         $vehicleOwnerColumn = $this->getVehicleOwnerColumn();
         $vehicleVendorColumn = $this->getVehicleVendorColumn();
         $vehicles = Vehicle::orderBy('vehicle_number')->get();
-        $users = User::where('role_id', 3)->orderBy('name')->get();
+        $users = $this->assignableStaffQuery(excludeAlreadyAssigned: false)->get();
         $hubs = Hub::orderBy('name')->get();
         $statuses = AssignmentParcel::getStatuses();
 
@@ -321,7 +358,7 @@ class AssignmentParcelController extends Controller
                     }
                 },
             ],
-            'user_id' => ['required', Rule::exists('users', 'id')->where('role_id', 3)],
+            'user_id' => ['required', Rule::exists('users', 'id')->whereIn('role_id', $this->assignableStaffRoleIds())],
             'hub_id' => 'required|exists:hubs,id',
             'parcel_quantity' => 'required|integer|min:1',
             'assignment_date' => 'required|date',
