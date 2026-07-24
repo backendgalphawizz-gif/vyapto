@@ -180,7 +180,7 @@ class UserController extends Controller
                 }
             }],
             'office_id' => ['nullable', 'exists:offices,id', function ($attribute, $value, $fail) use ($request) {
-                if ($request->role_id == $this->getStaffRoleId() && empty($value)) {
+                if ($request->role_id == $this->getStaffRoleId() && empty($value) && Office::query()->exists()) {
                     $fail('The office field is required for staff employees.');
                 }
             }],
@@ -325,7 +325,7 @@ class UserController extends Controller
                 }
             }],
             'office_id' => ['nullable', 'exists:offices,id', function ($attribute, $value, $fail) use ($request) {
-                if ($request->role_id == $this->getStaffRoleId() && empty($value)) {
+                if ($request->role_id == $this->getStaffRoleId() && empty($value) && Office::query()->exists()) {
                     $fail('The office field is required for staff employees.');
                 }
             }],

@@ -370,7 +370,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
     <div class="modal fade" id="editUserModal{{ $user->id }}" tabindex="-1" aria-labelledby="editUserLabel{{ $user->id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-primary rounded-4 shadow-sm">
-                <form action="{{ route('employees.update', $user->id) }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('employees.update', $user->id) }}" method="POST" enctype="multipart/form-data" novalidate class="employee-edit-form" data-user-id="{{ $user->id }}">
                     @csrf
                     @method('PUT')
                     <div class="modal-header py-2 px-3 border-bottom-0">
@@ -480,16 +480,19 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             </div>
 
                             <!-- Office Dropdown (Edit — Staff Employee only) -->
-                            <div class="col-md-6 {{ (old('office_id', $user->office_id) || ($user->role && $user->role->name == 'Staff Employee')) ? '' : 'd-none' }}" id="editOfficeContainer{{ $user->id }}">
-                                <label class="form-label">Office <span class="text-danger">*</span></label>
+                            @php $isStaffEdit = (old('role_id', $user->role_id) && optional($roles->firstWhere('id', old('role_id', $user->role_id)))->name === 'Staff Employee') || ($user->role && $user->role->name == 'Staff Employee'); @endphp
+                            <div class="col-md-6 {{ ($isStaffEdit || old('office_id', $user->office_id)) ? '' : 'd-none' }}" id="editOfficeContainer{{ $user->id }}">
+                                <label class="form-label">Office @if(($offices ?? collect())->isNotEmpty())<span class="text-danger">*</span>@endif</label>
                                 <select name="office_id" id="editOfficeSelect{{ $user->id }}" class="form-select @error('office_id', 'userUpdate'.$user->id) is-invalid @enderror"
-                                    {{ (old('office_id', $user->office_id) || ($user->role && $user->role->name == 'Staff Employee')) ? 'required' : '' }}>
+                                    {{ ($isStaffEdit && ($offices ?? collect())->isNotEmpty()) ? 'required' : '' }}>
                                     <option value="" disabled {{ old('office_id', $user->office_id) ? '' : 'selected' }}>Select Office</option>
-                                    @foreach($offices ?? [] as $office)
+                                    @forelse($offices ?? [] as $office)
                                     <option value="{{ $office->id }}" {{ old('office_id', $user->office_id) == $office->id ? 'selected' : '' }}>
                                         {{ $office->name }}@if($office->location) — {{ $office->location }}@endif
                                     </option>
-                                    @endforeach
+                                    @empty
+                                    <option value="" disabled>No offices found — create one under Offices</option>
+                                    @endforelse
                                 </select>
                                 @error('office_id', 'userUpdate'.$user->id)
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -598,8 +601,9 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                     data-existing-type="image"
                                     onchange="renderFilePreview(this)">
                                 <div id="editAadharPreviewWrap{{ $user->id }}" class="mt-2 {{ $user->aadhar_card_image ? '' : 'd-none' }}">
-                                    <img id="editAadharPreview{{ $user->id }}" src="{{ $user->aadhar_card_image ? asset($user->aadhar_card_image) : '' }}" class="img-thumbnail" style="max-height: 120px;">
-                                    <a id="editAadharPreviewLink{{ $user->id }}" href="#" target="_blank" class="btn btn-sm btn-outline-secondary d-none">View file</a>
+                                    <img id="editAadharPreview{{ $user->id }}" src="{{ $user->aadhar_card_image ? asset($user->aadhar_card_image) : '' }}" class="img-thumbnail" style="max-height: 120px;"
+                                        onerror="this.style.display='none'; this.parentElement.classList.add('d-none');">
+                                    <a id="editAadharPreviewLink{{ $user->id }}" href="{{ $user->aadhar_card_image ? asset($user->aadhar_card_image) : '#' }}" target="_blank" class="btn btn-sm btn-outline-secondary {{ $user->aadhar_card_image ? '' : 'd-none' }}">View file</a>
                                 </div>
                                 @error('aadhar_card_image', 'userUpdate'.$user->id)
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -626,8 +630,9 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                     data-existing-type="image"
                                     onchange="renderFilePreview(this)">
                                 <div id="editPanPreviewWrap{{ $user->id }}" class="mt-2 {{ $user->pan_card_image ? '' : 'd-none' }}">
-                                    <img id="editPanPreview{{ $user->id }}" src="{{ $user->pan_card_image ? asset($user->pan_card_image) : '' }}" class="img-thumbnail" style="max-height: 120px;">
-                                    <a id="editPanPreviewLink{{ $user->id }}" href="#" target="_blank" class="btn btn-sm btn-outline-secondary d-none">View file</a>
+                                    <img id="editPanPreview{{ $user->id }}" src="{{ $user->pan_card_image ? asset($user->pan_card_image) : '' }}" class="img-thumbnail" style="max-height: 120px;"
+                                        onerror="this.style.display='none'; this.parentElement.classList.add('d-none');">
+                                    <a id="editPanPreviewLink{{ $user->id }}" href="{{ $user->pan_card_image ? asset($user->pan_card_image) : '#' }}" target="_blank" class="btn btn-sm btn-outline-secondary {{ $user->pan_card_image ? '' : 'd-none' }}">View file</a>
                                 </div>
                                 @error('pan_card_image', 'userUpdate'.$user->id)
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -1156,6 +1161,27 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
         sessionStorage.removeItem(formStateKey + (formId || ''));
     }
 
+    function relaxHiddenFieldValidation(form) {
+        if (!form) return;
+        form.querySelectorAll('input, select, textarea').forEach(function(input) {
+            var host = input.closest('.d-none, [style*="display: none"], [style*="display:none"]');
+            var parentHidden = false;
+            var el = input.parentElement;
+            while (el && el !== form) {
+                if (el.classList && el.classList.contains('d-none')) parentHidden = true;
+                if (el.style && (el.style.display === 'none')) parentHidden = true;
+                el = el.parentElement;
+            }
+            if (host || parentHidden || input.disabled) {
+                if (input.hasAttribute('pattern')) {
+                    input.setAttribute('data-saved-pattern', input.getAttribute('pattern'));
+                    input.removeAttribute('pattern');
+                }
+                input.removeAttribute('required');
+            }
+        });
+    }
+
     function focusFirstInvalidField(containerSelector) {
         const container = document.querySelector(containerSelector);
         if (!container) return;
@@ -1215,21 +1241,25 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
     });
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Edit User Forms - Save state on submit
-        document.querySelectorAll('form[action*="employees/"][method="POST"]').forEach(function(form) {
+        // Edit User Forms - Save state on submit; never fail silently
+        document.querySelectorAll('form.employee-edit-form').forEach(function(form) {
             const updateAction = form.getAttribute('action');
-            if (updateAction && updateAction.includes('employees/') && form.querySelector('input[name="_method"][value="PUT"]')) {
-                const userId = updateAction.match(/\d+/)[0];
-                form.addEventListener('submit', function(event) {
-                    saveFormState('form[action="' + updateAction + '"]', userId);
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        hideFormLoader();
-                    }
+            const userId = form.getAttribute('data-user-id');
+            form.addEventListener('submit', function(event) {
+                relaxHiddenFieldValidation(form);
+                saveFormState('form[action="' + updateAction + '"]', userId);
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    hideFormLoader();
                     form.classList.add('was-validated');
-                });
-            }
+                    validationToastShown = false;
+                    showValidationToast('Please fill required fields (scroll up — e.g. Office for Staff Employee).');
+                    focusFirstInvalidField('#editUserModal' + userId);
+                    return;
+                }
+                form.classList.add('was-validated');
+            });
         });
 
         document.querySelectorAll('.delete-form').forEach(function(form) {
@@ -1454,6 +1484,10 @@ function toggleFieldsByRole(selectElement, opts) {
             field.style.display = 'none';
             field.querySelectorAll('input, select, textarea').forEach(function(input) {
                 input.removeAttribute('required');
+                if (input.hasAttribute('pattern')) {
+                    input.setAttribute('data-saved-pattern', input.getAttribute('pattern'));
+                    input.removeAttribute('pattern');
+                }
             });
         });
 
@@ -1474,7 +1508,11 @@ function toggleFieldsByRole(selectElement, opts) {
         if (officeContainer) officeContainer.classList.remove('d-none');
         if (officeSelect) {
             officeSelect.disabled = false;
-            officeSelect.setAttribute('required', 'required');
+            if (officeSelect.options.length > 1) {
+                officeSelect.setAttribute('required', 'required');
+            } else {
+                officeSelect.removeAttribute('required');
+            }
             if (!fromServer && !officeSelect.value) officeSelect.selectedIndex = 0;
         }
 
@@ -1491,6 +1529,11 @@ function toggleFieldsByRole(selectElement, opts) {
 
         additionalFields.forEach(function(field) {
             field.style.display = 'block';
+            field.querySelectorAll('input, select, textarea').forEach(function(input) {
+                if (input.getAttribute('data-saved-pattern')) {
+                    input.setAttribute('pattern', input.getAttribute('data-saved-pattern'));
+                }
+            });
         });
 
         if (jobTypeContainer) jobTypeContainer.classList.add('d-none');
@@ -1593,6 +1636,10 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
             field.style.display = 'none';
             field.querySelectorAll('input, select, textarea').forEach(function(input) {
                 input.removeAttribute('required');
+                if (input.hasAttribute('pattern')) {
+                    input.setAttribute('data-saved-pattern', input.getAttribute('pattern'));
+                    input.removeAttribute('pattern');
+                }
             });
         });
 
@@ -1605,7 +1652,11 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
         if (officeContainer) officeContainer.classList.remove('d-none');
         if (officeSelect) {
             officeSelect.disabled = false;
-            officeSelect.setAttribute('required', 'required');
+            if (officeSelect.options.length > 1) {
+                officeSelect.setAttribute('required', 'required');
+            } else {
+                officeSelect.removeAttribute('required');
+            }
             if (!fromServer && !officeSelect.value) officeSelect.selectedIndex = 0;
         }
 
@@ -1628,6 +1679,11 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
 
         additionalFields.forEach(function(field) {
             field.style.display = 'block';
+            field.querySelectorAll('input, select, textarea').forEach(function(input) {
+                if (input.getAttribute('data-saved-pattern')) {
+                    input.setAttribute('pattern', input.getAttribute('data-saved-pattern'));
+                }
+            });
         });
 
         if (jobTypeContainer) jobTypeContainer.classList.add('d-none');
