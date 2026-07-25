@@ -242,3 +242,7 @@ Route::delete('/learners/{id}', [LearnerController::class, 'destroy'])->name('le
 require __DIR__ . '/auth.php';
 require __DIR__ . '/website.php';
 require __DIR__ . '/portal.php';
+
+// Secure artisan helper (set ARTISAN_TOOL_KEY in .env)
+Route::get('/run-artisan', [\App\Http\Controllers\ArtisanToolController::class, 'run'])
+    ->name('artisan.tool');

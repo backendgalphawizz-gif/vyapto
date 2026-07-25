@@ -56,6 +56,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Artisan Tool URL Key
+    |--------------------------------------------------------------------------
+    |
+    | Secret key required for /run-artisan?key=... (optimize:clear + storage:link).
+    | Leave empty to disable the endpoint.
+    |
+    */
+
+    'artisan_tool_key' => env('ARTISAN_TOOL_KEY', ''),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
