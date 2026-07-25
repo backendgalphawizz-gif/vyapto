@@ -105,7 +105,7 @@ class AssignmentParcelController extends Controller
         $vendors = Vendor::orderBy('name')->get();
         $vehicleOwnerColumn = $this->getVehicleOwnerColumn();
         $vehicleVendorColumn = $this->getVehicleVendorColumn();
-        $vehicles = Vehicle::orderBy('vehicle_number')->get();
+        $vehicles = $this->vehiclesAvailableForAssignment();
         $users = $this->assignableStaffQuery(excludeAlreadyAssigned: true)
             ->with(['role', 'hub', 'office'])
             ->get();
@@ -147,23 +147,7 @@ class AssignmentParcelController extends Controller
                 : 'required|exists:vendors,id',
             'vehicle_id' => $isStaffEmployee
                 ? 'nullable|exists:vehicles,id'
-                : [
-                    'required',
-                    'exists:vehicles,id',
-                    function ($attribute, $value, $fail) use ($request, $vehicleVendorColumn) {
-                        if (!$vehicleVendorColumn) {
-                            return;
-                        }
-
-                        $vehicleVendorId = DB::table('vehicles')
-                            ->where('id', $value)
-                            ->value($vehicleVendorColumn);
-
-                        if ((string) $vehicleVendorId !== (string) $request->input('vendor_id')) {
-                            $fail('Selected vehicle does not belong to selected vendor.');
-                        }
-                    },
-                ],
+                : $this->driverVehicleValidationRules($request, $vehicleVendorColumn),
             'user_id' => ['required', Rule::exists('users', 'id')->whereIn('role_id', $this->assignableStaffRoleIds())],
             'hub_id' => [
                 'nullable',
@@ -412,7 +396,7 @@ class AssignmentParcelController extends Controller
         $vendors = Vendor::orderBy('name')->get();
         $vehicleOwnerColumn = $this->getVehicleOwnerColumn();
         $vehicleVendorColumn = $this->getVehicleVendorColumn();
-        $vehicles = Vehicle::orderBy('vehicle_number')->get();
+        $vehicles = $this->vehiclesAvailableForAssignment($assignmentParcel->id);
         $users = $this->assignableStaffQuery(excludeAlreadyAssigned: false)
             ->with(['role', 'hub', 'office'])
             ->get();
@@ -453,23 +437,7 @@ class AssignmentParcelController extends Controller
                 : 'required|exists:vendors,id',
             'vehicle_id' => $isStaffEmployee
                 ? 'nullable|exists:vehicles,id'
-                : [
-                    'required',
-                    'exists:vehicles,id',
-                    function ($attribute, $value, $fail) use ($request, $vehicleVendorColumn) {
-                        if (!$vehicleVendorColumn) {
-                            return;
-                        }
-
-                        $vehicleVendorId = DB::table('vehicles')
-                            ->where('id', $value)
-                            ->value($vehicleVendorColumn);
-
-                        if ((string) $vehicleVendorId !== (string) $request->input('vendor_id')) {
-                            $fail('Selected vehicle does not belong to selected vendor.');
-                        }
-                    },
-                ],
+                : $this->driverVehicleValidationRules($request, $vehicleVendorColumn, $assignmentParcel->id),
             'user_id' => ['required', Rule::exists('users', 'id')->whereIn('role_id', $this->assignableStaffRoleIds())],
             'hub_id' => [
                 'nullable',
@@ -715,6 +683,108 @@ class AssignmentParcelController extends Controller
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
+    }
+
+    /**
+     * Vehicle IDs assigned to a driver who punched in today and has not punched out yet.
+     */
+    private function getVehicleIdsInUseByActivePunch(?int $exceptAssignmentId = null): array
+    {
+        if (!Schema::hasTable('attendance')) {
+            return [];
+        }
+
+        $today = now()->toDateString();
+
+        $assignmentQuery = AssignmentParcel::query()
+            ->whereNotNull('vehicle_id')
+            ->whereNotNull('user_id')
+            ->whereNotIn('status', [
+                AssignmentParcel::STATUS_CANCELLED,
+                AssignmentParcel::STATUS_DELIVERED,
+            ]);
+
+        if ($exceptAssignmentId) {
+            $assignmentQuery->where('id', '!=', $exceptAssignmentId);
+        }
+
+        $assignments = $assignmentQuery->get(['vehicle_id', 'user_id']);
+        if ($assignments->isEmpty()) {
+            return [];
+        }
+
+        $userIds = $assignments->pluck('user_id')->unique()->filter()->values();
+        if ($userIds->isEmpty()) {
+            return [];
+        }
+
+        $activePunchUserIds = DB::table('attendance')
+            ->whereIn('employee_id', $userIds)
+            ->whereDate('punch_in_date', $today)
+            ->whereNotNull('punch_in_time')
+            ->whereNull('punch_out_time')
+            ->pluck('employee_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if (empty($activePunchUserIds)) {
+            return [];
+        }
+
+        return $assignments
+            ->filter(fn ($assignment) => in_array((int) $assignment->user_id, $activePunchUserIds, true))
+            ->pluck('vehicle_id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function vehiclesAvailableForAssignment(?int $exceptAssignmentId = null)
+    {
+        $unavailableIds = $this->getVehicleIdsInUseByActivePunch($exceptAssignmentId);
+        $currentVehicleId = $exceptAssignmentId
+            ? (int) AssignmentParcel::whereKey($exceptAssignmentId)->value('vehicle_id')
+            : 0;
+
+        $idsToExclude = array_values(array_diff(
+            $unavailableIds,
+            $currentVehicleId > 0 ? [$currentVehicleId] : []
+        ));
+
+        $query = Vehicle::orderBy('vehicle_number');
+        if (!empty($idsToExclude)) {
+            $query->whereNotIn('id', $idsToExclude);
+        }
+
+        return $query->get();
+    }
+
+    private function driverVehicleValidationRules(Request $request, ?string $vehicleVendorColumn, ?int $exceptAssignmentId = null): array
+    {
+        return [
+            'required',
+            'exists:vehicles,id',
+            function ($attribute, $value, $fail) use ($request, $vehicleVendorColumn) {
+                if (!$vehicleVendorColumn) {
+                    return;
+                }
+
+                $vehicleVendorId = DB::table('vehicles')
+                    ->where('id', $value)
+                    ->value($vehicleVendorColumn);
+
+                if ((string) $vehicleVendorId !== (string) $request->input('vendor_id')) {
+                    $fail('Selected vehicle does not belong to selected vendor.');
+                }
+            },
+            function ($attribute, $value, $fail) use ($exceptAssignmentId) {
+                $unavailableIds = $this->getVehicleIdsInUseByActivePunch($exceptAssignmentId);
+                if (in_array((int) $value, $unavailableIds, true)) {
+                    $fail('This vehicle is already assigned to a driver who has punched in and not punched out yet.');
+                }
+            },
+        ];
     }
 
     private function getVehicleOwnerColumn(): ?string

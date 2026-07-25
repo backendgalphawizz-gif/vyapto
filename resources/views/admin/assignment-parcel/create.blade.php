@@ -120,7 +120,7 @@
                         >{{ $vehicle->vehicle_number }} </option>
                     @endforeach
                 </select>
-                <div class="form-text">Only vehicles added by selected vendor are shown.</div>
+                <div class="form-text">Only vehicles added by selected vendor are shown. Vehicles in use by a punched-in driver (not punched out) are hidden.</div>
                 @error('vehicle_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             </div>
