@@ -255,14 +255,14 @@
           <span>Assignment</span>
         </a>
       </li>
-      <li class="nav-item mb-1">
+    {{--<li class="nav-item mb-1">
         <a href="{{ route('admin.vehicle-usage.index') }}"
           class="menu-item nav-link {{ request()->routeIs('admin.vehicle-usage.*') ? 'active' : '' }}"
           data-tooltip="Vehicle Usage">
           <i class="bi bi-truck me-2"></i>
           <span>Vehicle Usage</span>
         </a>
-      </li>
+      </li>--}}
       <li class="nav-item mb-1">
         <a href="{{ route('admin.vehicle-usage.today-km-summary') }}"
           class="menu-item nav-link {{ request()->routeIs('admin.vehicle-usage.today-km-summary') ? 'active' : '' }}"
