@@ -729,7 +729,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
 
                     <div class="modal-footer border-top-0">
                         <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary" onclick="showFormLoader()">Update</button>
+                        <button type="submit" class="btn btn-primary">Update</button>
                     </div>
                 </form>
             </div>
@@ -1071,7 +1071,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
 
                 <div class="modal-footer border-top-0">
                     <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" onclick="showFormLoader()">Save Employee</button>
+                    <button type="submit" class="btn btn-primary">Save Employee</button>
                 </div>
             </form>
         </div>
@@ -1099,6 +1099,42 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
         const el = document.getElementById('loadingModal');
         const m = el ? bootstrap.Modal.getInstance(el) : null;
         if (m) m.hide();
+        // Stuck backdrop after failed validation made the form look "readonly"
+        document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+            // Keep backdrop only if another modal (add/edit) is still open
+            const openModal = document.querySelector('.modal.show:not(#loadingModal)');
+            if (!openModal) {
+                backdrop.remove();
+            } else if (backdrop.parentElement) {
+                // Ensure only one backdrop remains for the open form modal
+            }
+        });
+        // If add/edit modal is open, ensure body keeps modal-open and fields stay editable
+        const openFormModal = document.querySelector('#addUsersModal.show, [id^="editUserModal"].show');
+        if (openFormModal) {
+            document.body.classList.add('modal-open');
+            openFormModal.querySelectorAll('input, select, textarea').forEach(function(el) {
+                el.disabled = false;
+                el.removeAttribute('readonly');
+                el.style.pointerEvents = '';
+            });
+        } else {
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+            document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+        }
+    }
+
+    function unlockEmployeeFormFields(form) {
+        if (!form) return;
+        form.querySelectorAll('input, select, textarea, button').forEach(function(el) {
+            if (el.type === 'hidden') return;
+            el.disabled = false;
+            el.removeAttribute('readonly');
+            el.style.pointerEvents = '';
+            el.style.opacity = '';
+        });
     }
 
     // Save form state before submission (password, file inputs)
@@ -1245,10 +1281,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                         }
                     }
                 }
-                form.querySelectorAll('input, select, textarea').forEach(function(el) {
-                    el.disabled = false;
-                    el.removeAttribute('readonly');
-                });
+                unlockEmployeeFormFields(form);
                 // Re-apply role visibility/required after unlock
                 var roleEl = form.querySelector('select[name="role_id"]');
                 if (roleEl) toggleEditFieldsByRole(roleEl, userId, { fromServer: true });
@@ -1258,6 +1291,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                     event.preventDefault();
                     event.stopPropagation();
                     hideFormLoader();
+                    unlockEmployeeFormFields(form);
                     form.classList.add('was-validated');
                     validationToastShown = false;
                     showValidationToast('Please fill required fields (scroll up).');
@@ -1265,6 +1299,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                     return;
                 }
                 form.classList.add('was-validated');
+                showFormLoader();
             });
         });
 
@@ -1342,11 +1377,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
         const addUserForm = document.getElementById('addUserForm');
         if (addUserForm) {
             addUserForm.addEventListener('submit', function(event) {
-                // Unlock any fields that were left disabled from older JS
-                addUserForm.querySelectorAll('input, select, textarea').forEach(function(el) {
-                    el.disabled = false;
-                    el.removeAttribute('readonly');
-                });
+                unlockEmployeeFormFields(addUserForm);
                 var roleSelectEl = document.getElementById('roleSelect');
                 if (roleSelectEl && roleSelectEl.value) {
                     toggleFieldsByRole(roleSelectEl, { fromServer: true });
@@ -1358,11 +1389,15 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                     event.preventDefault();
                     event.stopPropagation();
                     hideFormLoader();
+                    unlockEmployeeFormFields(addUserForm);
                     validationToastShown = false;
                     showValidationToast('Please fill required fields (scroll up).');
                     focusFirstInvalidField('#addUsersModal');
+                    addUserForm.classList.add('was-validated');
+                    return;
                 }
                 addUserForm.classList.add('was-validated');
+                showFormLoader();
             }, false);
 
             // Allow only numbers for phone
