@@ -431,7 +431,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
 
                             <div class="col-md-6" id="editDepartmentContainer{{ $user->id }}">
                                 <label class="form-label">Department <span class="text-danger">*</span></label>
-                                <select name="department_id" id="editDepartmentSelect{{ $user->id }}" class="form-select @error('department_id', 'userUpdate'.$user->id) is-invalid @enderror" required>
+                                <select name="department_id" id="editDepartmentSelect{{ $user->id }}" class="form-select @error('department_id', 'userUpdate'.$user->id) is-invalid @enderror">
                                     <option value="" disabled>Select Department</option>
                                     @foreach($departments as $dept)
                                     <option value="{{ $dept->id }}" {{ old('department_id', $user->department_id) == $dept->id ? 'selected' : '' }}>
@@ -541,7 +541,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             </div>
 
                             <div class="col-md-6 edit-additional-fields edit-additional-fields-{{ $user->id }}">
-                                <label class="form-label">Father's Name</label>
+                                <label class="form-label">Father's Name <span class="text-danger driver-required-mark d-none">*</span></label>
                                 <input type="text" name="father_name" class="form-control @error('father_name', 'userUpdate'.$user->id) is-invalid @enderror"
                                     value="{{ old('father_name', $user->father_name) }}" pattern="[A-Za-z\s]+" title="Only letters and spaces allowed"
                                     oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '');" maxlength="255">
@@ -580,7 +580,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             </div>
 
                             <div class="col-md-6 edit-additional-fields edit-additional-fields-{{ $user->id }}">
-                                <label class="form-label">Aadhar Card Number</label>
+                                <label class="form-label">Aadhar Card Number <span class="text-danger driver-required-mark d-none">*</span></label>
                                 <input type="text" name="aadhar_card_no" class="form-control @error('aadhar_card_no', 'userUpdate'.$user->id) is-invalid @enderror"
                                     value="{{ old('aadhar_card_no', $user->aadhar_card_no) }}" pattern="[0-9]{12}" maxlength="12"
                                     oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12);">
@@ -590,7 +590,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             </div>
 
                             <div class="col-md-6 edit-additional-fields edit-additional-fields-{{ $user->id }}">
-                                <label class="form-label">Aadhar Card Image</label>
+                                <label class="form-label">Aadhar Card Image <span class="text-danger driver-required-mark d-none">*</span></label>
                                 <input type="file" name="aadhar_card_image" class="form-control @error('aadhar_card_image', 'userUpdate'.$user->id) is-invalid @enderror" accept="image/jpeg,image/png,image/jpg,image/gif"
                                     data-preview-wrap="editAadharPreviewWrap{{ $user->id }}"
                                     data-preview-img="editAadharPreview{{ $user->id }}"
@@ -609,7 +609,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             </div>
 
                             <div class="col-md-6 edit-additional-fields edit-additional-fields-{{ $user->id }}">
-                                <label class="form-label">PAN Card Number</label>
+                                <label class="form-label">PAN Card Number <span class="text-danger driver-required-mark d-none">*</span></label>
                                 <input type="text" name="pan_card_no" class="form-control @error('pan_card_no', 'userUpdate'.$user->id) is-invalid @enderror"
                                     value="{{ old('pan_card_no', $user->pan_card_no) }}" pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" maxlength="10"
                                     oninput="this.value = this.value.toUpperCase();">
@@ -619,7 +619,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             </div>
 
                             <div class="col-md-6 edit-additional-fields edit-additional-fields-{{ $user->id }}">
-                                <label class="form-label">PAN Card Image</label>
+                                <label class="form-label">PAN Card Image <span class="text-danger driver-required-mark d-none">*</span></label>
                                 <input type="file" name="pan_card_image" class="form-control @error('pan_card_image', 'userUpdate'.$user->id) is-invalid @enderror" accept="image/jpeg,image/png,image/jpg,image/gif"
                                     data-preview-wrap="editPanPreviewWrap{{ $user->id }}"
                                     data-preview-img="editPanPreview{{ $user->id }}"
@@ -882,7 +882,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                         <!-- Department (other roles) -->
                         <div class="col-md-6" id="departmentContainer">
                             <label class="form-label">Department <span class="text-danger">*</span></label>
-                            <select name="department_id" id="departmentSelect" class="form-select @error('department_id', 'userCreation') is-invalid @enderror">
+                            <select name="department_id" id="departmentSelect" class="form-select @error('department_id', 'userCreation') is-invalid @enderror" required>
                                 <option value="" disabled {{ old('department_id') ? '' : 'selected' }}>Select Department</option>
                                 @foreach($departments as $dept)
                                 <option value="{{ $dept->id }}" {{ old('department_id') == $dept->id ? 'selected' : '' }}>
@@ -911,7 +911,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                         <!-- Password (Always Visible) -->
                         <div class="col-md-6">
                             <label class="form-label">Password <span class="text-danger">*</span></label>
-                            <input type="password" name="password" class="form-control @error('password', 'userCreation') is-invalid @enderror" placeholder="Password" minlength="6" required>
+                            <input type="password" name="password" class="form-control @error('password', 'userCreation') is-invalid @enderror" placeholder="Password" minlength="6" required autocomplete="new-password">
                             @error('password', 'userCreation')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -919,7 +919,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
 
                         <div class="col-md-6">
                             <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                            <input type="password" name="password_confirmation" class="form-control @error('password_confirmation', 'userCreation') is-invalid @enderror" placeholder="Confirm Password" minlength="6" required>
+                            <input type="password" name="password_confirmation" class="form-control @error('password_confirmation', 'userCreation') is-invalid @enderror" placeholder="Confirm Password" minlength="6" required autocomplete="new-password">
                             @error('password_confirmation', 'userCreation')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -927,7 +927,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
 
                         <!-- Father's Name (Only for non-staff) -->
                         <div class="col-md-6 additional-fields" style="display: none;">
-                            <label class="form-label">Father's Name</label>
+                            <label class="form-label">Father's Name <span class="text-danger driver-required-mark d-none">*</span></label>
                             <input type="text" name="father_name" class="form-control @error('father_name', 'userCreation') is-invalid @enderror" placeholder="Father's Name" value="{{ old('father_name') }}" pattern="[A-Za-z\s]+" title="Only letters and spaces allowed" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '');" maxlength="255">
                             @error('father_name', 'userCreation')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -936,7 +936,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
 
                         <!-- Aadhar Details (Only for non-staff) -->
                         <div class="col-md-6 additional-fields" style="display: none;">
-                            <label class="form-label">Aadhar Card Number</label>
+                            <label class="form-label">Aadhar Card Number <span class="text-danger driver-required-mark d-none">*</span></label>
                             <input type="text" name="aadhar_card_no" class="form-control @error('aadhar_card_no', 'userCreation') is-invalid @enderror" placeholder="Aadhar Card Number" value="{{ old('aadhar_card_no') }}" pattern="[0-9]{12}" title="Enter valid 12-digit Aadhar number" maxlength="12" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12);">
                             @error('aadhar_card_no', 'userCreation')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -944,7 +944,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                         </div>
 
                         <div class="col-12 additional-fields" style="display: none;">
-                            <label class="form-label">Aadhar Card Image</label>
+                            <label class="form-label">Aadhar Card Image <span class="text-danger driver-required-mark d-none">*</span></label>
                             <input type="file" name="aadhar_card_image" class="form-control @error('aadhar_card_image', 'userCreation') is-invalid @enderror" accept="image/jpeg,image/png,image/jpg,image/gif"
                                 data-preview-wrap="addAadharPreviewWrap"
                                 data-preview-img="addAadharPreview"
@@ -962,7 +962,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
 
                         <!-- PAN Details (Only for non-staff) -->
                         <div class="col-md-6 additional-fields" style="display: none;">
-                            <label class="form-label">PAN Card Number</label>
+                            <label class="form-label">PAN Card Number <span class="text-danger driver-required-mark d-none">*</span></label>
                             <input type="text" name="pan_card_no" class="form-control @error('pan_card_no', 'userCreation') is-invalid @enderror" placeholder="PAN Card Number" value="{{ old('pan_card_no') }}" pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" title="Enter valid PAN card number (e.g., ABCDE1234F)" maxlength="10" oninput="this.value = this.value.toUpperCase();">
                             @error('pan_card_no', 'userCreation')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -970,7 +970,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                         </div>
 
                         <div class="col-12 additional-fields" style="display: none;">
-                            <label class="form-label">PAN Card Image</label>
+                            <label class="form-label">PAN Card Image <span class="text-danger driver-required-mark d-none">*</span></label>
                             <input type="file" name="pan_card_image" class="form-control @error('pan_card_image', 'userCreation') is-invalid @enderror" accept="image/jpeg,image/png,image/jpg,image/gif"
                                 data-preview-wrap="addPanPreviewWrap"
                                 data-preview-img="addPanPreview"
@@ -1245,6 +1245,13 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                         }
                     }
                 }
+                form.querySelectorAll('input, select, textarea').forEach(function(el) {
+                    el.disabled = false;
+                    el.removeAttribute('readonly');
+                });
+                // Re-apply role visibility/required after unlock
+                var roleEl = form.querySelector('select[name="role_id"]');
+                if (roleEl) toggleEditFieldsByRole(roleEl, userId, { fromServer: true });
                 relaxHiddenFieldValidation(form);
                 saveFormState('form[action="' + updateAction + '"]', userId);
                 if (!form.checkValidity()) {
@@ -1335,12 +1342,25 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
         const addUserForm = document.getElementById('addUserForm');
         if (addUserForm) {
             addUserForm.addEventListener('submit', function(event) {
+                // Unlock any fields that were left disabled from older JS
+                addUserForm.querySelectorAll('input, select, textarea').forEach(function(el) {
+                    el.disabled = false;
+                    el.removeAttribute('readonly');
+                });
+                var roleSelectEl = document.getElementById('roleSelect');
+                if (roleSelectEl && roleSelectEl.value) {
+                    toggleFieldsByRole(roleSelectEl, { fromServer: true });
+                }
+                relaxHiddenFieldValidation(addUserForm);
                 // Save form state before submission
                 saveFormState('#addUserForm');
                 if (!addUserForm.checkValidity()) {
                     event.preventDefault();
                     event.stopPropagation();
                     hideFormLoader();
+                    validationToastShown = false;
+                    showValidationToast('Please fill required fields (scroll up).');
+                    focusFirstInvalidField('#addUsersModal');
                 }
                 addUserForm.classList.add('was-validated');
             }, false);
@@ -1365,11 +1385,13 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                 if (jobC) jobC.classList.add('d-none');
                 if (deptS) {
                     deptS.disabled = false;
+                    deptS.removeAttribute('readonly');
                     deptS.setAttribute('required', 'required');
                 }
                 if (jobS) {
+                    jobS.disabled = false;
+                    jobS.removeAttribute('readonly');
                     jobS.removeAttribute('required');
-                    jobS.disabled = true;
                 }
                 document.querySelectorAll('.additional-fields').forEach(function(f) { f.style.display = 'none'; });
                 addUserForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
@@ -1387,12 +1409,16 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                     if (jobC) jobC.classList.add('d-none');
                     if (deptS) {
                         deptS.disabled = false;
+                        deptS.removeAttribute('readonly');
                         deptS.setAttribute('required', 'required');
                     }
                     if (jobS) {
+                        jobS.disabled = false;
+                        jobS.removeAttribute('readonly');
                         jobS.removeAttribute('required');
-                        jobS.disabled = true;
                     }
+                } else {
+                    toggleFieldsByRole(roleSelect, { fromServer: true });
                 }
             });
         }
@@ -1479,8 +1505,10 @@ function toggleFieldsByRole(selectElement, opts) {
             container.style.display = 'none';
         }
         if (select) {
+            // Do not disable — disabled fields look readonly after failed submit
+            select.disabled = false;
             select.removeAttribute('required');
-            select.disabled = true;
+            select.removeAttribute('readonly');
             if (!fromServer) select.value = '';
         }
     }
@@ -1492,6 +1520,7 @@ function toggleFieldsByRole(selectElement, opts) {
         }
         if (select) {
             select.disabled = false;
+            select.removeAttribute('readonly');
             if (requireIfOptions && select.options.length > 1) {
                 select.setAttribute('required', 'required');
             } else {
@@ -1565,6 +1594,8 @@ function setDriverKycRequiredFields(scope, isRequired, allowExistingFile = false
         scope.querySelectorAll('[name="' + name + '"]').forEach(function(input) {
             const isFileField = input.type === 'file';
             const hasExistingFile = !!(input.getAttribute('data-existing-url') || '').trim();
+            input.disabled = false;
+            input.removeAttribute('readonly');
 
             if (isRequired) {
                 if (isFileField && allowExistingFile && hasExistingFile) {
@@ -1576,6 +1607,14 @@ function setDriverKycRequiredFields(scope, isRequired, allowExistingFile = false
                 input.removeAttribute('required');
             }
         });
+    });
+
+    scope.querySelectorAll('.driver-required-mark').forEach(function(mark) {
+        if (isRequired) {
+            mark.classList.remove('d-none');
+        } else {
+            mark.classList.add('d-none');
+        }
     });
 }
 
@@ -1626,8 +1665,10 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
             container.style.display = 'none';
         }
         if (select) {
+            // Do not disable — keeps fields editable after validation errors
+            select.disabled = false;
             select.removeAttribute('required');
-            select.disabled = true;
+            select.removeAttribute('readonly');
             if (!fromServer) select.value = '';
         }
     }
@@ -1639,6 +1680,7 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
         }
         if (select) {
             select.disabled = false;
+            select.removeAttribute('readonly');
             if (requireIfOptions && select.options.length > 1) {
                 select.setAttribute('required', 'required');
             } else {
