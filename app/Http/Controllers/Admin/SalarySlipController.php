@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\DB;
 
 use App\Models\User;
 
+use App\Support\BrandAssets;
+
 use Illuminate\Support\Facades\Validator;
 
 use Illuminate\Validation\Rule;
@@ -69,21 +71,6 @@ class SalarySlipController extends Controller
             $slip->year,
             $slip->month
         );
-
-        $relativePath = $this->resolveSlipStorageRelativePath($slip->file_path);
-        if ($relativePath && Storage::disk('public')->exists($relativePath)) {
-            return response()->file(Storage::disk('public')->path($relativePath), [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="'.$filename.'"',
-            ]);
-        }
-
-        if ($slip->file_path && file_exists(public_path($slip->file_path))) {
-            return response()->file(public_path($slip->file_path), [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="'.$filename.'"',
-            ]);
-        }
 
         $viewData = $this->prepareSlipViewData($slip);
         $viewData['forPdf'] = true;
@@ -1089,7 +1076,7 @@ class SalarySlipController extends Controller
             'deduction_via'    => $resolve($slip->deduction_via_value, $slip->deduction_via_type, $basic),
         ];
 
-        return compact(
+        return array_merge(compact(
             'slip',
             'earnings',
             'deductions',
@@ -1097,7 +1084,9 @@ class SalarySlipController extends Controller
             'taxLines',
             'salaryLabels',
             'salaryType'
-        );
+        ), [
+            'company_logo_url' => BrandAssets::companyWebLogoEmbedUrl(),
+        ]);
     }
 
     private function storeSlipPdf(SalarySlip $slip): string

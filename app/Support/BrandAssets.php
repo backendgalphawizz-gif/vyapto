@@ -24,6 +24,45 @@ class BrandAssets
         return $logo ? asset('storage/company/' . $logo) : null;
     }
 
+    /**
+     * Absolute path to company logo on disk (for PDF / payslip embedding).
+     */
+    public static function companyWebLogoAbsolutePath(): ?string
+    {
+        $logo = self::companyWebLogoPath();
+        if (! $logo) {
+            return null;
+        }
+
+        $logo = ltrim(str_replace('\\', '/', $logo), '/');
+
+        foreach ([
+            storage_path('app/public/company/' . $logo),
+            public_path('storage/company/' . $logo),
+        ] as $path) {
+            if (is_file($path)) {
+                return $path;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Logo as data URI — works in DomPDF and inline PDF viewers without /storage/ HTTP access.
+     */
+    public static function companyWebLogoEmbedUrl(): ?string
+    {
+        $path = self::companyWebLogoAbsolutePath();
+        if (! $path) {
+            return self::companyWebLogoUrl();
+        }
+
+        $mime = @mime_content_type($path) ?: 'image/png';
+
+        return 'data:' . $mime . ';base64,' . base64_encode((string) file_get_contents($path));
+    }
+
     public static function siteLogoUrl(
         string $sectionKey = 'site_logo_desktop',
         ?string $fallback = 'images/nav-logo.png'

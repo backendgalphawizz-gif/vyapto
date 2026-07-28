@@ -200,10 +200,15 @@
     $netWords = strtoupper(numberToWordsSlip((float) round($netPay))) . ' ONLY';
 
     $slipLogoUrl = $company_logo_url ?? null;
+    if (!$slipLogoUrl && class_exists(\App\Support\BrandAssets::class)) {
+        $slipLogoUrl = \App\Support\BrandAssets::companyWebLogoEmbedUrl();
+    }
     if (!$slipLogoUrl) {
         $logoSetting = $SettingClass::where('type', 'company_web_logo')->first();
         if ($logoSetting && !empty($logoSetting->value)) {
-            $slipLogoUrl = asset('storage/company/' . $logoSetting->value);
+            $slipLogoUrl = class_exists(\App\Support\BrandAssets::class)
+                ? \App\Support\BrandAssets::companyWebLogoEmbedUrl()
+                : asset('storage/company/' . $logoSetting->value);
         }
     }
 @endphp

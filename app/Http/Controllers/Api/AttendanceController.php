@@ -250,6 +250,9 @@ class AttendanceController extends Controller
 			'taxLines'     => $breakdown['taxLines'],
 			'salaryLabels' => $salaryLabels,
 			'salaryType'   => $salaryLabels['type'],
+			'company_logo_url' => class_exists(\App\Support\BrandAssets::class)
+				? \App\Support\BrandAssets::companyWebLogoEmbedUrl()
+				: null,
 		];
 	}
 
