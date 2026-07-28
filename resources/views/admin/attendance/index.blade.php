@@ -244,14 +244,30 @@
                             <td class="text-center small text-muted">{{ $row['punch_in_location'] ?? '-' }}</td>
                             <td class="text-center small text-muted">{{ $row['punch_out_location'] ?? '-' }}</td>
                             <td class="text-center">
-                                @if(str_contains($row['exception'] ?? '', 'Late arrival') || ($row['punch_in_exception'] ?? '') == 'Late arrival')
-                                    <span class="text-warning small fw-bold d-inline-flex align-items-center gap-1">
-                                        <i class="bi bi-exclamation-triangle-fill"></i> Late
-                                    </span>
-                                @elseif(str_contains($row['exception'] ?? '', 'Early leave') || ($row['punch_out_exception'] ?? '') == 'Early leave')
-                                    <span class="text-info small fw-bold d-inline-flex align-items-center gap-1">
-                                        <i class="bi bi-box-arrow-right"></i> Early
-                                    </span>
+                                @php
+                                    $exceptionText = trim((string) ($row['exception'] ?? ''));
+                                    $manualIn = (string) ($row['punch_in_exception'] ?? '');
+                                    $manualOut = (string) ($row['punch_out_exception'] ?? '');
+                                    $showLate = str_contains($exceptionText, 'Late arrival')
+                                        || strcasecmp($manualIn, 'Late arrival') === 0
+                                        || stripos($manualIn, 'late') !== false;
+                                    $showEarly = str_contains($exceptionText, 'Early leave')
+                                        || strcasecmp($manualOut, 'Early leave') === 0
+                                        || stripos($manualOut, 'early') !== false;
+                                @endphp
+                                @if($showLate || $showEarly)
+                                    <div class="d-flex flex-column align-items-center gap-1">
+                                        @if($showLate)
+                                            <span class="text-warning small fw-bold d-inline-flex align-items-center gap-1">
+                                                <i class="bi bi-exclamation-triangle-fill"></i> Late
+                                            </span>
+                                        @endif
+                                        @if($showEarly)
+                                            <span class="text-info small fw-bold d-inline-flex align-items-center gap-1">
+                                                <i class="bi bi-box-arrow-right"></i> Early
+                                            </span>
+                                        @endif
+                                    </div>
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif

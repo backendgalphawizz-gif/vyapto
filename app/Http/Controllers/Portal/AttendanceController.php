@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Holiday;
-use App\Models\Setting;
+use App\Services\AttendanceScheduleService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,8 +47,8 @@ class AttendanceController extends Controller
             ->get()
             ->keyBy(fn ($row) => Carbon::parse($row->punch_in_date)->toDateString());
 
-        $companyStartTime = Setting::where('type', 'company_start_time')->value('value');
-        $companyEndTime = Setting::where('type', 'company_end_time')->value('value');
+        $scheduleService = app(AttendanceScheduleService::class);
+        $assignmentsByUser = $scheduleService->loadAssignmentsForEmployees([(int) $user->id]);
 
         $holidayMap = Holiday::whereBetween('date', [$startOfMonth, $endOfMonth])
             ->get()
@@ -85,7 +85,8 @@ class AttendanceController extends Controller
                 $status = 'Weekend';
                 $statusKey = 'weekend';
             } elseif ($attendance && $attendance->punch_in_time) {
-                $status = $this->resolveDayStatus($attendance, $companyStartTime, $companyEndTime);
+                $schedule = $scheduleService->resolveSchedule($user, $key, $assignmentsByUser);
+                $status = $scheduleService->resolveDayStatusLabel($attendance, $schedule);
                 $statusKey = $this->statusKey($status);
 
                 if ($date->lte($today)) {
@@ -188,50 +189,6 @@ class AttendanceController extends Controller
             'monthOptions',
             'monthEntries'
         ));
-    }
-
-    private function resolveDayStatus($attendance, ?string $startTime, ?string $endTime): string
-    {
-        $punchIn = Carbon::parse($attendance->punch_in_time);
-        $punchOut = $attendance->punch_out_time ? Carbon::parse($attendance->punch_out_time) : null;
-
-        $isLateComing = false;
-        if ($startTime) {
-            $lateThreshold = Carbon::parse($punchIn->toDateString().' '.$startTime)->addMinutes(15);
-            $isLateComing = $punchIn->gt($lateThreshold);
-        }
-
-        $isHalfDay = false;
-        $isEarlyGoing = false;
-
-        if ($punchOut && $endTime) {
-            $halfDayThreshold = Carbon::parse($punchOut->toDateString().' '.$endTime)->subMinutes(90);
-            $earlyGoingThreshold = Carbon::parse($punchOut->toDateString().' '.$endTime)->subMinutes(60);
-
-            if ($punchOut->lte($halfDayThreshold)) {
-                $isHalfDay = true;
-            } elseif ($punchOut->lte($earlyGoingThreshold)) {
-                $isEarlyGoing = true;
-            }
-        }
-
-        if ($isHalfDay) {
-            return 'Half Day';
-        }
-
-        if ($isLateComing && $isEarlyGoing) {
-            return 'Late Coming, Early Going';
-        }
-
-        if ($isLateComing) {
-            return 'Late';
-        }
-
-        if ($isEarlyGoing) {
-            return 'Early Going';
-        }
-
-        return 'Present';
     }
 
     private function statusKey(string $status): string

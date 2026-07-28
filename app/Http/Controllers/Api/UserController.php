@@ -9,10 +9,10 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
-use App\Models\Api\Setting;
 use Illuminate\Support\Facades\DB;
 use App\Models\Api\UserToken;
 use App\Models\Holiday;
+use App\Services\AttendanceScheduleService;
 
 class UserController extends Controller
 {
@@ -35,10 +35,6 @@ class UserController extends Controller
 				'message' => 'Month and Year are required'
 			], 422);
 		}
-
-		$companyStartTime = Setting::where('type', 'company_start_time')->value('value'); // 10:00
-		$companyHalfTime  = Setting::where('type', 'company_half_time')->value('value');  // 14:00
-		$companyEndTime   = Setting::where('type', 'company_end_time')->value('value');   // 19:30
 
 		$startOfMonth = Carbon::create($request->year, $request->month, 1)->startOfMonth();
 		$endOfMonth   = Carbon::create($request->year, $request->month, 1)->endOfMonth();
@@ -65,6 +61,9 @@ class UserController extends Controller
 		$halfDayCount    = 0;
 		$checkinCheckouts = [];
 
+		$scheduleService = app(AttendanceScheduleService::class);
+		$assignmentsByUser = $scheduleService->loadAssignmentsForEmployees([(int) $employee->id]);
+
 		// ----- Process Attendance -----
 		foreach ($employee->attendance as $attendance) {
 			if (empty($attendance->punch_in_time)) {
@@ -87,51 +86,24 @@ class UserController extends Controller
 			// If employee has punched in, day cannot be absent.
 			$calendar[$date]['value'] = 'Present';
 
-			// ----- Late Coming Check (grace period: start_time + 15 minutes) -----
-			$isLateComing = false;
-			if (!empty($companyStartTime)) {
-				$lateThreshold = Carbon::parse($punchIn->toDateString() . ' ' . $companyStartTime)->addMinutes(15);
-				$isLateComing  = $punchIn->gt($lateThreshold);
-			}
+			$schedule = $scheduleService->resolveSchedule($employee, $date, $assignmentsByUser);
+			$dayStatus = $scheduleService->resolveDayStatusLabel($attendance, $schedule);
 
-			// ----- Half Day / Early Going Check -----
-			// Leaving 1h 30m+ before end time = Half Day (highest priority, absorbs all other flags)
-			// Leaving 1h–1h30m before end time = Early Going
-			$isHalfDay    = false;
-			$isEarlyGoing = false;
+			$isLateComing = in_array($dayStatus, ['Late', 'Late Coming, Early Going'], true);
+			$isEarlyGoing = in_array($dayStatus, ['Early Going', 'Late Coming, Early Going'], true);
+			$isHalfDay = $dayStatus === 'Half Day';
 
-			if ($punchOut && !empty($companyEndTime)) {
-				$halfDayThreshold   = Carbon::parse($punchOut->toDateString() . ' ' . $companyEndTime)->subMinutes(90);
-				$earlyGoingThreshold = Carbon::parse($punchOut->toDateString() . ' ' . $companyEndTime)->subMinutes(60);
-
-				if ($punchOut->lte($halfDayThreshold)) {
-					// Left 1h 30m or more before end time → Half Day
-					$isHalfDay = true;
-				} elseif ($punchOut->lte($earlyGoingThreshold)) {
-					// Left 1h or more (but less than 1h 30m) before end time → Early Going
-					$isEarlyGoing = true;
-				}
-			}
-
-			// ----- Determine Calendar Status -----
-			// Half Day takes full priority: late arrival + leaving 1h30m+ early = Half Day only
 			if ($isHalfDay) {
-				$dayStatus = 'Half Day';
 				$halfDayCount++;
 			} elseif ($isLateComing && $isEarlyGoing) {
-				$dayStatus = 'Late Coming, Early Going';
 				$lateComingCount++;
 				$lateCount++;
 				$earlyGoingCount++;
 			} elseif ($isLateComing) {
-				$dayStatus = 'Late';
 				$lateComingCount++;
 				$lateCount++;
 			} elseif ($isEarlyGoing) {
-				$dayStatus = 'Early Going';
 				$earlyGoingCount++;
-			} else {
-				$dayStatus = 'Present';
 			}
 
 			$calendar[$date]['value'] = $dayStatus;

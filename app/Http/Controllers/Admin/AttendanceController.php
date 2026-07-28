@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 
 use App\Models\Api\PunchIn;
 use App\Models\Attendance;
-use App\Models\Setting;
+use App\Services\AttendanceScheduleService;
 use Carbon\Carbon;
 use App\Models\User;
 
@@ -47,8 +47,8 @@ class AttendanceController extends Controller
         $employees = $employeesQuery->orderBy('name')->get();
         $employeeList = User::where('status', 1)->where('role_id', '!=', 1)->orderBy('name')->get();
 
-        $companyStartTime = Setting::where('type', 'company_start_time')->value('value');
-        $companyHalfTime = Setting::where('type', 'company_half_time')->value('value');
+        $scheduleService = app(AttendanceScheduleService::class);
+        $assignmentsByUser = $scheduleService->loadAssignmentsForEmployees($employees->pluck('id')->all());
 
         $dateColumns = collect();
         $cursor = $monthStart->copy();
@@ -100,49 +100,39 @@ class AttendanceController extends Controller
                     continue;
                 }
 
-                $statusCode = 'P';
-                $statusLabel = 'Present';
-                $statusClass = 'bg-success-subtle text-success-emphasis';
+                $schedule = $scheduleService->resolveSchedule($employee, $dateString, $assignmentsByUser);
+                $evaluation = $scheduleService->evaluateDay(
+                    $attendance->punch_in_time ? (string) $attendance->punch_in_time : null,
+                    $attendance->punch_out_time ? (string) $attendance->punch_out_time : null,
+                    $dateString,
+                    $schedule
+                );
 
-                if ($attendance->punch_in_time && $companyHalfTime) {
-                    try {
-                        $pIn = Carbon::parse($attendance->punch_in_time);
-                        $halfLimit = Carbon::parse($dateString . ' ' . $companyHalfTime);
-                        if ($pIn->gt($halfLimit)) {
-                            $statusCode = 'H';
-                            $statusLabel = 'Half Day';
-                            $statusClass = 'bg-warning-subtle text-warning-emphasis';
-                            $halfDay++;
-                            $dayStats[] = ['code' => $statusCode, 'label' => $statusLabel, 'class' => $statusClass];
-                            continue;
-                        }
-                    } catch (\Exception $e) {
-                    }
+                if ($evaluation['is_half_day']) {
+                    $dayStats[] = [
+                        'code' => 'H',
+                        'label' => 'Half Day',
+                        'class' => 'bg-warning-subtle text-warning-emphasis'
+                    ];
+                    $halfDay++;
+                    continue;
                 }
 
-                if ($attendance->punch_in_time && $companyStartTime) {
-                    try {
-                        $pIn = Carbon::parse($attendance->punch_in_time);
-                        $startLimit = Carbon::parse($dateString . ' ' . $companyStartTime);
-                        if ($pIn->gt($startLimit)) {
-                            $statusCode = 'L';
-                            $statusLabel = 'Late';
-                            $statusClass = 'bg-primary-subtle text-primary-emphasis';
-                            $late++;
-                        } else {
-                            $present++;
-                        }
-                    } catch (\Exception $e) {
-                        $present++;
-                    }
-                } else {
-                    $present++;
+                if ($evaluation['is_late']) {
+                    $dayStats[] = [
+                        'code' => 'L',
+                        'label' => 'Late',
+                        'class' => 'bg-primary-subtle text-primary-emphasis'
+                    ];
+                    $late++;
+                    continue;
                 }
 
+                $present++;
                 $dayStats[] = [
-                    'code' => $statusCode,
-                    'label' => $statusLabel,
-                    'class' => $statusClass
+                    'code' => 'P',
+                    'label' => 'Present',
+                    'class' => 'bg-success-subtle text-success-emphasis'
                 ];
             }
 
@@ -338,13 +328,9 @@ class AttendanceController extends Controller
 
         $period = \Carbon\CarbonPeriod::create($fromDate, $toDate);
 
-        // Fetch Company Settings
-        $companyStartTime = Setting::where('type', 'company_start_time')->value('value');
-        $companyEndTime   = Setting::where('type', 'company_end_time')->value('value');
-        $companyHalfTime  = Setting::where('type', 'company_half_time')->value('value');
+        $scheduleService = app(AttendanceScheduleService::class);
+        $assignmentsByUser = $scheduleService->loadAssignmentsForEmployees($activeEmployees->pluck('id')->all());
 
-        // Parse once to save cycles (using arbitrary date, we only care about time component)
-        // Note: Carbon::parse will use today's date if only time passed, which is fine for comparison if we standardise
         $reportData = collect();
 
         foreach ($period as $date) {
@@ -356,8 +342,8 @@ class AttendanceController extends Controller
             foreach ($activeEmployees as $employee) {
                 $attendance = $dayAttendances->get($employee->id);
                 
-                $status = $attendance ? 'Present' : 'Absent';
-                $exception = '';
+                $status = 'Absent';
+                $exception = '-';
                 
                 $punchIn = null;
                 $punchOut = null;
@@ -370,45 +356,18 @@ class AttendanceController extends Controller
                      $punchInLoc = $attendance->punch_in_location;
                      $punchOutLoc = $attendance->punch_out_location;
 
-                     // Calculate Status & Exceptions based on Time if settings exist
-                     if ($punchIn && $companyStartTime) {
-                         try {
-                             $pIn = Carbon::parse($punchIn);
-                             // Create comparison time on the same date as the punch-in
-                             $sTime = Carbon::parse($dateString . ' ' . $companyStartTime);
-                             
-                             if ($companyHalfTime) {
-                                 $hTime = Carbon::parse($dateString . ' ' . $companyHalfTime);
-                                 if ($pIn->gt($hTime)) {
-                                     $status = 'Half Day';
-                                 } elseif ($pIn->gt($sTime)) {
-                                     $exception .= 'Late arrival ';
-                                 }
-                             } elseif ($pIn->gt($sTime)) {
-                                  $exception .= 'Late arrival ';
-                             }
-                         } catch (\Exception $e) {}
-                     }
-                     
-                     if ($punchOut && $companyEndTime) {
-                         try {
-                             $pOut = Carbon::parse($punchOut);
-                             $eTime = Carbon::parse($dateString . ' ' . $companyEndTime);
-                             
-                             if ($pOut->lt($eTime)) {
-                                 $exception .= 'Early leave ';
-                             }
-                         } catch (\Exception $e) {}
-                     }
-                     
-                     // Append manual exceptions if they exist in DB and aren't already added
-                     $manualInExc = $attendance->punch_in_exception;
-                     $manualOutExc = $attendance->punch_out_exception;
-                     
-                     if ($manualInExc && !str_contains($exception, $manualInExc)) $exception .= $manualInExc . ' ';
-                     if ($manualOutExc && !str_contains($exception, $manualOutExc)) $exception .= $manualOutExc . ' ';
-                     
-                     $exception = trim($exception) ?: '-';
+                     $schedule = $scheduleService->resolveSchedule($employee, $dateString, $assignmentsByUser);
+                     $evaluation = $scheduleService->evaluateDay(
+                         $punchIn ? (string) $punchIn : null,
+                         $punchOut ? (string) $punchOut : null,
+                         $dateString,
+                         $schedule,
+                         $attendance->punch_in_exception,
+                         $attendance->punch_out_exception
+                     );
+
+                     $status = $evaluation['status'];
+                     $exception = $evaluation['exception'];
                 }
 
                 // Apply Filters
