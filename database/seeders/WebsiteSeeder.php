@@ -34,11 +34,7 @@ class WebsiteSeeder extends Seeder
             ['page' => 'home', 'section_key' => 'gallery_header', 'title' => 'Operations in Motion', 'content' => 'Real logistics operations and networks powering supply chains.', 'sort_order' => 70],
             ['page' => 'home', 'section_key' => 'faq_header', 'title' => 'Frequently Asked Questions', 'content' => 'Find answers to common questions about our services and solutions.', 'sort_order' => 80],
             ['page' => 'home', 'section_key' => 'cta', 'title' => 'Ready to Transform Your Operations?', 'content' => 'Partner with us today and experience the difference.', 'sort_order' => 90],
-            ['page' => 'about', 'section_key' => 'hero', 'title' => 'About Vyapto', 'content' => 'Leading the future of logistics support, business services & operational excellence.', 'sort_order' => 1],
-            ['page' => 'about', 'section_key' => 'overview', 'title' => 'Powering Smarter Logistics & Driving Real Growth', 'content' => 'We go beyond basics by helping our clients manage operations, optimizing processes, and staying ahead in a highly competitive industry.', 'sort_order' => 2],
-            ['page' => 'about', 'section_key' => 'who_we_are', 'title' => 'Who We Are', 'content' => 'Vyapto provides logistics support services with structured operations and standardized processes for day-to-day consistency and efficiency.', 'sort_order' => 3],
-            ['page' => 'about', 'section_key' => 'why_choose', 'title' => 'Why Choose Vyapto?', 'content' => 'There are several reasons why you should choose us.', 'sort_order' => 20],
-            ['page' => 'about', 'section_key' => 'cta', 'title' => "Let's Simplify Logistics Together!", 'content' => 'Partner with us today and develop smarter logistics operations.', 'sort_order' => 90],
+            ['page' => 'about', 'section_key' => 'hero', 'title' => "Every load has\nan origin.", 'subtitle' => 'ABOUT VYAPTO', 'content' => 'Vyapto Commerce Pvt. Ltd. is a fast-growing company based in Bihar, India, moving goods, people and opportunity across the country — one consignment at a time.', 'sort_order' => 1],
             ['page' => 'faq', 'section_key' => 'hero', 'title' => 'Frequently Asked Questions', 'content' => 'Find answers to common questions about our services and solutions.', 'sort_order' => 1],
             ['page' => 'services', 'section_key' => 'hero', 'title' => 'Solving real challenges.', 'subtitle' => 'Delivering real results.', 'content' => 'We understand the challenges businesses face every day. Vyapto is built to solve them with efficient solutions, transparency, and an unwavering commitment to quality service.', 'sort_order' => 1, 'extra' => ['default_image' => 'images/vyapto-warehouse-bg.png']],
             ['page' => 'products', 'section_key' => 'hero', 'title' => 'Our Products', 'content' => "Built on the trust we've earned through our services — now bringing quality directly to you.", 'sort_order' => 1, 'extra' => ['default_image' => 'images/vyapto-warehouse-bg.png']],
@@ -275,61 +271,227 @@ class WebsiteSeeder extends Seeder
             );
         }
 
-        $milestones = [
-            ['subtitle' => '2021', 'title' => 'The Foundation', 'content' => 'Vyapto started with a skilled team focused on providing reliable logistics support services.'],
-            ['subtitle' => '2022', 'title' => 'Establishing The Brand', 'content' => 'Operations were unified under Vyapto, solidifying and launching the brand.'],
-            ['subtitle' => '2023', 'title' => 'Expanding Reach', 'content' => 'Our team grew and we opened more offices, enabling 24x7 support to clients.'],
-            ['subtitle' => '2025', 'title' => 'Strengthening Capabilities', 'content' => 'We added integrated logistics support services and upgraded customer success systems.'],
-        ];
-        foreach ($milestones as $i => $m) {
-            WebsitePageSection::updateOrCreate(
-                ['page' => 'about', 'section_key' => 'milestone_' . ($i + 1)],
-                array_merge($m, ['page' => 'about', 'sort_order' => 10 + $i, 'status' => true])
-            );
-        }
-
-        $locations = [
-            ['title' => 'Mohali', 'subtitle' => 'Head Office'],
-            ['title' => 'Gurgaon', 'subtitle' => 'Sub-Branch'],
-            ['title' => 'Noida', 'subtitle' => 'Sub-Branch'],
-            ['title' => 'Delhi', 'subtitle' => 'Sub-Branch'],
-        ];
-        foreach ($locations as $i => $loc) {
-            WebsitePageSection::updateOrCreate(
-                ['page' => 'about', 'section_key' => 'location_' . ($i + 1)],
-                array_merge($loc, ['page' => 'about', 'sort_order' => 15 + $i, 'status' => true])
-            );
-        }
-
         $testimonials = [
             ['content' => 'Vyapto is a great place to work, known for its positive work culture. They truly appreciate their employees.', 'title' => 'Ayesha Amaan', 'subtitle' => 'Customer Success Team'],
             ['content' => 'The platform makes daily operations so much easier. Everything is in one place.', 'title' => 'Rohit Sharma', 'subtitle' => 'Operations Manager'],
             ['content' => 'Excellent support team and reliable systems. Highly recommended!', 'title' => 'Vivek Singh', 'subtitle' => 'Delivery Partner'],
         ];
-
         foreach ($testimonials as $i => $testimonial) {
             WebsitePageSection::updateOrCreate(
                 ['page' => 'home', 'section_key' => 'testimonial_' . ($i + 1)],
-                [
-                    'page' => 'home',
-                    'title' => $testimonial['title'],
-                    'subtitle' => $testimonial['subtitle'],
-                    'content' => $testimonial['content'],
-                    'sort_order' => 61 + $i,
-                    'status' => true,
-                ]
+                array_merge($testimonial, ['page' => 'home', 'sort_order' => 61 + $i, 'status' => true])
+            );
+        }
+
+        $this->seedAboutPage();
+    }
+
+    private function seedAboutPage(): void
+    {
+        WebsitePageSection::updateOrCreate(
+            ['page' => 'about', 'section_key' => 'hero_bg'],
+            ['page' => 'about', 'title' => 'Hero Background', 'sort_order' => 2, 'status' => true, 'extra' => ['default_image' => 'https://images.unsplash.com/photo-1601584115917-0f970f2f0e6b?auto=format&fit=crop&w=1600&q=80']]
+        );
+
+        $metas = [
+            ['title' => 'ORIGIN', 'subtitle' => 'Bihar, India'],
+            ['title' => 'ROUTE', 'subtitle' => 'Pan-India'],
+            ['title' => 'VERTICALS', 'subtitle' => '04'],
+            ['title' => 'STATUS', 'subtitle' => 'In Transit — Growing'],
+        ];
+        foreach ($metas as $i => $meta) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'about', 'section_key' => 'hero_meta_' . ($i + 1)],
+                array_merge($meta, ['page' => 'about', 'sort_order' => 3 + $i, 'status' => true])
             );
         }
 
         WebsitePageSection::updateOrCreate(
-            ['page' => 'about', 'section_key' => 'overview'],
+            ['page' => 'about', 'section_key' => 'story_header'],
             [
                 'page' => 'about',
-                'title' => 'Powering Smarter Logistics & Driving Real Growth',
-                'content' => 'We go beyond basics by helping our clients manage operations, optimizing processes, and staying ahead in a highly competitive industry.',
-                'sort_order' => 2,
+                'title' => "Built on the road,\nnot in a boardroom.",
+                'subtitle' => 'OUR COMPANY STORY',
+                'sort_order' => 10,
                 'status' => true,
-                'extra' => ['default_image' => 'images/5slider.avif'],
+            ]
+        );
+
+        WebsitePageSection::updateOrCreate(
+            ['page' => 'about', 'section_key' => 'story'],
+            [
+                'page' => 'about',
+                'title' => 'Company Story',
+                'content' => "Vyapto started with a simple observation: businesses across India were losing time and money to unreliable transport, unverified manpower, and disconnected operations.\nWhat began as a transportation and logistics operation in Bihar has grown into an integrated services company — spanning Transportation & Logistics, Manpower Solutions, Franchise Operations and Consumer Products. Every vertical we've added exists because a partner asked us to solve one more problem for them.\nToday, that same approach — solve the problem in front of us, do it with integrity, and stay close to the ground — still runs every route we plan and every hire we place.",
+                'sort_order' => 11,
+                'status' => true,
+            ]
+        );
+
+        WebsitePageSection::updateOrCreate(
+            ['page' => 'about', 'section_key' => 'story_image'],
+            [
+                'page' => 'about',
+                'title' => 'Distribution Hub',
+                'sort_order' => 12,
+                'status' => true,
+                'extra' => ['default_image' => 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=800&q=85'],
+            ]
+        );
+
+        $stats = [
+            ['title' => '100+', 'subtitle' => 'Business Clients Served'],
+            ['title' => '1500+', 'subtitle' => 'Deliveries Daily'],
+            ['title' => '150+', 'subtitle' => 'Workforce Managed'],
+            ['title' => '200+', 'subtitle' => 'Pincodes Covered'],
+        ];
+        foreach ($stats as $i => $stat) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'about', 'section_key' => 'about_stat_' . ($i + 1)],
+                array_merge($stat, ['page' => 'about', 'sort_order' => 20 + $i, 'status' => true])
+            );
+        }
+
+        WebsitePageSection::updateOrCreate(
+            ['page' => 'about', 'section_key' => 'vision_header'],
+            ['page' => 'about', 'title' => 'Our Vision', 'subtitle' => 'OUR VISION', 'sort_order' => 30, 'status' => true]
+        );
+
+        WebsitePageSection::updateOrCreate(
+            ['page' => 'about', 'section_key' => 'vision_quote'],
+            [
+                'page' => 'about',
+                'title' => 'Vision Quote',
+                'content' => 'To become a trusted growth partner for businesses by delivering dependable logistics, workforce, franchise, and distribution solutions that create sustainable value.',
+                'sort_order' => 31,
+                'status' => true,
+            ]
+        );
+
+        $visionPoints = [
+            ['title' => 'Innovate & Excel', 'content' => 'Constantly improving our services through technology, optimization, and on-time execution.'],
+            ['title' => 'Empower & Impact', 'content' => 'Enabling businesses to scale and creating long-term positive economic impact.'],
+        ];
+        foreach ($visionPoints as $i => $point) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'about', 'section_key' => 'vision_point_' . ($i + 1)],
+                array_merge($point, ['page' => 'about', 'sort_order' => 32 + $i, 'status' => true])
+            );
+        }
+
+        WebsitePageSection::updateOrCreate(
+            ['page' => 'about', 'section_key' => 'vision_image'],
+            [
+                'page' => 'about',
+                'title' => 'Vision Photo',
+                'sort_order' => 34,
+                'status' => true,
+                'extra' => ['default_image' => 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=85'],
+            ]
+        );
+
+        WebsitePageSection::updateOrCreate(
+            ['page' => 'about', 'section_key' => 'why_header'],
+            [
+                'page' => 'about',
+                'title' => "We solve the problem\nbefore it costs you a client.",
+                'subtitle' => 'Operational Strength',
+                'content' => 'Every challenge businesses face has a Vyapto answer built directly against it.',
+                'sort_order' => 40,
+                'status' => true,
+            ]
+        );
+
+        $issues = [
+            ['title' => 'Delayed deliveries', 'content' => 'Unreliable transport partners and poor route planning.', 'subtitle' => 'Reliable logistics network with real-time tracking.'],
+            ['title' => 'Workforce shortages', 'content' => 'Skilled, dependable manpower is hard to find fast.', 'subtitle' => 'Ready-to-deploy, verified workforce pool.'],
+            ['title' => 'High operational costs', 'content' => 'Inefficient processes inflate business expenses.', 'subtitle' => 'Smart planning, transparent cost-efficient pricing.'],
+            ['title' => 'Inconsistent supply', 'content' => 'Irregular supply chains hurt customer trust.', 'subtitle' => 'Quality-assured, hygiene-checked distribution.'],
+        ];
+        foreach ($issues as $i => $issue) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'about', 'section_key' => 'issue_' . ($i + 1)],
+                array_merge($issue, ['page' => 'about', 'sort_order' => 41 + $i, 'status' => true])
+            );
+        }
+
+        WebsitePageSection::updateOrCreate(
+            ['page' => 'about', 'section_key' => 'advantage_header'],
+            ['page' => 'about', 'title' => 'THE VYAPTO ADVANTAGE', 'sort_order' => 50, 'status' => true]
+        );
+
+        $advantages = [
+            ['title' => 'Integrated Solutions', 'content' => 'One-stop solutions across multiple business needs.', 'icon' => 'fa-layer-group'],
+            ['title' => 'Pan-India Network', 'content' => 'Strong presence and operations across India.', 'icon' => 'fa-map'],
+            ['title' => 'Experienced Team', 'content' => 'Skilled professionals with domain expertise.', 'icon' => 'fa-users'],
+            ['title' => 'Quality Assured', 'content' => 'Consistent, high standards in everything we do.', 'icon' => 'fa-clipboard-check'],
+            ['title' => 'Ethical & Transparent', 'content' => 'Complete transparency, always.', 'icon' => 'fa-shield-halved'],
+            ['title' => 'Growth-Oriented', 'content' => 'Reducing cost, increasing profitability, together.', 'icon' => 'fa-chart-line'],
+        ];
+        foreach ($advantages as $i => $adv) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'about', 'section_key' => 'advantage_' . ($i + 1)],
+                array_merge($adv, ['page' => 'about', 'sort_order' => 51 + $i, 'status' => true])
+            );
+        }
+
+        WebsitePageSection::updateOrCreate(
+            ['page' => 'about', 'section_key' => 'team_header'],
+            [
+                'page' => 'about',
+                'title' => "The people behind\nevery delivery.",
+                'subtitle' => 'Our Force',
+                'content' => '150+ trained professionals — drivers, dispatchers, franchise managers and support staff — working as one crew across Bihar and beyond.',
+                'sort_order' => 60,
+                'status' => true,
+            ]
+        );
+
+        $team = [
+            [
+                'title' => 'Rahul Sharma',
+                'subtitle' => 'Leadership',
+                'content' => 'Head of Operations — oversees logistics, route planning and hub management across all Vyapto locations.',
+                'icon' => 'orange',
+                'extra' => ['default_image' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80'],
+            ],
+            [
+                'title' => 'Priya Verma',
+                'subtitle' => 'Workforce',
+                'content' => 'Workforce Manager — sources, verifies and deploys skilled and semi-skilled personnel for clients across the country.',
+                'icon' => 'orange',
+                'extra' => ['default_image' => 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80'],
+            ],
+            [
+                'title' => 'Amit Singh',
+                'subtitle' => 'Franchise',
+                'content' => 'Franchise Director — builds and grows Vyapto\'s franchise partner network from onboarding to operational excellence.',
+                'icon' => 'blue',
+                'extra' => ['default_image' => 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80'],
+            ],
+            [
+                'title' => 'Neha Jha',
+                'subtitle' => 'Finance',
+                'content' => 'Finance & Compliance — manages bookkeeping, tax compliance and financial controls for all Vyapto verticals.',
+                'icon' => 'blue',
+                'extra' => ['default_image' => 'https://images.unsplash.com/photo-1607746882042-944635dfe10e?auto=format&fit=crop&w=400&q=80'],
+            ],
+        ];
+        foreach ($team as $i => $member) {
+            WebsitePageSection::updateOrCreate(
+                ['page' => 'about', 'section_key' => 'team_' . ($i + 1)],
+                array_merge($member, ['page' => 'about', 'sort_order' => 61 + $i, 'status' => true])
+            );
+        }
+
+        WebsitePageSection::updateOrCreate(
+            ['page' => 'about', 'section_key' => 'team_cta'],
+            [
+                'page' => 'about',
+                'title' => 'Join the crew',
+                'link' => '/careers',
+                'sort_order' => 70,
+                'status' => true,
             ]
         );
     }
