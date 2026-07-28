@@ -294,8 +294,8 @@
                             <td class="text-center">
 
                                 @if($slip->file_path)
-                                    {{-- Uploaded PDF --}}
-                                    <a href="{{ asset($slip->file_path) }}" target="_blank"
+                                    {{-- Stored PDF — serve via app route (avoids /storage/ 403 on live) --}}
+                                    <a href="{{ route('salary-slips.pdf', $slip->slip_id) }}" target="_blank"
                                        class="btn btn-sm btn-outline-danger" title="View PDF">
                                         <i class="bi bi-file-earmark-pdf-fill"></i> PDF
                                     </a>
@@ -588,7 +588,7 @@
                                 <label class="form-label small fw-semibold">Replace PDF File (Optional)</label>
                                 <input type="file" name="file" class="form-control form-control-sm" accept="application/pdf">
                                 <div class="form-text">
-                                    Current: <a href="{{ asset($slip->file_path) }}" target="_blank">View current PDF</a>
+                                    Current: <a href="{{ route('salary-slips.pdf', $slip->slip_id) }}" target="_blank">View current PDF</a>
                                 </div>
                             </div>
                             @endif

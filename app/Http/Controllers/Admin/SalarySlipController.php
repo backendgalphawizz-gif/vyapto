@@ -52,6 +52,47 @@ class SalarySlipController extends Controller
         return view('admin.salary_slips.slip', $this->prepareSlipViewData($slip));
     }
 
+    public function downloadPdf($id)
+    {
+        $slip = SalarySlip::with(['employee' => function ($q) {
+            $q->select(
+                'id', 'name', 'email', 'phone',
+                'date_of_birth', 'join_date', 'gender', 'job_type',
+                'pan_card_no', 'aadhar_card_no',
+                'bank_account_no', 'ifsc_code', 'bank_name', 'bank_branch'
+            );
+        }])->findOrFail($id);
+
+        $filename = sprintf(
+            'salary-slip-%d-%d-%02d.pdf',
+            $slip->employee_id,
+            $slip->year,
+            $slip->month
+        );
+
+        $relativePath = $this->resolveSlipStorageRelativePath($slip->file_path);
+        if ($relativePath && Storage::disk('public')->exists($relativePath)) {
+            return response()->file(Storage::disk('public')->path($relativePath), [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            ]);
+        }
+
+        if ($slip->file_path && file_exists(public_path($slip->file_path))) {
+            return response()->file(public_path($slip->file_path), [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            ]);
+        }
+
+        $viewData = $this->prepareSlipViewData($slip);
+        $viewData['forPdf'] = true;
+
+        $pdf = Pdf::loadView('admin.salary_slips.slip', $viewData)->setPaper('a4', 'portrait');
+
+        return $pdf->stream($filename);
+    }
+
     public function index(Request $request)
 
     {
@@ -1082,6 +1123,21 @@ class SalarySlipController extends Controller
         Storage::disk('public')->put($relativePath, $pdf->output());
 
         return 'storage/'.$relativePath;
+    }
+
+    private function resolveSlipStorageRelativePath(?string $filePath): ?string
+    {
+        if (! $filePath) {
+            return null;
+        }
+
+        $path = str_replace('\\', '/', $filePath);
+
+        if (str_starts_with($path, 'storage/')) {
+            return substr($path, strlen('storage/'));
+        }
+
+        return ltrim($path, '/');
     }
 
 }

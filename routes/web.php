@@ -99,6 +99,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::group(['middleware' => ['permission:manage_salary_slips']], function () {
+        Route::get('salary-slips/{id}/pdf', [SalarySlipController::class, 'downloadPdf'])->name('salary-slips.pdf');
         Route::resource('salary-slips', SalarySlipController::class)->except(['create', 'edit']);
 
         // User Salary CRUD
