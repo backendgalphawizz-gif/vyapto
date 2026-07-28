@@ -162,6 +162,7 @@
         </a>
       </li>
 
+      @can('manage_salary_slips')
       <li class="nav-item mb-1">
         <a href="{{ route('salary-slips.index') }}" class="menu-item nav-link {{ request()->routeIs('salary-slips.index') ? 'active' : '' }}" data-tooltip="Salary Slips">
           <i class="bi bi-file-earmark-text me-2"></i><span>Salary Slips</span>
@@ -172,6 +173,7 @@
           <i class="bi bi-wallet2 me-2"></i><span>Salaries</span>
         </a>
       </li>
+      @endcan
       <li class="nav-item mb-1">
         <a href="{{ route('settings.company-info') }}" class="menu-item nav-link {{ request()->routeIs('settings.company-info') ? 'active' : '' }}" data-tooltip="Settings">
           <i class="bi bi-gear me-2"></i><span>Settings</span>

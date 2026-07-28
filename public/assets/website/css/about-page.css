@@ -94,7 +94,7 @@
 
 /* ── Hero (prod-hero bg + about content layout) ── */
 .about-page .about-hero.prod-hero {
-    min-height: 72vh;
+    min-height: 320px;
     align-items: flex-end;
     padding: 120px 0 72px;
 }

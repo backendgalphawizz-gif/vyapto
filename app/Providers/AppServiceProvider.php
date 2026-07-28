@@ -45,6 +45,22 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
 
+            // Honor Spatie permissions linked to users.role_id (even when model_has_roles is empty).
+            $roleId = (int) ($user->role_id ?? 0);
+            if ($roleId > 0) {
+                try {
+                    $role = \Spatie\Permission\Models\Role::findById(
+                        $roleId,
+                        method_exists($user, 'getDefaultGuardName') ? $user->getDefaultGuardName() : 'web'
+                    );
+                    if ($role && $role->hasPermissionTo($ability)) {
+                        return true;
+                    }
+                } catch (\Throwable $e) {
+                    // Role/permission missing in DB — fall through to normal checks.
+                }
+            }
+
             return null;
         });
     }
