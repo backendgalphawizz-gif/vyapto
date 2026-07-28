@@ -34,10 +34,43 @@ class AssignmentParcelController extends Controller
         $query = StaffRoles::employeesQuery();
 
         if ($excludeAlreadyAssigned) {
+            // Hide staff only while they have an open shipment assignment (not after delivery/cancel).
             $query->whereNotIn('id', function ($sub) {
+                $sub->select('pd.user_id')
+                    ->from('parcel_detail as pd')
+                    ->join('assignment_parcel as ap', 'ap.id', '=', 'pd.assignment_parcel_id')
+                    ->whereNotIn('pd.status', [
+                        ParcelDetail::STATUS_DELIVERED,
+                        ParcelDetail::STATUS_CANCELLED,
+                    ])
+                    ->whereNotIn('ap.status', [
+                        AssignmentParcel::STATUS_DELIVERED,
+                        AssignmentParcel::STATUS_CANCELLED,
+                    ]);
+            });
+
+            // Office / staff assignments (no parcels): hide only while date range is active.
+            $today = now()->toDateString();
+            $query->whereNotIn('id', function ($sub) use ($today) {
                 $sub->select('user_id')
-                    ->from('parcel_detail')
-                    ->where('status', 'assigned');
+                    ->from('assignment_parcel')
+                    ->whereNotNull('office_id')
+                    ->whereNull('vehicle_id')
+                    ->whereNotIn('status', [
+                        AssignmentParcel::STATUS_DELIVERED,
+                        AssignmentParcel::STATUS_CANCELLED,
+                    ]);
+
+                if (Schema::hasColumn('assignment_parcel', 'from_date')) {
+                    $sub->where(function ($q) use ($today) {
+                        $q->whereNull('from_date')->orWhereDate('from_date', '<=', $today);
+                    });
+                }
+                if (Schema::hasColumn('assignment_parcel', 'to_date')) {
+                    $sub->where(function ($q) use ($today) {
+                        $q->whereNull('to_date')->orWhereDate('to_date', '>=', $today);
+                    });
+                }
             });
         }
 

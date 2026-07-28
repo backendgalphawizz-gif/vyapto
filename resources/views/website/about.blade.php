@@ -5,6 +5,7 @@
 @section('content')
 @php
     $hero = $sections->get('hero');
+    $heroImage = $hero?->imageUrl() ?: asset('images/vyapto-warehouse-bg.png');
     $overview = $sections->get('overview');
     $whoWeAre = $sections->get('who_we_are');
     $timeline = $sections->filter(fn ($s) => str_starts_with($s->section_key, 'milestone_'))->sortBy('sort_order');
@@ -14,7 +15,20 @@
     $cta = $sections->get('cta');
 @endphp
 
-@include('website.partials.page-hero', ['hero' => $hero, 'fallbackTitle' => 'About ' . ($companyName ?? 'Us')])
+{{-- HERO --}}
+<section class="prod-hero">
+    <img src="{{ $heroImage }}" alt="" class="prod-hero-bg" aria-hidden="true">
+    <div class="prod-hero-overlay"></div>
+    <div class="container prod-hero-inner" data-reveal>
+        <h1 class="prod-hero-title">{{ $hero?->title ?? 'About ' . ($companyName ?? 'Us') }}</h1>
+        @if($hero?->subtitle)
+            <p class="prod-hero-lead" style="margin-bottom: 8px; font-size: 1rem; opacity: 0.92;">{{ $hero->subtitle }}</p>
+        @endif
+        <p class="prod-hero-lead">
+            {{ $hero?->content ?? 'Leading the future of logistics support, business services & operational excellence.' }}
+        </p>
+    </div>
+</section>
 
 <section class="content-section">
     <div class="container">
