@@ -24,9 +24,9 @@ class WebsiteMedia
         }
 
         if (str_starts_with($path, 'storage/')) {
-            return asset($path);
+            return StorageAssets::url($path);
         }
 
-        return asset('storage/' . $path);
+        return StorageAssets::url($path);
     }
 }

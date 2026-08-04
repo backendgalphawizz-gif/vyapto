@@ -4,6 +4,7 @@
 @section('content')
 
 @php
+use App\Support\StorageAssets;
 $staffRole = $roles->firstWhere('name', 'Staff Employee');
 $staffRoleID = $staffRole ? $staffRole->id : null;
 @endphp
@@ -172,7 +173,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 @endif
                             </td>
                             <td class="text-center">
-                                <img src="{{ $user->profile_image ? asset($user->profile_image) : asset('assets/admin/images/no-image.png') }}"
+                                <img src="{{ $user->profileImageUrl() }}"
                                     alt="Profile"
                                     class="rounded shadow-sm border"
                                     width="50" height="50"
@@ -290,7 +291,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                 </div>
                 <div class="modal-body">
                     <div class="text-center mb-4">
-                        <img src="{{ $user->profile_image ? asset($user->profile_image) : asset('assets/admin/images/no-image.png') }}"
+                        <img src="{{ $user->profileImageUrl() }}"
                             alt="Profile"
                             class="rounded-circle border shadow-sm" width="120" height="120"
                             style="object-fit: cover;"
@@ -343,9 +344,9 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 <div class="col-md-6"><label class="small text-muted mb-0">Aadhar Number</label><div class="fw-bold">{{ $user->aadhar_card_no ?? 'N/A' }}</div></div>
                                 <div class="col-md-6"><label class="small text-muted mb-0">PAN Number</label><div class="fw-bold">{{ $user->pan_card_no ?? 'N/A' }}</div></div>
                                 <div class="col-md-6"><label class="small text-muted mb-0">Driving License Number</label><div class="fw-bold">{{ $user->driving_license_no ?? 'N/A' }}</div></div>
-                                <div class="col-md-6"><label class="small text-muted mb-0">Aadhar Image</label><div>@if($user->aadhar_card_image)<a href="{{ asset($user->aadhar_card_image) }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>@else N/A @endif</div></div>
-                                <div class="col-md-6"><label class="small text-muted mb-0">PAN Image</label><div>@if($user->pan_card_image)<a href="{{ asset($user->pan_card_image) }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>@else N/A @endif</div></div>
-                                <div class="col-md-6"><label class="small text-muted mb-0">Driving License File</label><div>@if($user->driving_license_image)<a href="{{ asset($user->driving_license_image) }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>@else N/A @endif</div></div>
+                                <div class="col-md-6"><label class="small text-muted mb-0">Aadhar Image</label><div>@if($user->aadhar_card_image)<a href="{{ StorageAssets::url($user->aadhar_card_image) }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>@else N/A @endif</div></div>
+                                <div class="col-md-6"><label class="small text-muted mb-0">PAN Image</label><div>@if($user->pan_card_image)<a href="{{ StorageAssets::url($user->pan_card_image) }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>@else N/A @endif</div></div>
+                                <div class="col-md-6"><label class="small text-muted mb-0">Driving License File</label><div>@if($user->driving_license_image)<a href="{{ StorageAssets::url($user->driving_license_image) }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>@else N/A @endif</div></div>
                             </div>
                         </div>
 
@@ -356,7 +357,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 <div class="col-md-6"><label class="small text-muted mb-0">IFSC Code</label><div class="fw-bold">{{ $user->ifsc_code ?? 'N/A' }}</div></div>
                                 <div class="col-md-6"><label class="small text-muted mb-0">Bank Name</label><div class="fw-bold">{{ $user->bank_name ?? 'N/A' }}</div></div>
                                 <div class="col-md-6"><label class="small text-muted mb-0">Branch</label><div class="fw-bold">{{ $user->bank_branch ?? 'N/A' }}</div></div>
-                                <div class="col-md-6"><label class="small text-muted mb-0">Bank Proof</label><div>@if($user->bank_proof_image)<a href="{{ asset($user->bank_proof_image) }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>@else N/A @endif</div></div>
+                                <div class="col-md-6"><label class="small text-muted mb-0">Bank Proof</label><div>@if($user->bank_proof_image)<a href="{{ StorageAssets::url($user->bank_proof_image) }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>@else N/A @endif</div></div>
                             </div>
                         </div>
                         @endif
@@ -407,7 +408,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             <!-- apply onerror -->
                             <div class="col-12 text-center mb-3">
                                 <img id="editPreview{{ $user->id }}"
-                                    src="{{ $user->profile_image ? asset($user->profile_image) : asset('assets/admin/images/no-image.png') }}"
+                                    src="{{ $user->profileImageUrl() }}"
                                     class="rounded-circle border shadow-sm" width="100" height="100" style="object-fit: cover;"
                                     onerror="this.src='{{ asset('assets/admin/images/no-image.png') }}'">
                             </div>
@@ -646,13 +647,13 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                     data-preview-wrap="editAadharPreviewWrap{{ $user->id }}"
                                     data-preview-img="editAadharPreview{{ $user->id }}"
                                     data-preview-link="editAadharPreviewLink{{ $user->id }}"
-                                    data-existing-url="{{ $user->aadhar_card_image ? asset($user->aadhar_card_image) : '' }}"
+                                    data-existing-url="{{ $user->aadhar_card_image ? StorageAssets::url($user->aadhar_card_image) : '' }}"
                                     data-existing-type="image"
                                     onchange="renderFilePreview(this)">
                                 <div id="editAadharPreviewWrap{{ $user->id }}" class="mt-2 {{ $user->aadhar_card_image ? '' : 'd-none' }}">
-                                    <img id="editAadharPreview{{ $user->id }}" src="{{ $user->aadhar_card_image ? asset($user->aadhar_card_image) : '' }}" class="img-thumbnail" style="max-height: 120px;"
+                                    <img id="editAadharPreview{{ $user->id }}" src="{{ $user->aadhar_card_image ? StorageAssets::url($user->aadhar_card_image) : '' }}" class="img-thumbnail" style="max-height: 120px;"
                                         onerror="this.style.display='none'; this.parentElement.classList.add('d-none');">
-                                    <a id="editAadharPreviewLink{{ $user->id }}" href="{{ $user->aadhar_card_image ? asset($user->aadhar_card_image) : '#' }}" target="_blank" class="btn btn-sm btn-outline-secondary {{ $user->aadhar_card_image ? '' : 'd-none' }}">View file</a>
+                                    <a id="editAadharPreviewLink{{ $user->id }}" href="{{ $user->aadhar_card_image ? StorageAssets::url($user->aadhar_card_image) : '#' }}" target="_blank" class="btn btn-sm btn-outline-secondary {{ $user->aadhar_card_image ? '' : 'd-none' }}">View file</a>
                                 </div>
                                 @error('aadhar_card_image', 'userUpdate'.$user->id)
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -675,13 +676,13 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                     data-preview-wrap="editPanPreviewWrap{{ $user->id }}"
                                     data-preview-img="editPanPreview{{ $user->id }}"
                                     data-preview-link="editPanPreviewLink{{ $user->id }}"
-                                    data-existing-url="{{ $user->pan_card_image ? asset($user->pan_card_image) : '' }}"
+                                    data-existing-url="{{ $user->pan_card_image ? StorageAssets::url($user->pan_card_image) : '' }}"
                                     data-existing-type="image"
                                     onchange="renderFilePreview(this)">
                                 <div id="editPanPreviewWrap{{ $user->id }}" class="mt-2 {{ $user->pan_card_image ? '' : 'd-none' }}">
-                                    <img id="editPanPreview{{ $user->id }}" src="{{ $user->pan_card_image ? asset($user->pan_card_image) : '' }}" class="img-thumbnail" style="max-height: 120px;"
+                                    <img id="editPanPreview{{ $user->id }}" src="{{ $user->pan_card_image ? StorageAssets::url($user->pan_card_image) : '' }}" class="img-thumbnail" style="max-height: 120px;"
                                         onerror="this.style.display='none'; this.parentElement.classList.add('d-none');">
-                                    <a id="editPanPreviewLink{{ $user->id }}" href="{{ $user->pan_card_image ? asset($user->pan_card_image) : '#' }}" target="_blank" class="btn btn-sm btn-outline-secondary {{ $user->pan_card_image ? '' : 'd-none' }}">View file</a>
+                                    <a id="editPanPreviewLink{{ $user->id }}" href="{{ $user->pan_card_image ? StorageAssets::url($user->pan_card_image) : '#' }}" target="_blank" class="btn btn-sm btn-outline-secondary {{ $user->pan_card_image ? '' : 'd-none' }}">View file</a>
                                 </div>
                                 @error('pan_card_image', 'userUpdate'.$user->id)
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -703,12 +704,12 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                     data-preview-wrap="editDrivingPreviewWrap{{ $user->id }}"
                                     data-preview-img="editDrivingPreview{{ $user->id }}"
                                     data-preview-link="editDrivingPreviewLink{{ $user->id }}"
-                                    data-existing-url="{{ $user->driving_license_image ? asset($user->driving_license_image) : '' }}"
+                                    data-existing-url="{{ $user->driving_license_image ? StorageAssets::url($user->driving_license_image) : '' }}"
                                     data-existing-type="{{ $user->driving_license_image && strtolower(pathinfo($user->driving_license_image, PATHINFO_EXTENSION)) === 'pdf' ? 'pdf' : 'image' }}"
                                     onchange="renderFilePreview(this)">
                                 <div id="editDrivingPreviewWrap{{ $user->id }}" class="mt-2 {{ $user->driving_license_image ? '' : 'd-none' }}">
-                                    <img id="editDrivingPreview{{ $user->id }}" src="{{ $user->driving_license_image && strtolower(pathinfo($user->driving_license_image, PATHINFO_EXTENSION)) !== 'pdf' ? asset($user->driving_license_image) : '' }}" class="img-thumbnail {{ $user->driving_license_image && strtolower(pathinfo($user->driving_license_image, PATHINFO_EXTENSION)) !== 'pdf' ? '' : 'd-none' }}" style="max-height: 120px;">
-                                    <a id="editDrivingPreviewLink{{ $user->id }}" href="{{ $user->driving_license_image ? asset($user->driving_license_image) : '#' }}" target="_blank" class="btn btn-sm btn-outline-secondary {{ $user->driving_license_image && strtolower(pathinfo($user->driving_license_image, PATHINFO_EXTENSION)) === 'pdf' ? '' : 'd-none' }}">View current file</a>
+                                    <img id="editDrivingPreview{{ $user->id }}" src="{{ $user->driving_license_image && strtolower(pathinfo($user->driving_license_image, PATHINFO_EXTENSION)) !== 'pdf' ? StorageAssets::url($user->driving_license_image) : '' }}" class="img-thumbnail {{ $user->driving_license_image && strtolower(pathinfo($user->driving_license_image, PATHINFO_EXTENSION)) !== 'pdf' ? '' : 'd-none' }}" style="max-height: 120px;">
+                                    <a id="editDrivingPreviewLink{{ $user->id }}" href="{{ $user->driving_license_image ? StorageAssets::url($user->driving_license_image) : '#' }}" target="_blank" class="btn btn-sm btn-outline-secondary {{ $user->driving_license_image && strtolower(pathinfo($user->driving_license_image, PATHINFO_EXTENSION)) === 'pdf' ? '' : 'd-none' }}">View current file</a>
                                 </div>
                                 @error('driving_license_image', 'userUpdate'.$user->id)
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -764,12 +765,12 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                     data-preview-wrap="editBankProofPreviewWrap{{ $user->id }}"
                                     data-preview-img="editBankProofPreview{{ $user->id }}"
                                     data-preview-link="editBankProofPreviewLink{{ $user->id }}"
-                                    data-existing-url="{{ $user->bank_proof_image ? asset($user->bank_proof_image) : '' }}"
+                                    data-existing-url="{{ $user->bank_proof_image ? StorageAssets::url($user->bank_proof_image) : '' }}"
                                     data-existing-type="{{ $user->bank_proof_image && strtolower(pathinfo($user->bank_proof_image, PATHINFO_EXTENSION)) === 'pdf' ? 'pdf' : 'image' }}"
                                     onchange="renderFilePreview(this)">
                                 <div id="editBankProofPreviewWrap{{ $user->id }}" class="mt-2 {{ $user->bank_proof_image ? '' : 'd-none' }}">
-                                    <img id="editBankProofPreview{{ $user->id }}" src="{{ $user->bank_proof_image && strtolower(pathinfo($user->bank_proof_image, PATHINFO_EXTENSION)) !== 'pdf' ? asset($user->bank_proof_image) : '' }}" class="img-thumbnail {{ $user->bank_proof_image && strtolower(pathinfo($user->bank_proof_image, PATHINFO_EXTENSION)) !== 'pdf' ? '' : 'd-none' }}" style="max-height: 120px;">
-                                    <a id="editBankProofPreviewLink{{ $user->id }}" href="{{ $user->bank_proof_image ? asset($user->bank_proof_image) : '#' }}" target="_blank" class="btn btn-sm btn-outline-secondary {{ $user->bank_proof_image && strtolower(pathinfo($user->bank_proof_image, PATHINFO_EXTENSION)) === 'pdf' ? '' : 'd-none' }}">View current file</a>
+                                    <img id="editBankProofPreview{{ $user->id }}" src="{{ $user->bank_proof_image && strtolower(pathinfo($user->bank_proof_image, PATHINFO_EXTENSION)) !== 'pdf' ? StorageAssets::url($user->bank_proof_image) : '' }}" class="img-thumbnail {{ $user->bank_proof_image && strtolower(pathinfo($user->bank_proof_image, PATHINFO_EXTENSION)) !== 'pdf' ? '' : 'd-none' }}" style="max-height: 120px;">
+                                    <a id="editBankProofPreviewLink{{ $user->id }}" href="{{ $user->bank_proof_image ? StorageAssets::url($user->bank_proof_image) : '#' }}" target="_blank" class="btn btn-sm btn-outline-secondary {{ $user->bank_proof_image && strtolower(pathinfo($user->bank_proof_image, PATHINFO_EXTENSION)) === 'pdf' ? '' : 'd-none' }}">View current file</a>
                                 </div>
                                 @error('bank_proof_image', 'userUpdate'.$user->id)
                                 <div class="invalid-feedback">{{ $message }}</div>

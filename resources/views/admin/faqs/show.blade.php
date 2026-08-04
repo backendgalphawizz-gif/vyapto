@@ -1,4 +1,5 @@
 @extends('layouts.admin')
+@php use App\Support\StorageAssets; @endphp
 @section('title', 'View FAQ')
 
 @section('content')
@@ -47,7 +48,7 @@
 				<div class="col-md-9">
 					<label class="small text-muted mb-1 d-block">Image</label>
 					@if($faq->image)
-						<img src="{{ asset('storage/' . $faq->image) }}" alt="FAQ" width="120" height="120" class="rounded border" style="object-fit: cover;">
+						<img src="{{ StorageAssets::url($faq->image) }}" alt="FAQ" width="120" height="120" class="rounded border" style="object-fit: cover;">
 					@elseif($faq->image_url)
 						<a href="{{ $faq->image_url }}" target="_blank" class="btn btn-sm btn-outline-primary">Open Image URL</a>
 					@else

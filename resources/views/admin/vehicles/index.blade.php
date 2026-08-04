@@ -2,6 +2,8 @@
 
 @section('title', 'Vehicle Management')
 
+@php use App\Support\StorageAssets; @endphp
+
 @section('content')
 
 
@@ -217,7 +219,7 @@
 
                             <td class="text-center">
 
-                                <img src="{{ asset('storage/'.$vehicle->rc_image) }}"
+                                <img src="{{ StorageAssets::url($vehicle->rc_image) }}"
 
                                     width="60"
 
@@ -239,11 +241,11 @@
                                 @endphp
 
                                 @if($firstInsurance && in_array($firstExt, ['jpg', 'jpeg', 'png', 'webp']))
-                                    <img src="{{ asset('storage/'.$firstInsurance) }}"
+                                    <img src="{{ StorageAssets::url($firstInsurance) }}"
                                         width="60"
                                         onerror="this.src='/assets/admin/images/no-image.png'">
                                 @elseif($firstInsurance)
-                                    <a href="{{ asset('storage/'.$firstInsurance) }}" target="_blank" class="badge bg-secondary text-decoration-none">File</a>
+                                    <a href="{{ StorageAssets::url($firstInsurance) }}" target="_blank" class="badge bg-secondary text-decoration-none">File</a>
                                 @else
                                     <span class="text-muted small">No File</span>
                                 @endif
@@ -742,7 +744,7 @@
 
                             <div class="border rounded p-1 d-inline-block bg-light">
 
-                                <img src="{{ asset('storage/'.$vehicle->rc_image) }}" 
+                                <img src="{{ StorageAssets::url($vehicle->rc_image) }}" 
 
                                     class="img-fluid rounded" 
 
@@ -776,14 +778,14 @@
                                     @foreach($insuranceFilesView as $insuranceFile)
                                         @php $insuranceExt = strtolower(pathinfo($insuranceFile, PATHINFO_EXTENSION)); @endphp
                                         @if(in_array($insuranceExt, ['jpg', 'jpeg', 'png', 'webp']))
-                                            <a href="{{ asset('storage/'.$insuranceFile) }}" target="_blank" rel="noopener" class="border rounded p-1 bg-light d-inline-block">
-                                                <img src="{{ asset('storage/'.$insuranceFile) }}"
+                                            <a href="{{ StorageAssets::url($insuranceFile) }}" target="_blank" rel="noopener" class="border rounded p-1 bg-light d-inline-block">
+                                                <img src="{{ StorageAssets::url($insuranceFile) }}"
                                                     class="img-fluid rounded"
                                                     style="max-height: 120px;"
                                                     onerror="this.src='/assets/admin/images/no-image.png'">
                                             </a>
                                         @else
-                                            <a href="{{ asset('storage/'.$insuranceFile) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                                            <a href="{{ StorageAssets::url($insuranceFile) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
                                                 View {{ strtoupper($insuranceExt ?: 'FILE') }}
                                             </a>
                                         @endif
@@ -963,7 +965,7 @@
 
                                 <label class="small text-muted mb-1 d-block">Preview:</label>
 
-                                <img src="{{ asset('storage/'.$vehicle->rc_image) }}" 
+                                <img src="{{ StorageAssets::url($vehicle->rc_image) }}" 
 
                                     id="rcPreview{{ $vehicle->id }}" 
 
@@ -1012,7 +1014,7 @@
                                     <div class="d-flex flex-wrap gap-2">
                                         @foreach($insuranceFilesEdit as $insuranceFile)
                                             @php $insuranceExt = strtolower(pathinfo($insuranceFile, PATHINFO_EXTENSION)); @endphp
-                                            <a href="{{ asset('storage/'.$insuranceFile) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                                            <a href="{{ StorageAssets::url($insuranceFile) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
                                                 {{ strtoupper($insuranceExt ?: 'FILE') }}
                                             </a>
                                         @endforeach

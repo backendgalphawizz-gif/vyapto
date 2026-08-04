@@ -11,6 +11,7 @@ use App\Http\Controllers\EmailLogController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\DesignationController;
+use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\VehicleController;
@@ -44,6 +45,10 @@ Route::get('/admin/dashboard', [AdminController::class, 'index'])
     ->name('admin.dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+
+    Route::get('admin/media/{path}', [MediaController::class, 'show'])
+        ->where('path', '.*')
+        ->name('admin.media.show');
 
     // i want prefix company setting and then inside that i want to have permissions, roles, users, vehicles, attendance, announcements
     Route::group(['middleware' => ['permission:manage_settings']], function () {

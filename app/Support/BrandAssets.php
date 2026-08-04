@@ -21,7 +21,7 @@ class BrandAssets
     {
         $logo = self::companyWebLogoPath();
 
-        return $logo ? asset('storage/company/' . $logo) : null;
+        return $logo ? StorageAssets::url('company/' . ltrim($logo, '/')) : null;
     }
 
     /**

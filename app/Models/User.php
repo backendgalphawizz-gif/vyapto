@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Support\StorageAssets;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -119,27 +120,6 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $fallback = asset('assets/admin/images/no-image.png');
 
-        if (empty($this->profile_image)) {
-            return $fallback;
-        }
-
-        if (str_starts_with($this->profile_image, 'http')) {
-            return $this->profile_image;
-        }
-
-        $path = ltrim($this->profile_image, '/');
-
-        if (file_exists(public_path($path))) {
-            return asset($path);
-        }
-
-        if (str_starts_with($path, 'storage/')) {
-            $storageRelative = substr($path, strlen('storage/'));
-            if (file_exists(storage_path('app/public/'.$storageRelative))) {
-                return asset($path);
-            }
-        }
-
-        return $fallback;
+        return StorageAssets::url($this->profile_image, $fallback) ?? $fallback;
     }
 }

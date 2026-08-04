@@ -12,6 +12,8 @@
 
 @section('content')
 
+@php use App\Support\StorageAssets; @endphp
+
 <div class="main-section">
 
     <div class="pb-2">
@@ -303,7 +305,7 @@
 
                             <img height="60" id="viewerWL"
 
-                                src="{{ $logo ? asset('storage/company/'.$logo) : asset('assets/admin/images/no-image.png') }}">
+                                src="{{ $logo ? StorageAssets::url('company/'.$logo) : asset('assets/admin/images/no-image.png') }}">
 
                         </center>
 

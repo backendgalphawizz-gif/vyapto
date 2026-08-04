@@ -1,5 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Vehicle Usage Records')
+@php use App\Support\StorageAssets; @endphp
 
 @section('content')
 <div class="main-section">
@@ -84,8 +85,8 @@
                             <td class="text-center">{{ $vehicleUsages->firstItem() + $loop->index }}</td>
                             <td class="text-center">
                                 @if($usage->image)
-                                <a href="{{ asset('storage/' . $usage->image) }}" target="_blank" rel="noopener">
-                                    <img src="{{ asset('storage/' . $usage->image) }}" alt="Vehicle" class="rounded shadow-sm border" width="50" height="50" style="object-fit: cover;">
+                                <a href="{{ StorageAssets::url($usage->image) }}" target="_blank" rel="noopener">
+                                    <img src="{{ StorageAssets::url($usage->image) }}" alt="Vehicle" class="rounded shadow-sm border" width="50" height="50" style="object-fit: cover;">
                                 </a>
                                 @else
                                 <span class="text-muted small">No Image</span>

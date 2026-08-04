@@ -1,5 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Edit Vehicle Usage')
+@php use App\Support\StorageAssets; @endphp
 
 @section('content')
 <div class="main-section">
@@ -70,7 +71,7 @@
                             <div class="col-md-6">
                                 <div class="small text-muted mb-1">Current Image</div>
                                 @if($vehicleUsage->image)
-                                <img src="{{ asset('storage/' . $vehicleUsage->image) }}" alt="Current Image" class="rounded border" style="max-width: 220px; max-height: 220px; object-fit: cover;">
+                                <img src="{{ StorageAssets::url($vehicleUsage->image) }}" alt="Current Image" class="rounded border" style="max-width: 220px; max-height: 220px; object-fit: cover;">
                                 @else
                                 <div class="text-muted">No image available</div>
                                 @endif

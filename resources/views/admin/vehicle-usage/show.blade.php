@@ -1,5 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Vehicle Usage Details')
+@php use App\Support\StorageAssets; @endphp
 
 @section('content')
 <div class="main-section">
@@ -63,12 +64,12 @@
                         </div>
                         <div class="card-body text-center">
                             @if($vehicleUsage->image)
-                            <img src="{{ asset('storage/' . $vehicleUsage->image) }}" alt="Vehicle Image" class="img-fluid rounded border" style="max-height: 320px; object-fit: cover;">
+                            <img src="{{ StorageAssets::url($vehicleUsage->image) }}" alt="Vehicle Image" class="img-fluid rounded border" style="max-height: 320px; object-fit: cover;">
                             <div class="mt-3 d-flex justify-content-center gap-2">
-                                <a href="{{ asset('storage/' . $vehicleUsage->image) }}" target="_blank" rel="noopener" class="btn btn-sm btn-info text-white">
+                                <a href="{{ StorageAssets::url($vehicleUsage->image) }}" target="_blank" rel="noopener" class="btn btn-sm btn-info text-white">
                                     <i class="bi bi-eye me-1"></i> View Full
                                 </a>
-                                <a href="{{ asset('storage/' . $vehicleUsage->image) }}" download class="btn btn-sm btn-success">
+                                <a href="{{ StorageAssets::url($vehicleUsage->image) }}" download class="btn btn-sm btn-success">
                                     <i class="bi bi-download me-1"></i> Download
                                 </a>
                             </div>
