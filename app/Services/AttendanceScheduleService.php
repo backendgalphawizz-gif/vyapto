@@ -278,6 +278,84 @@ class AttendanceScheduleService
     }
 
     /**
+     * Compare punch-in time with assigned hub/office (or company) opening time.
+     *
+     * @param  array{start_time:?string,end_time:?string,source:?string,source_name:?string}  $schedule
+     * @return array{
+     *   timing: 'early'|'late'|'on_time'|'unknown',
+     *   minutes_diff: int,
+     *   expected_start_time: ?string,
+     *   location_type: ?string,
+     *   location_name: ?string,
+     *   message: string
+     * }
+     */
+    public function evaluatePunchInTiming(Carbon $punchIn, string $date, array $schedule, int $graceMinutes = 0): array
+    {
+        $locationType = $schedule['source'] ?? null;
+        $locationName = $schedule['source_name'] ?? null;
+
+        $base = [
+            'timing' => 'unknown',
+            'minutes_diff' => 0,
+            'expected_start_time' => null,
+            'location_type' => $locationType,
+            'location_name' => $locationName,
+            'message' => 'Punch In Success',
+        ];
+
+        if (empty($schedule['start_time'])) {
+            return $base;
+        }
+
+        try {
+            $expectedStart = Carbon::parse($date.' '.$schedule['start_time']);
+            $actualIn = $punchIn->copy();
+            $expectedLabel = $expectedStart->format('h:i A');
+            $locationPhrase = $this->punchLocationPhrase($schedule);
+
+            if ($actualIn->gt($expectedStart->copy()->addMinutes($graceMinutes))) {
+                $minutesLate = $expectedStart->diffInMinutes($actualIn);
+                $duration = $this->formatDurationHuman($minutesLate);
+
+                return [
+                    'timing' => 'late',
+                    'minutes_diff' => $minutesLate,
+                    'expected_start_time' => $expectedLabel,
+                    'location_type' => $locationType,
+                    'location_name' => $locationName,
+                    'message' => "You are punching in {$duration} late{$locationPhrase}. Expected opening time was {$expectedLabel}.",
+                ];
+            }
+
+            if ($actualIn->lt($expectedStart->copy()->subMinutes($graceMinutes))) {
+                $minutesEarly = $actualIn->diffInMinutes($expectedStart);
+                $duration = $this->formatDurationHuman($minutesEarly);
+
+                return [
+                    'timing' => 'early',
+                    'minutes_diff' => $minutesEarly,
+                    'expected_start_time' => $expectedLabel,
+                    'location_type' => $locationType,
+                    'location_name' => $locationName,
+                    'message' => "You are punching in {$duration} early{$locationPhrase}. Expected opening time is {$expectedLabel}.",
+                ];
+            }
+
+            return [
+                'timing' => 'on_time',
+                'minutes_diff' => 0,
+                'expected_start_time' => $expectedLabel,
+                'location_type' => $locationType,
+                'location_name' => $locationName,
+                'message' => 'Punch In Success',
+            ];
+        } catch (\Throwable) {
+            return $base;
+        }
+    }
+
+    /**
      * Compare punch-out time with assigned hub/office (or company) closing time.
      *
      * @param  array{start_time:?string,end_time:?string,source:?string,source_name:?string}  $schedule
@@ -312,7 +390,7 @@ class AttendanceScheduleService
             $expectedEnd = Carbon::parse($date.' '.$schedule['end_time']);
             $actualOut = $punchOut->copy();
             $expectedLabel = $expectedEnd->format('h:i A');
-            $locationPhrase = $this->punchOutLocationPhrase($schedule);
+            $locationPhrase = $this->punchLocationPhrase($schedule);
 
             if ($actualOut->lte($expectedEnd->copy()->subMinutes($graceMinutes))) {
                 $minutesEarly = $expectedEnd->diffInMinutes($actualOut);
@@ -355,7 +433,7 @@ class AttendanceScheduleService
         }
     }
 
-    private function punchOutLocationPhrase(array $schedule): string
+    private function punchLocationPhrase(array $schedule): string
     {
         $name = trim((string) ($schedule['source_name'] ?? ''));
         $source = $schedule['source'] ?? null;

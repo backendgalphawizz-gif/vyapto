@@ -117,14 +117,24 @@ class PunchController extends Controller
             $imageUrl  = asset('storage/' . $imagePath);
         }
 
+        $punchInTime = Carbon::now();
+        $punchInTiming = $this->resolvePunchInTiming($user, $today, $punchInTime);
+
+        $punchInException = $request->exception;
+        if (($punchInTiming['timing'] ?? '') === 'late') {
+            $punchInException = $punchInException ?: 'Late arrival';
+        } elseif (($punchInTiming['timing'] ?? '') === 'early') {
+            $punchInException = $punchInException ?: 'Early arrival';
+        }
+
         $punch = PunchIn::create([
             'employee_id' => $user->id,
             'punch_in_date' => date('Y-m-d'),
-            'punch_in_time' => Carbon::now(),
+            'punch_in_time' => $punchInTime,
             'punch_in_lat' => $userLat,
             'punch_in_long' => $userLng,
             'punch_in_location' => $request->location,
-            'punch_in_exception' => $request->exception,
+            'punch_in_exception' => $punchInException,
             'punch_in_image' => $imagePath,
         ]);
 
@@ -132,7 +142,14 @@ class PunchController extends Controller
         return response()->json([
             'status' => true,
             'code' => 200,
-            'message' => 'Punch In Success',
+            'message' => $punchInTiming['message'] ?? 'Punch In Success',
+            'punch_in_timing' => [
+                'timing' => $punchInTiming['timing'] ?? 'unknown',
+                'minutes_diff' => $punchInTiming['minutes_diff'] ?? 0,
+                'expected_start_time' => $punchInTiming['expected_start_time'] ?? null,
+                'location_type' => $punchInTiming['location_type'] ?? null,
+                'location_name' => $punchInTiming['location_name'] ?? null,
+            ],
             'data' => $punch,
             //'image_url' => $imageUrl
         ]);
@@ -268,7 +285,26 @@ class PunchController extends Controller
         ]);
     }
 
+    private function resolvePunchInTiming($user, string $date, Carbon $punchInTime): array
+    {
+        $schedule = $this->resolvePunchSchedule($user, $date);
+
+        return app(AttendanceScheduleService::class)
+            ->evaluatePunchInTiming($punchInTime, $date, $schedule);
+    }
+
     private function resolvePunchOutTiming($user, string $date, Carbon $punchOutTime): array
+    {
+        $schedule = $this->resolvePunchSchedule($user, $date);
+
+        return app(AttendanceScheduleService::class)
+            ->evaluatePunchOutTiming($punchOutTime, $date, $schedule);
+    }
+
+    /**
+     * @return array{start_time:?string,end_time:?string,half_time:?string,source:?string,source_name:?string}
+     */
+    private function resolvePunchSchedule($user, string $date): array
     {
         /** @var AttendanceScheduleService $scheduleService */
         $scheduleService = app(AttendanceScheduleService::class);
@@ -289,10 +325,10 @@ class PunchController extends Controller
                     ->select('name', 'opening_time', 'closing_time')
                     ->first();
 
-                if ($hub && ! empty($hub->closing_time)) {
+                if ($hub && (! empty($hub->opening_time) || ! empty($hub->closing_time))) {
                     $schedule = [
                         'start_time' => $hub->opening_time ? Carbon::parse($hub->opening_time)->format('H:i:s') : null,
-                        'end_time' => Carbon::parse($hub->closing_time)->format('H:i:s'),
+                        'end_time' => $hub->closing_time ? Carbon::parse($hub->closing_time)->format('H:i:s') : null,
                         'half_time' => null,
                         'source' => 'hub',
                         'source_name' => $hub->name,
@@ -307,10 +343,10 @@ class PunchController extends Controller
                     ->select('name', 'opening_time', 'closing_time')
                     ->first();
 
-                if ($office && ! empty($office->closing_time)) {
+                if ($office && (! empty($office->opening_time) || ! empty($office->closing_time))) {
                     $schedule = [
                         'start_time' => $office->opening_time ? Carbon::parse($office->opening_time)->format('H:i:s') : null,
-                        'end_time' => Carbon::parse($office->closing_time)->format('H:i:s'),
+                        'end_time' => $office->closing_time ? Carbon::parse($office->closing_time)->format('H:i:s') : null,
                         'half_time' => null,
                         'source' => 'office',
                         'source_name' => $office->name,
@@ -319,15 +355,27 @@ class PunchController extends Controller
             }
         }
 
-        if (empty($schedule['end_time'])) {
-            $employee = AdminUser::query()->find($user->id);
-            if ($employee) {
-                $schedule = $scheduleService->resolveSchedule($employee, $date);
+        $employee = AdminUser::query()->find($user->id);
+        if ($employee) {
+            $fallback = $scheduleService->resolveSchedule($employee, $date);
+            if (empty($schedule['start_time'])) {
+                $schedule['start_time'] = $fallback['start_time'] ?? null;
+            }
+            if (empty($schedule['end_time'])) {
+                $schedule['end_time'] = $fallback['end_time'] ?? null;
+            }
+            if (empty($schedule['half_time'])) {
+                $schedule['half_time'] = $fallback['half_time'] ?? null;
+            }
+            if (empty($schedule['source'])) {
+                $schedule['source'] = $fallback['source'] ?? null;
+                $schedule['source_name'] = $fallback['source_name'] ?? null;
             }
         }
 
-        return $scheduleService->evaluatePunchOutTiming($punchOutTime, $date, $schedule);
+        return $schedule;
     }
+
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {
         $earthRadius = 6371; // KM
