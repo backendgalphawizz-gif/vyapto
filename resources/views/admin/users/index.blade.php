@@ -97,7 +97,6 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                     'hub_id',
                     'office_id',
                     'designation_id',
-                    'job_type',
                     'sort_by',
                     'sort_order',
                 ]),
@@ -142,14 +141,6 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                     {{ $designationOption->name }}
                 </option>
                 @endforeach
-            </select>
-        </div>
-
-        <div class="col-md-2">
-            <select name="job_type" class="form-select form-select-sm">
-                <option value="">All Job Types</option>
-                <option value="Full Time" {{ request('job_type') === 'Full Time' ? 'selected' : '' }}>Full Time</option>
-                <option value="Half Time" {{ request('job_type') === 'Half Time' ? 'selected' : '' }}>Half Time</option>
             </select>
         </div>
 
@@ -381,7 +372,6 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             <div class="mb-2"><label class="small text-muted mb-0">Department</label><div class="fw-bold">{{ $user->department->name ?? 'N/A' }}</div></div>
                             @endif
                             @if($isStaffView)
-                            <div class="mb-2"><label class="small text-muted mb-0">Job Type</label><div class="fw-bold">{{ $user->job_type ?? 'N/A' }}</div></div>
                             <div class="mb-2"><label class="small text-muted mb-0">Office</label><div class="fw-bold">{{ $user->office->name ?? 'N/A' }}</div></div>
                             <div class="mb-2"><label class="small text-muted mb-0">Hub</label><div class="fw-bold">{{ $user->hub->name ?? 'N/A' }}</div></div>
                             <div class="mb-2"><label class="small text-muted mb-0">From Date</label><div class="fw-bold">{{ $user->location_from_date ? \Carbon\Carbon::parse($user->location_from_date)->format('d M, Y') : 'N/A' }}</div></div>
@@ -564,20 +554,6 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                     @endforeach
                                 </select>
                                 @error('designation_id', 'userUpdate'.$user->id)
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Job Type Dropdown (Edit) -->
-                            <div class="col-md-6 {{ (old('job_type', $user->job_type) || ($user->role && $user->role->name == 'Staff Employee')) ? '' : 'd-none' }}" id="editJobTypeContainer{{ $user->id }}">
-                                <label class="form-label">Job Type</label>
-                                <select name="job_type" id="editJobTypeSelect{{ $user->id }}" class="form-select @error('job_type', 'userUpdate'.$user->id) is-invalid @enderror"
-                                    {{ (old('job_type', $user->job_type) || ($user->role && $user->role->name == 'Staff Employee')) ? 'required' : '' }}>
-                                    <option value="" selected disabled>Select Job Type</option>
-                                    <option value="Full Time" {{ old('job_type', $user->job_type) == 'Full Time' ? 'selected' : '' }}>Full Time</option>
-                                    <option value="Half Time" {{ old('job_type', $user->job_type) == 'Half Time' ? 'selected' : '' }}>Half Time</option>
-                                </select>
-                                @error('job_type', 'userUpdate'.$user->id)
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -1057,19 +1033,6 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 @endforeach
                             </select>
                             @error('department_id', 'userCreation')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <!-- Job Type (Only for Staff Employee) -->
-                        <div class="col-md-6 d-none" id="jobTypeContainer">
-                            <label class="form-label">Job Type <span class="text-danger">*</span></label>
-                            <select name="job_type" id="jobTypeSelect" class="form-select @error('job_type', 'userCreation') is-invalid @enderror">
-                                <option value="" selected disabled>Select Job Type</option>
-                                <option value="Full Time" {{ old('job_type') == 'Full Time' ? 'selected' : '' }}>Full Time</option>
-                                <option value="Half Time" {{ old('job_type') == 'Half Time' ? 'selected' : '' }}>Half Time</option>
-                            </select>
-                            @error('job_type', 'userCreation')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -1629,19 +1592,11 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                 addUserForm.classList.remove('was-validated');
                 var deptC = document.getElementById('departmentContainer');
                 var deptS = document.getElementById('departmentSelect');
-                var jobC = document.getElementById('jobTypeContainer');
-                var jobS = document.getElementById('jobTypeSelect');
                 if (deptC) deptC.style.display = 'block';
-                if (jobC) jobC.classList.add('d-none');
                 if (deptS) {
                     deptS.disabled = false;
                     deptS.removeAttribute('readonly');
                     deptS.setAttribute('required', 'required');
-                }
-                if (jobS) {
-                    jobS.disabled = false;
-                    jobS.removeAttribute('readonly');
-                    jobS.removeAttribute('required');
                 }
                 document.querySelectorAll('.additional-fields').forEach(function(f) { f.style.display = 'none'; });
                 addUserForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
@@ -1653,19 +1608,11 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                 if (!roleSelect.value) {
                     var deptC = document.getElementById('departmentContainer');
                     var deptS = document.getElementById('departmentSelect');
-                    var jobC = document.getElementById('jobTypeContainer');
-                    var jobS = document.getElementById('jobTypeSelect');
                     if (deptC) deptC.style.display = 'block';
-                    if (jobC) jobC.classList.add('d-none');
                     if (deptS) {
                         deptS.disabled = false;
                         deptS.removeAttribute('readonly');
                         deptS.setAttribute('required', 'required');
-                    }
-                    if (jobS) {
-                        jobS.disabled = false;
-                        jobS.removeAttribute('readonly');
-                        jobS.removeAttribute('required');
                     }
                 } else {
                     toggleFieldsByRole(roleSelect, { fromServer: true });
@@ -1674,31 +1621,6 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
         }
     });
 
-    /**
-     * Show/Hide custom fields based on Role selection
-     */
-    function toggleJobType(selectElement, containerId = 'jobTypeContainer') {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        const selectedText = selectElement.options[selectElement.selectedIndex].text.trim().toLowerCase();
-
-        // Use a more generic check or specific role name
-        // The user specifically asked for "Staff Employee"
-        if (selectedText === 'staff employee') {
-            container.classList.remove('d-none');
-            // Make required if visible?
-            const jobSelect = container.querySelector('select');
-            if (jobSelect) jobSelect.setAttribute('required', 'required');
-        } else {
-            container.classList.add('d-none');
-            const jobSelect = container.querySelector('select');
-            if (jobSelect) {
-                jobSelect.removeAttribute('required');
-                jobSelect.value = ""; // Clear selection
-            }
-        }
-    }
     /**
  * Show/Hide fields based on Role selection.
  * opts.fromServer: true after redirect with validation errors or on init — do not clear inputs (preserves old()).
@@ -1717,13 +1639,11 @@ function toggleFieldsByRole(selectElement, opts) {
 
     const additionalFields = document.querySelectorAll('.additional-fields');
     const departmentContainer = document.getElementById('departmentContainer');
-    const jobTypeContainer = document.getElementById('jobTypeContainer');
     const hubContainer = document.getElementById('hubContainer');
     const officeContainer = document.getElementById('officeContainer');
     const staffDatesContainer = document.getElementById('staffDatesContainer');
     const staffDatesToContainer = document.getElementById('staffDatesToContainer');
     const departmentSelect = document.getElementById('departmentSelect');
-    const jobTypeSelect = document.getElementById('jobTypeSelect');
     const hubSelect = document.getElementById('hubSelect');
     const officeSelect = document.getElementById('officeSelect');
     const locationFromDate = document.getElementById('locationFromDate');
@@ -1837,7 +1757,6 @@ function toggleFieldsByRole(selectElement, opts) {
 
         hideSelect(departmentContainer, departmentSelect);
         showSelect(hubContainer, hubSelect, false);
-        showSelect(jobTypeContainer, jobTypeSelect, true);
         showSelect(officeContainer, officeSelect, true);
         showDateField(staffDatesContainer, locationFromDate, true);
         showDateField(staffDatesToContainer, locationToDate, true);
@@ -1853,7 +1772,6 @@ function toggleFieldsByRole(selectElement, opts) {
             });
         });
         hideSelect(departmentContainer, departmentSelect);
-        hideSelect(jobTypeContainer, jobTypeSelect);
         hideSelect(officeContainer, officeSelect);
         hideDateField(staffDatesContainer, locationFromDate);
         hideDateField(staffDatesToContainer, locationToDate);
@@ -1861,11 +1779,6 @@ function toggleFieldsByRole(selectElement, opts) {
         document.querySelectorAll('.hub-required-mark').forEach(function(el) { el.classList.remove('d-none'); });
         setDriverKycRequiredFields(document, true, false);
     } else {
-        if (!fromServer && jobTypeSelect) {
-            jobTypeSelect.removeAttribute('required');
-            jobTypeSelect.value = '';
-        }
-
         additionalFields.forEach(function(field) {
             field.style.display = 'block';
             field.querySelectorAll('input, select, textarea').forEach(function(input) {
@@ -1875,7 +1788,6 @@ function toggleFieldsByRole(selectElement, opts) {
             });
         });
 
-        hideSelect(jobTypeContainer, jobTypeSelect);
         hideSelect(hubContainer, hubSelect);
         hideSelect(officeContainer, officeSelect);
         hideDateField(staffDatesContainer, locationFromDate);
@@ -1936,8 +1848,6 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
     const additionalFields = modal.querySelectorAll('.edit-additional-fields-' + userId);
     const departmentContainer = document.getElementById('editDepartmentContainer' + userId);
     const departmentSelect = document.getElementById('editDepartmentSelect' + userId);
-    const jobTypeContainer = document.getElementById('editJobTypeContainer' + userId);
-    const jobTypeSelect = document.getElementById('editJobTypeSelect' + userId);
     const hubContainer = document.getElementById('editHubContainer' + userId);
     const hubSelect = document.getElementById('editHubSelect' + userId);
     const officeContainer = document.getElementById('editOfficeContainer' + userId);
@@ -2047,7 +1957,6 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
         });
         hideEditSelect(departmentContainer, departmentSelect);
         showEditSelect(hubContainer, hubSelect, false);
-        showEditSelect(jobTypeContainer, jobTypeSelect, true);
         showEditSelect(officeContainer, officeSelect, true);
         showEditDateField(staffDatesContainer, locationFromDate, true);
         showEditDateField(staffDatesToContainer, locationToDate, true);
@@ -2064,7 +1973,6 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
             });
         });
         hideEditSelect(departmentContainer, departmentSelect);
-        hideEditSelect(jobTypeContainer, jobTypeSelect);
         hideEditSelect(officeContainer, officeSelect);
         hideEditDateField(staffDatesContainer, locationFromDate);
         hideEditDateField(staffDatesToContainer, locationToDate);
@@ -2076,11 +1984,6 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
         });
         setDriverKycRequiredFields(modal, true, true);
     } else {
-        if (!fromServer && jobTypeSelect) {
-            jobTypeSelect.removeAttribute('required');
-            jobTypeSelect.value = '';
-        }
-
         additionalFields.forEach(function(field) {
             field.style.display = 'block';
             field.querySelectorAll('input, select, textarea').forEach(function(input) {
@@ -2090,7 +1993,6 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
             });
         });
 
-        hideEditSelect(jobTypeContainer, jobTypeSelect);
         hideEditSelect(hubContainer, hubSelect);
         hideEditSelect(officeContainer, officeSelect);
         hideEditDateField(staffDatesContainer, locationFromDate);

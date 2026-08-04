@@ -131,10 +131,6 @@ class UserController extends Controller
         if ($request->filled('designation_id')) {
             $query->where('designation_id', $request->designation_id);
         }
-
-        if ($request->filled('job_type')) {
-            $query->where('job_type', $request->job_type);
-        }
     }
 
     private function employeeLocationLabel(User $user): string
@@ -234,11 +230,6 @@ class UserController extends Controller
                 }
                 if (empty($value)) {
                     $fail('The department field is required.');
-                }
-            }],
-            'job_type'   => ['nullable', 'string', 'in:Full Time,Half Time', function ($attribute, $value, $fail) use ($request) {
-                if ($this->isStaffEmployeeRole($request->role_id) && empty($value)) {
-                    $fail('The job type field is required for staff employees.');
                 }
             }],
             'hub_id' => ['nullable', 'integer', 'exists:hubs,id', function ($attribute, $value, $fail) use ($request) {
@@ -345,7 +336,7 @@ class UserController extends Controller
         $user->office_id = $isStaff ? ($request->office_id ?: null) : null;
         $user->location_from_date = $isStaff ? $request->location_from_date : null;
         $user->location_to_date = $isStaff ? $request->location_to_date : null;
-        $user->job_type = $isStaff ? $request->job_type : null;
+        $user->job_type = null;
         $user->designation_id = $request->designation_id;
         $user->profile_image = $profileImage;
 
@@ -416,11 +407,6 @@ class UserController extends Controller
                 }
                 if (empty($value)) {
                     $fail('The department field is required.');
-                }
-            }],
-            'job_type' => ['nullable', 'string', 'in:Full Time,Half Time', function ($attribute, $value, $fail) use ($request) {
-                if ($this->isStaffEmployeeRole($request->role_id) && empty($value)) {
-                    $fail('The job type field is required for staff employees.');
                 }
             }],
             'hub_id' => ['nullable', 'integer', 'exists:hubs,id', function ($attribute, $value, $fail) use ($request) {
@@ -544,7 +530,7 @@ class UserController extends Controller
         $employee->office_id = $isStaff ? ($request->office_id ?: null) : null;
         $employee->location_from_date = $isStaff ? $request->location_from_date : null;
         $employee->location_to_date = $isStaff ? $request->location_to_date : null;
-        $employee->job_type = $isStaff ? $request->job_type : null;
+        $employee->job_type = null;
         $employee->designation_id = $request->designation_id;
         $employee->date_of_birth = $request->date_of_birth;
         $employee->gender = $request->gender;

@@ -330,11 +330,6 @@ class AuthController extends Controller
 					$fail('The department field is required for non-staff employees.');
 				}
 			}],
-			'job_type'   => ['nullable', 'string', 'in:Full Time,Half Time', function ($attribute, $value, $fail) use ($roleId) {
-				if ($roleId == $this->getStaffRoleId() && empty($value)) {
-					$fail('The job type field is required for staff employees.');
-				}
-			}],
 			'date_of_birth' => 'required|date|before:today',
 			'gender'     => 'required|in:male,female,other',
 			'marital_status' => 'required|in:single,married,divorced,widowed',
@@ -411,7 +406,6 @@ class AuthController extends Controller
 		$user->address = $request->address;
 		$user->role_id = $roleId;
 		$user->department_id = $request->department_id;
-		$user->job_type = $request->job_type;
 		$user->date_of_birth = $request->date_of_birth;
 		$user->gender = $request->gender;
 		$user->father_name = $request->father_name;
