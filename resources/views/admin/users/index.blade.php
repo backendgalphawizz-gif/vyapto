@@ -89,7 +89,18 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
         <div>
             @include('partials.export-dropdown', [
                 'exportRoute' => 'employees.report',
-                'exportQuery' => request()->only(['search', 'status', 'role_id', 'sort_by', 'sort_order']),
+                'exportQuery' => request()->only([
+                    'search',
+                    'status',
+                    'role_id',
+                    'department_id',
+                    'hub_id',
+                    'office_id',
+                    'designation_id',
+                    'job_type',
+                    'sort_by',
+                    'sort_order',
+                ]),
             ])
             <button class="btn btn-primary rounded-3" data-bs-toggle="modal" data-bs-target="#addUsersModal">
                 <i class="bi bi-person-plus-fill me-1"></i> Add Employee
@@ -98,14 +109,14 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
     </div>
 
     <form method="GET" action="{{ route('employees.index') }}" class="row g-2 mb-3">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <input type="text" name="search" value="{{ request('search') }}"
-                class="form-control"
-                placeholder="Search by name, email, phone...">
+                class="form-control form-control-sm"
+                placeholder="Search name, email, phone, location...">
         </div>
 
-        <div class="col-md-3">
-            <select name="role_id" class="form-select">
+        <div class="col-md-2">
+            <select name="role_id" class="form-select form-select-sm">
                 <option value="">All Roles</option>
                 @foreach($roles as $roleOption)
                 <option value="{{ $roleOption->id }}" {{ request('role_id') == $roleOption->id ? 'selected' : '' }}>
@@ -116,17 +127,70 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
         </div>
 
         <div class="col-md-2">
-            <select name="status" class="form-select">
+            <select name="status" class="form-select form-select-sm">
                 <option value="">All Status</option>
                 <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active</option>
                 <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Inactive</option>
             </select>
         </div>
+
+        <div class="col-md-2">
+            <select name="designation_id" class="form-select form-select-sm">
+                <option value="">All Designations</option>
+                @foreach($designations as $designationOption)
+                <option value="{{ $designationOption->id }}" {{ request('designation_id') == $designationOption->id ? 'selected' : '' }}>
+                    {{ $designationOption->name }}
+                </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <select name="job_type" class="form-select form-select-sm">
+                <option value="">All Job Types</option>
+                <option value="Full Time" {{ request('job_type') === 'Full Time' ? 'selected' : '' }}>Full Time</option>
+                <option value="Half Time" {{ request('job_type') === 'Half Time' ? 'selected' : '' }}>Half Time</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <select name="department_id" class="form-select form-select-sm">
+                <option value="">All Departments</option>
+                @foreach($departments as $departmentOption)
+                <option value="{{ $departmentOption->id }}" {{ request('department_id') == $departmentOption->id ? 'selected' : '' }}>
+                    {{ $departmentOption->name }}
+                </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <select name="hub_id" class="form-select form-select-sm">
+                <option value="">All Hubs</option>
+                @foreach($hubs as $hubOption)
+                <option value="{{ $hubOption->id }}" {{ request('hub_id') == $hubOption->id ? 'selected' : '' }}>
+                    {{ $hubOption->name }}
+                </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <select name="office_id" class="form-select form-select-sm">
+                <option value="">All Offices</option>
+                @foreach($offices as $officeOption)
+                <option value="{{ $officeOption->id }}" {{ request('office_id') == $officeOption->id ? 'selected' : '' }}>
+                    {{ $officeOption->name }}
+                </option>
+                @endforeach
+            </select>
+        </div>
+
         <div class="col-auto">
             <input type="hidden" name="sort_by" value="{{ request('sort_by') }}">
             <input type="hidden" name="sort_order" value="{{ request('sort_order') }}">
-            <button class="btn btn-primary">Search</button>
-            <a href="{{ route('employees.index') }}" class="btn btn-outline-secondary">Reset</a>
+            <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+            <a href="{{ route('employees.index') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
         </div>
     </form>
 
@@ -316,6 +380,12 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             @if($isStaffView)
                             <div class="mb-2"><label class="small text-muted mb-0">Job Type</label><div class="fw-bold">{{ $user->job_type ?? 'N/A' }}</div></div>
                             <div class="mb-2"><label class="small text-muted mb-0">Office</label><div class="fw-bold">{{ $user->office->name ?? 'N/A' }}</div></div>
+                            <div class="mb-2"><label class="small text-muted mb-0">From Date</label><div class="fw-bold">{{ $user->location_from_date ? \Carbon\Carbon::parse($user->location_from_date)->format('d M, Y') : 'N/A' }}</div></div>
+                            <div class="mb-2"><label class="small text-muted mb-0">To Date</label><div class="fw-bold">{{ $user->location_to_date ? \Carbon\Carbon::parse($user->location_to_date)->format('d M, Y') : 'N/A' }}</div></div>
+                            @endif
+                            @php $isDriverView = isset($user->role) && stripos((string) $user->role->name, 'driver') !== false; @endphp
+                            @if($isDriverView)
+                            <div class="mb-2"><label class="small text-muted mb-0">Hub</label><div class="fw-bold">{{ $user->hub->name ?? 'N/A' }}</div></div>
                             @endif
                             @if(!$isStaffView)
                             <div class="mb-2"><label class="small text-muted mb-0">Father's Name</label><div class="fw-bold">{{ $user->father_name ?? 'N/A' }}</div></div>
@@ -540,6 +610,28 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                     @endforeach
                                 </select>
                                 @error('office_id', 'userUpdate'.$user->id)
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 {{ ($editIsStaff || old('location_from_date', $user->location_from_date)) ? '' : 'd-none' }}" id="editStaffDatesContainer{{ $user->id }}">
+                                <label class="form-label">From Date <span class="text-danger">*</span></label>
+                                <input type="date" name="location_from_date" id="editLocationFromDate{{ $user->id }}"
+                                    class="form-control @error('location_from_date', 'userUpdate'.$user->id) is-invalid @enderror"
+                                    value="{{ old('location_from_date', $user->location_from_date ? \Carbon\Carbon::parse($user->location_from_date)->format('Y-m-d') : '') }}"
+                                    {{ ($editIsStaff || old('location_from_date', $user->location_from_date)) ? 'required' : '' }}>
+                                @error('location_from_date', 'userUpdate'.$user->id)
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 {{ ($editIsStaff || old('location_to_date', $user->location_to_date)) ? '' : 'd-none' }}" id="editStaffDatesToContainer{{ $user->id }}">
+                                <label class="form-label">To Date <span class="text-danger">*</span></label>
+                                <input type="date" name="location_to_date" id="editLocationToDate{{ $user->id }}"
+                                    class="form-control @error('location_to_date', 'userUpdate'.$user->id) is-invalid @enderror"
+                                    value="{{ old('location_to_date', $user->location_to_date ? \Carbon\Carbon::parse($user->location_to_date)->format('Y-m-d') : '') }}"
+                                    {{ ($editIsStaff || old('location_to_date', $user->location_to_date)) ? 'required' : '' }}>
+                                @error('location_to_date', 'userUpdate'.$user->id)
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -1002,6 +1094,27 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 @endforeach
                             </select>
                             @error('office_id', 'userCreation')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <!-- Staff location dates -->
+                        <div class="col-md-6 d-none" id="staffDatesContainer">
+                            <label class="form-label">From Date <span class="text-danger">*</span></label>
+                            <input type="date" name="location_from_date" id="locationFromDate"
+                                class="form-control @error('location_from_date', 'userCreation') is-invalid @enderror"
+                                value="{{ old('location_from_date') }}">
+                            @error('location_from_date', 'userCreation')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 d-none" id="staffDatesToContainer">
+                            <label class="form-label">To Date <span class="text-danger">*</span></label>
+                            <input type="date" name="location_to_date" id="locationToDate"
+                                class="form-control @error('location_to_date', 'userCreation') is-invalid @enderror"
+                                value="{{ old('location_to_date') }}">
+                            @error('location_to_date', 'userCreation')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -1603,10 +1716,14 @@ function toggleFieldsByRole(selectElement, opts) {
     const jobTypeContainer = document.getElementById('jobTypeContainer');
     const hubContainer = document.getElementById('hubContainer');
     const officeContainer = document.getElementById('officeContainer');
+    const staffDatesContainer = document.getElementById('staffDatesContainer');
+    const staffDatesToContainer = document.getElementById('staffDatesToContainer');
     const departmentSelect = document.getElementById('departmentSelect');
     const jobTypeSelect = document.getElementById('jobTypeSelect');
     const hubSelect = document.getElementById('hubSelect');
     const officeSelect = document.getElementById('officeSelect');
+    const locationFromDate = document.getElementById('locationFromDate');
+    const locationToDate = document.getElementById('locationToDate');
 
     function clearHiddenFieldInputs(container) {
         container.querySelectorAll('input, select, textarea').forEach(function(input) {
@@ -1634,6 +1751,38 @@ function toggleFieldsByRole(selectElement, opts) {
             }
             input.removeAttribute('required');
         });
+    }
+
+    function showDateField(container, input, requireIfVisible) {
+        if (container) {
+            container.classList.remove('d-none');
+            container.style.display = 'block';
+        }
+        if (input) {
+            input.disabled = false;
+            if (requireIfVisible) {
+                input.setAttribute('required', 'required');
+            } else {
+                input.removeAttribute('required');
+            }
+            if (!fromServer && !input.value) {
+                input.value = '';
+            }
+        }
+    }
+
+    function hideDateField(container, input) {
+        if (container) {
+            container.classList.add('d-none');
+            container.style.display = 'none';
+        }
+        if (input) {
+            input.disabled = false;
+            input.removeAttribute('required');
+            if (!fromServer) {
+                input.value = '';
+            }
+        }
     }
 
     function hideSelect(container, select) {
@@ -1686,6 +1835,8 @@ function toggleFieldsByRole(selectElement, opts) {
         hideSelect(hubContainer, hubSelect);
         showSelect(jobTypeContainer, jobTypeSelect, true);
         showSelect(officeContainer, officeSelect, true);
+        showDateField(staffDatesContainer, locationFromDate, true);
+        showDateField(staffDatesToContainer, locationToDate, true);
         setDriverKycRequiredFields(document, false, false);
     } else if (isDriver) {
         additionalFields.forEach(function(field) {
@@ -1699,6 +1850,8 @@ function toggleFieldsByRole(selectElement, opts) {
         hideSelect(departmentContainer, departmentSelect);
         hideSelect(jobTypeContainer, jobTypeSelect);
         hideSelect(officeContainer, officeSelect);
+        hideDateField(staffDatesContainer, locationFromDate);
+        hideDateField(staffDatesToContainer, locationToDate);
         showSelect(hubContainer, hubSelect, true);
         setDriverKycRequiredFields(document, true, false);
     } else {
@@ -1719,6 +1872,8 @@ function toggleFieldsByRole(selectElement, opts) {
         hideSelect(jobTypeContainer, jobTypeSelect);
         hideSelect(hubContainer, hubSelect);
         hideSelect(officeContainer, officeSelect);
+        hideDateField(staffDatesContainer, locationFromDate);
+        hideDateField(staffDatesToContainer, locationToDate);
         showSelect(departmentContainer, departmentSelect, true);
         setDriverKycRequiredFields(document, false, false);
     }
@@ -1781,6 +1936,10 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
     const hubSelect = document.getElementById('editHubSelect' + userId);
     const officeContainer = document.getElementById('editOfficeContainer' + userId);
     const officeSelect = document.getElementById('editOfficeSelect' + userId);
+    const staffDatesContainer = document.getElementById('editStaffDatesContainer' + userId);
+    const staffDatesToContainer = document.getElementById('editStaffDatesToContainer' + userId);
+    const locationFromDate = document.getElementById('editLocationFromDate' + userId);
+    const locationToDate = document.getElementById('editLocationToDate' + userId);
 
     function clearEditHiddenInputs(field) {
         field.querySelectorAll('input, select, textarea').forEach(function(input) {
@@ -1804,6 +1963,35 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
             }
             input.removeAttribute('required');
         });
+    }
+
+    function showEditDateField(container, input, requireIfVisible) {
+        if (container) {
+            container.classList.remove('d-none');
+            container.style.display = 'block';
+        }
+        if (input) {
+            input.disabled = false;
+            if (requireIfVisible) {
+                input.setAttribute('required', 'required');
+            } else {
+                input.removeAttribute('required');
+            }
+        }
+    }
+
+    function hideEditDateField(container, input) {
+        if (container) {
+            container.classList.add('d-none');
+            container.style.display = 'none';
+        }
+        if (input) {
+            input.disabled = false;
+            input.removeAttribute('required');
+            if (!fromServer) {
+                input.value = '';
+            }
+        }
     }
 
     function hideEditSelect(container, select) {
@@ -1855,6 +2043,8 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
         hideEditSelect(hubContainer, hubSelect);
         showEditSelect(jobTypeContainer, jobTypeSelect, true);
         showEditSelect(officeContainer, officeSelect, true);
+        showEditDateField(staffDatesContainer, locationFromDate, true);
+        showEditDateField(staffDatesToContainer, locationToDate, true);
         setDriverKycRequiredFields(modal, false, true);
     } else if (isDriver) {
         additionalFields.forEach(function(field) {
@@ -1868,6 +2058,8 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
         hideEditSelect(departmentContainer, departmentSelect);
         hideEditSelect(jobTypeContainer, jobTypeSelect);
         hideEditSelect(officeContainer, officeSelect);
+        hideEditDateField(staffDatesContainer, locationFromDate);
+        hideEditDateField(staffDatesToContainer, locationToDate);
         showEditSelect(hubContainer, hubSelect, true);
         modal.querySelectorAll('input[data-preview-wrap]').forEach(function(inp) {
             renderFilePreview(inp);
@@ -1891,6 +2083,8 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
         hideEditSelect(jobTypeContainer, jobTypeSelect);
         hideEditSelect(hubContainer, hubSelect);
         hideEditSelect(officeContainer, officeSelect);
+        hideEditDateField(staffDatesContainer, locationFromDate);
+        hideEditDateField(staffDatesToContainer, locationToDate);
         showEditSelect(departmentContainer, departmentSelect, true);
 
         modal.querySelectorAll('input[data-preview-wrap]').forEach(function(inp) {

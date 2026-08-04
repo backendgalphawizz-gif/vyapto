@@ -30,6 +30,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'department_id',
         'office_id',
         'hub_id',
+        'location_from_date',
+        'location_to_date',
         'job_type',
         'designation_id',
         'password',
@@ -57,6 +59,8 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'date_of_birth' => 'date',
+            'location_from_date' => 'date',
+            'location_to_date' => 'date',
             'password' => 'hashed',
         ];
     }

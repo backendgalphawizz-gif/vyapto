@@ -49,24 +49,7 @@ class UserController extends Controller
         $query = User::with(['roles', 'office', 'hub', 'department', 'designation'])
             ->whereNotIn('role_id', [1, 2]);
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-
-            $query->where(function ($q) use ($search) {
-                $q->where('users.name', 'like', "%{$search}%")
-                    ->orWhere('users.email', 'like', "%{$search}%")
-                    ->orWhere('users.phone', 'like', "%{$search}%")
-                    ->orWhere('users.address', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('role_id')) {
-            $query->where('role_id', $request->role_id);
-        }
+        $this->applyEmployeeListFilters($request, $query);
 
         // Sorting Logic
         if ($request->filled('sort_by') && $request->filled('sort_order')) {
@@ -76,6 +59,12 @@ class UserController extends Controller
             if ($sortBy === 'role') {
                 $query->join('roles', 'users.role_id', '=', 'roles.id')
                     ->orderBy('roles.name', $sortOrder)
+                    ->select('users.*');
+            } elseif ($sortBy === 'department') {
+                $query->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+                    ->leftJoin('hubs', 'users.hub_id', '=', 'hubs.id')
+                    ->leftJoin('offices', 'users.office_id', '=', 'offices.id')
+                    ->orderByRaw('COALESCE(hubs.name, offices.name, departments.name) ' . ($sortOrder === 'asc' ? 'asc' : 'desc'))
                     ->select('users.*');
             } else {
                 $allowedSorts = ['name', 'status', 'created_at'];
@@ -99,6 +88,67 @@ class UserController extends Controller
         $hubs = Hub::orderBy('name')->get();
 
         return view('admin.users.index', compact('users', 'roles', 'departments', 'designations', 'offices', 'hubs'));
+    }
+
+    private function applyEmployeeListFilters(Request $request, $query): void
+    {
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('users.name', 'like', "%{$search}%")
+                    ->orWhere('users.email', 'like', "%{$search}%")
+                    ->orWhere('users.phone', 'like', "%{$search}%")
+                    ->orWhere('users.address', 'like', "%{$search}%")
+                    ->orWhereHas('department', fn ($relation) => $relation->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('hub', fn ($relation) => $relation->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('office', fn ($relation) => $relation->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('designation', fn ($relation) => $relation->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('role_id')) {
+            $query->where('role_id', $request->role_id);
+        }
+
+        if ($request->filled('department_id')) {
+            $query->where('department_id', $request->department_id);
+        }
+
+        if ($request->filled('hub_id')) {
+            $query->where('hub_id', $request->hub_id);
+        }
+
+        if ($request->filled('office_id')) {
+            $query->where('office_id', $request->office_id);
+        }
+
+        if ($request->filled('designation_id')) {
+            $query->where('designation_id', $request->designation_id);
+        }
+
+        if ($request->filled('job_type')) {
+            $query->where('job_type', $request->job_type);
+        }
+    }
+
+    private function employeeLocationLabel(User $user): string
+    {
+        $roleName = strtolower((string) ($user->role->name ?? ''));
+
+        if (str_contains($roleName, 'driver')) {
+            return (string) ($user->hub->name ?? '-');
+        }
+
+        if ($roleName === 'staff employee') {
+            return (string) ($user->office->name ?? '-');
+        }
+
+        return (string) ($user->department->name ?? '-');
     }
 
 
@@ -200,6 +250,16 @@ class UserController extends Controller
                     $fail('Office is required for staff employees.');
                 }
             }],
+            'location_from_date' => ['nullable', 'date', function ($attribute, $value, $fail) use ($request) {
+                if ($this->isStaffEmployeeRole($request->role_id) && empty($value)) {
+                    $fail('From date is required for staff employees.');
+                }
+            }],
+            'location_to_date' => ['nullable', 'date', 'after_or_equal:location_from_date', function ($attribute, $value, $fail) use ($request) {
+                if ($this->isStaffEmployeeRole($request->role_id) && empty($value)) {
+                    $fail('To date is required for staff employees.');
+                }
+            }],
             'designation_id' => [
                 'required',
                 'integer',
@@ -282,6 +342,8 @@ class UserController extends Controller
         $user->department_id = ($isStaff || $isDriver) ? null : $request->department_id;
         $user->hub_id = $isDriver ? $request->hub_id : null;
         $user->office_id = $isStaff ? $request->office_id : null;
+        $user->location_from_date = $isStaff ? $request->location_from_date : null;
+        $user->location_to_date = $isStaff ? $request->location_to_date : null;
         $user->job_type = $isStaff ? $request->job_type : null;
         $user->designation_id = $request->designation_id;
         $user->profile_image = $profileImage;
@@ -368,6 +430,16 @@ class UserController extends Controller
             'office_id' => ['nullable', 'integer', 'exists:offices,id', function ($attribute, $value, $fail) use ($request) {
                 if ($this->isStaffEmployeeRole($request->role_id) && empty($value)) {
                     $fail('Office is required for staff employees.');
+                }
+            }],
+            'location_from_date' => ['nullable', 'date', function ($attribute, $value, $fail) use ($request) {
+                if ($this->isStaffEmployeeRole($request->role_id) && empty($value)) {
+                    $fail('From date is required for staff employees.');
+                }
+            }],
+            'location_to_date' => ['nullable', 'date', 'after_or_equal:location_from_date', function ($attribute, $value, $fail) use ($request) {
+                if ($this->isStaffEmployeeRole($request->role_id) && empty($value)) {
+                    $fail('To date is required for staff employees.');
                 }
             }],
             'designation_id' => [
@@ -469,6 +541,8 @@ class UserController extends Controller
         $employee->department_id = ($isStaff || $isDriver) ? null : $request->department_id;
         $employee->hub_id = $isDriver ? $request->hub_id : null;
         $employee->office_id = $isStaff ? $request->office_id : null;
+        $employee->location_from_date = $isStaff ? $request->location_from_date : null;
+        $employee->location_to_date = $isStaff ? $request->location_to_date : null;
         $employee->job_type = $isStaff ? $request->job_type : null;
         $employee->designation_id = $request->designation_id;
         $employee->date_of_birth = $request->date_of_birth;
@@ -516,39 +590,24 @@ class UserController extends Controller
 
     public function report(Request $request)
     {
-        $query = User::with(['role', 'department'])
+        $query = User::with(['role', 'department', 'hub', 'office', 'designation'])
             ->whereNotIn('role_id', [1, 2]);
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-
-            $query->where(function ($q) use ($search) {
-                $q->where('users.name', 'like', "%{$search}%")
-                    ->orWhere('users.email', 'like', "%{$search}%")
-                    ->orWhere('users.phone', 'like', "%{$search}%")
-                    ->orWhere('users.address', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('role_id')) {
-            $query->where('role_id', $request->role_id);
-        }
+        $this->applyEmployeeListFilters($request, $query);
 
         $users = $query->orderBy('created_at', 'desc')->get();
 
         $format = $this->exportFormat($request);
-        $headers = ['ID', 'Name', 'Role', 'Department', 'Email', 'Phone', 'Status'];
+        $headers = ['ID', 'Name', 'Role', 'Location', 'Designation', 'Job Type', 'Email', 'Phone', 'Status'];
         $rows = [];
         foreach ($users as $user) {
             $rows[] = [
                 (string) $user->id,
                 (string) ($user->name ?? '-'),
                 (string) ($user->role->name ?? '-'),
-                (string) ($user->department->name ?? '-'),
+                $this->employeeLocationLabel($user),
+                (string) ($user->designation->name ?? '-'),
+                (string) ($user->job_type ?? '-'),
                 (string) ($user->email ?? '-'),
                 (string) ($user->phone ?? '-'),
                 ((int) $user->status === 1) ? 'Active' : 'Inactive',
@@ -576,7 +635,7 @@ class UserController extends Controller
             . '<h2>Employee Report</h2>'
             . '<p>Exported at: ' . e(now()->format('d M Y h:i A')) . '</p>'
             . '<table><thead><tr>'
-            . '<th>ID</th><th>Name</th><th>Role</th><th>Department</th><th>Email</th><th>Phone</th><th>Status</th>'
+            . '<th>ID</th><th>Name</th><th>Role</th><th>Location</th><th>Designation</th><th>Job Type</th><th>Email</th><th>Phone</th><th>Status</th>'
             . '</tr></thead><tbody>';
 
         foreach ($users as $user) {
@@ -584,7 +643,9 @@ class UserController extends Controller
                 . '<td>' . e((string) $user->id) . '</td>'
                 . '<td>' . e((string) ($user->name ?? '-')) . '</td>'
                 . '<td>' . e((string) ($user->role->name ?? '-')) . '</td>'
-                . '<td>' . e((string) ($user->department->name ?? '-')) . '</td>'
+                . '<td>' . e($this->employeeLocationLabel($user)) . '</td>'
+                . '<td>' . e((string) ($user->designation->name ?? '-')) . '</td>'
+                . '<td>' . e((string) ($user->job_type ?? '-')) . '</td>'
                 . '<td>' . e((string) ($user->email ?? '-')) . '</td>'
                 . '<td>' . e((string) ($user->phone ?? '-')) . '</td>'
                 . '<td>' . e((int) $user->status === 1 ? 'Active' : 'Inactive') . '</td>'
@@ -592,7 +653,7 @@ class UserController extends Controller
         }
 
         if ($users->isEmpty()) {
-            $html .= '<tr><td colspan="7" style="text-align:center;">No Data Found</td></tr>';
+            $html .= '<tr><td colspan="9" style="text-align:center;">No Data Found</td></tr>';
         }
 
         $html .= '</tbody></table></body></html>';
