@@ -31,8 +31,31 @@ class StorageAssets
             return self::adminMediaUrl($relative);
         }
 
-        if (self::absolutePath($relative)) {
+        return self::publicUrl($relative, $fallback);
+    }
+
+    public static function publicUrl(?string $path, ?string $fallback = null): ?string
+    {
+        if ($path === null || trim($path) === '') {
+            return $fallback;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        $relative = self::normalizeRelativePath($path);
+        if ($relative === '') {
+            return $fallback;
+        }
+
+        $symlinkFile = public_path('storage/'.$relative);
+        if (is_file($symlinkFile)) {
             return asset('storage/'.$relative);
+        }
+
+        if (self::absolutePath($relative)) {
+            return url('/media?'.http_build_query(['path' => $relative]));
         }
 
         return $fallback;

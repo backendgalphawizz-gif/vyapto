@@ -44,6 +44,8 @@ Route::get('/admin/dashboard', [AdminController::class, 'index'])
     ->middleware(['auth'])
     ->name('admin.dashboard');
 
+Route::get('media', [MediaController::class, 'show'])->name('media.show');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('admin/media', [MediaController::class, 'show'])->name('admin.media.show');
 });

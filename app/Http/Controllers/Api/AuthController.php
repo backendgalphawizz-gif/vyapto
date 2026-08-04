@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use App\Models\Api\UserToken;
 use App\Models\Designation;
+use App\Support\StorageAssets;
 use Spatie\Permission\Models\Role;
 use Validator;
 use Carbon\Carbon;
@@ -442,6 +443,18 @@ class AuthController extends Controller
 	{
 		$data = $user->toArray();
 		$data['designation'] = $this->resolveDesignationName($user->designation_id);
+
+		foreach ([
+			'profile_image',
+			'aadhar_card_image',
+			'pan_card_image',
+			'driving_license_image',
+			'bank_proof_image',
+		] as $field) {
+			if (! empty($data[$field])) {
+				$data[$field] = StorageAssets::publicUrl($data[$field], $data[$field]);
+			}
+		}
 
 		return $data;
 	}

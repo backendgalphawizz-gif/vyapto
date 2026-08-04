@@ -9,12 +9,14 @@ use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\ParcelController;
 use App\Http\Controllers\Api\VehicalController;
 use App\Http\Controllers\Api\FaqController;
+use App\Http\Controllers\Admin\MediaController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('send-otp', [AuthController::class, 'sendOtp']);
 Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('logout', [AuthController::class, 'logout']);
+Route::get('media', [MediaController::class, 'show'])->name('api.media.show');
 Route::get('/salary-slip/{employee_id}/{date}', [AttendanceController::class, 'salarySlipView']);
 Route::get('/salary-slip-pdf/{employee_id}/{date}', [AttendanceController::class, 'salarySlipPdf']);
 Route::middleware('jwt.verify')->group(function () {

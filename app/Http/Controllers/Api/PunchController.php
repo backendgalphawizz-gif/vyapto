@@ -11,6 +11,7 @@ use App\Models\Api\Setting;
 use App\Models\User as AdminUser;
 use App\Services\AttendanceScheduleService;
 use App\Support\StaffRoles;
+use App\Support\StorageAssets;
 use Carbon\Carbon;
 use Validator;
 use Auth;
@@ -60,7 +61,7 @@ class PunchController extends Controller
                 'status' => false,
                 'code' => 200,
                 'message' => 'You have already punched in today',
-                'data' => $alreadyPunch
+                'data' => $this->formatPunchForApi($alreadyPunch)
             ]);
         }
 
@@ -150,7 +151,7 @@ class PunchController extends Controller
                 'location_type' => $punchInTiming['location_type'] ?? null,
                 'location_name' => $punchInTiming['location_name'] ?? null,
             ],
-            'data' => $punch,
+            'data' => $this->formatPunchForApi($punch),
             //'image_url' => $imageUrl
         ]);
     }
@@ -201,7 +202,7 @@ class PunchController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'You have already punched out today',
-                'data' => $punch
+                'data' => $this->formatPunchForApi($punch)
             ]);
         }
         $userLat = $request->latitude;
@@ -281,7 +282,7 @@ class PunchController extends Controller
                 'location_type' => $punchOutTiming['location_type'] ?? null,
                 'location_name' => $punchOutTiming['location_name'] ?? null,
             ],
-            'data' => $query->fresh()
+            'data' => $this->formatPunchForApi($query->fresh())
         ]);
     }
 
@@ -628,5 +629,20 @@ class PunchController extends Controller
             'latitude' => (float) $hub->latitude,
             'longitude' => (float) $hub->longitude,
         ];
+    }
+
+    private function formatPunchForApi(PunchIn $punch): array
+    {
+        $data = $punch->toArray();
+
+        if (! empty($data['punch_in_image'])) {
+            $data['punch_in_image'] = StorageAssets::publicUrl($data['punch_in_image'], $data['punch_in_image']);
+        }
+
+        if (! empty($data['punch_out_image'])) {
+            $data['punch_out_image'] = StorageAssets::publicUrl($data['punch_out_image'], $data['punch_out_image']);
+        }
+
+        return $data;
     }
 }

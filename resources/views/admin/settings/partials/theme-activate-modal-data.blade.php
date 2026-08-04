@@ -10,7 +10,7 @@
         <div class="mb-4 text-center">
             <img
                 width="200"
-                src="{{asset("storage/app/public/company")."/".$web_config['web_logo']->value}}"
+                src="{{ $web_config['web_logo']->value ? \App\Support\StorageAssets::publicUrl('company/'.$web_config['web_logo']->value) : asset('assets/admin/images/no-image.png') }}"
                 onerror="this.src='{{ asset('public/assets/back-end/img/900x400/img1.jpg') }}'"
                 alt=""
                 class="dark-support"
