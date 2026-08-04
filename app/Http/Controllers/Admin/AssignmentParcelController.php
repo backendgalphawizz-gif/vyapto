@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use App\Services\FcmNotificationService;
+use App\Services\EmployeeLocationService;
 use Illuminate\Support\Facades\Log;
 use App\Support\StaffRoles;
 
@@ -305,6 +306,9 @@ class AssignmentParcelController extends Controller
                 $assignment = AssignmentParcel::create($validated);
             }
 
+            // Overwrite employee punch location with this new assignment location.
+            app(EmployeeLocationService::class)->applyAssignmentLocation($assignment);
+
             if (!$isStaffEmployee && (int) ($validated['parcel_quantity'] ?? 0) > 0) {
                 $this->createParcelDetails(
                     $assignment,
@@ -523,6 +527,9 @@ class AssignmentParcelController extends Controller
             }
 
             $assignmentParcel->update($validated);
+
+            // Keep employee punch location on the updated assignment location.
+            app(EmployeeLocationService::class)->applyAssignmentLocation($assignmentParcel->fresh());
 
             DB::commit();
 

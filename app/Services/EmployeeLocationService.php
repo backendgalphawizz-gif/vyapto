@@ -13,8 +13,11 @@ class EmployeeLocationService
 {
     /**
      * Resolve punch geofence target:
-     * 1) Active assignment parcel hub/office (if any)
-     * 2) Fallback to creation-time users.hub_id / users.office_id
+     * 1) Newest active assignment parcel hub/office
+     * 2) Fallback to current users.hub_id / users.office_id
+     *
+     * Punch-in and punch-out both call this, so a newly assigned location
+     * is used for both immediately.
      */
     public function resolveLocationTarget(User|ApiUser $user): array
     {
@@ -120,6 +123,163 @@ class EmployeeLocationService
     public function locationActiveForDate(User $user, string $date): bool
     {
         return $this->isProfileLocationActiveForDate((int) $user->id, $date);
+    }
+
+    /**
+     * When a new assignment is given, overwrite the employee's profile location
+     * and close older overlapping location assignments so punches use the new place.
+     */
+    public function applyAssignmentLocation(object $assignment): void
+    {
+        $userId = (int) ($assignment->user_id ?? 0);
+        if ($userId <= 0) {
+            return;
+        }
+
+        $hubId = ! empty($assignment->hub_id) ? (int) $assignment->hub_id : null;
+        $officeId = ! empty($assignment->office_id) ? (int) $assignment->office_id : null;
+        $fromDate = $this->normalizeDateValue($assignment->from_date ?? $assignment->assignment_date ?? null);
+        $toDate = $this->normalizeDateValue($assignment->to_date ?? null);
+        $assignmentId = (int) ($assignment->id ?? 0);
+
+        $this->closeOlderLocationAssignments($userId, $assignmentId, $fromDate);
+
+        $user = User::query()->find($userId);
+        if (! $user) {
+            return;
+        }
+
+        $updates = [];
+
+        if ($hubId) {
+            $updates['hub_id'] = $hubId;
+            $updates['office_id'] = null;
+            if (Schema::hasColumn('users', 'location_from_date')) {
+                $updates['location_from_date'] = null;
+            }
+            if (Schema::hasColumn('users', 'location_to_date')) {
+                $updates['location_to_date'] = null;
+            }
+        } elseif ($officeId) {
+            $updates['office_id'] = $officeId;
+            $updates['hub_id'] = null;
+            if (Schema::hasColumn('users', 'location_from_date')) {
+                $updates['location_from_date'] = $fromDate;
+            }
+            if (Schema::hasColumn('users', 'location_to_date')) {
+                $updates['location_to_date'] = $toDate;
+            }
+        }
+
+        if ($updates !== []) {
+            $user->forceFill($updates)->save();
+        }
+    }
+
+    /**
+     * When admin edits employee hub/office on profile, keep punch location in sync
+     * by updating the newest active assignment (or closing old ones).
+     */
+    public function applyProfileLocation(User $user): void
+    {
+        $userId = (int) $user->id;
+        $assignmentTable = $this->assignmentTableName();
+        if (! $assignmentTable) {
+            return;
+        }
+
+        $today = date('Y-m-d');
+        $latest = DB::table($assignmentTable)
+            ->where('user_id', $userId)
+            ->where(function ($q) use ($assignmentTable) {
+                if (Schema::hasColumn($assignmentTable, 'hub_id')) {
+                    $q->whereNotNull('hub_id');
+                }
+                if (Schema::hasColumn($assignmentTable, 'office_id')) {
+                    $q->orWhereNotNull('office_id');
+                }
+            })
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $latest) {
+            return;
+        }
+
+        $fromDate = $this->normalizeDateValue($user->location_from_date ?? null) ?: $today;
+        $toDate = $this->normalizeDateValue($user->location_to_date ?? null);
+
+        $this->closeOlderLocationAssignments($userId, (int) $latest->id, $fromDate);
+
+        $payload = [];
+        if (! empty($user->hub_id) && Schema::hasColumn($assignmentTable, 'hub_id')) {
+            $payload['hub_id'] = (int) $user->hub_id;
+            if (Schema::hasColumn($assignmentTable, 'office_id')) {
+                $payload['office_id'] = null;
+            }
+            if (Schema::hasColumn($assignmentTable, 'from_date')) {
+                $payload['from_date'] = null;
+            }
+            if (Schema::hasColumn($assignmentTable, 'to_date')) {
+                $payload['to_date'] = null;
+            }
+            if (Schema::hasColumn($assignmentTable, 'assignment_date')) {
+                $payload['assignment_date'] = $today;
+            }
+        } elseif (! empty($user->office_id) && Schema::hasColumn($assignmentTable, 'office_id')) {
+            $payload['office_id'] = (int) $user->office_id;
+            if (Schema::hasColumn($assignmentTable, 'hub_id')) {
+                $payload['hub_id'] = null;
+            }
+            if (Schema::hasColumn($assignmentTable, 'from_date')) {
+                $payload['from_date'] = $fromDate;
+            }
+            if (Schema::hasColumn($assignmentTable, 'to_date')) {
+                $payload['to_date'] = $toDate;
+            }
+            if (Schema::hasColumn($assignmentTable, 'assignment_date')) {
+                $payload['assignment_date'] = $fromDate;
+            }
+        }
+
+        if ($payload !== []) {
+            DB::table($assignmentTable)->where('id', $latest->id)->update($payload);
+        }
+    }
+
+    private function closeOlderLocationAssignments(int $userId, int $keepAssignmentId, ?string $newFromDate): void
+    {
+        $assignmentTable = $this->assignmentTableName();
+        if (! $assignmentTable || $keepAssignmentId <= 0) {
+            return;
+        }
+
+        $endBefore = $newFromDate
+            ? Carbon::parse($newFromDate)->subDay()->format('Y-m-d')
+            : Carbon::yesterday()->format('Y-m-d');
+
+        $query = DB::table($assignmentTable)
+            ->where('user_id', $userId)
+            ->where('id', '!=', $keepAssignmentId);
+
+        if (Schema::hasColumn($assignmentTable, 'hub_id') || Schema::hasColumn($assignmentTable, 'office_id')) {
+            $query->where(function ($q) use ($assignmentTable) {
+                if (Schema::hasColumn($assignmentTable, 'hub_id')) {
+                    $q->whereNotNull('hub_id');
+                }
+                if (Schema::hasColumn($assignmentTable, 'office_id')) {
+                    $q->orWhereNotNull('office_id');
+                }
+            });
+        }
+
+        // End open / future-overlapping older assignments so only the new location is punchable.
+        if (Schema::hasColumn($assignmentTable, 'to_date')) {
+            $query->where(function ($q) use ($endBefore) {
+                $q->whereNull('to_date')->orWhereDate('to_date', '>=', $endBefore);
+            });
+            $query->update(['to_date' => $endBefore]);
+        }
     }
 
     private function validateProfileLocationDates(int $employeeId): array
@@ -311,21 +471,9 @@ class EmployeeLocationService
             });
         }
 
-        if (Schema::hasColumn($assignmentTable, 'from_date')) {
-            $assignmentQuery->orderByDesc('from_date');
-        }
-        if (Schema::hasColumn($assignmentTable, 'assignment_date')) {
-            $assignmentQuery->orderByDesc('assignment_date');
-        }
-        if (Schema::hasColumn($assignmentTable, 'created_at')) {
-            $assignmentQuery->orderByDesc('created_at');
-        }
+        // Newest assignment always wins (new location replaces the old one).
+        $assignmentQuery->orderByDesc('id');
 
-        $active = $assignmentQuery->first();
-        if ($active) {
-            return $active;
-        }
-
-        return null;
+        return $assignmentQuery->first();
     }
 }

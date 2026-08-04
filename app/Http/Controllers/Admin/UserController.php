@@ -11,6 +11,7 @@ use App\Models\Designation;
 use App\Models\Office;
 use App\Models\Hub;
 use App\Support\StaffRoles;
+use App\Services\EmployeeLocationService;
 use App\CPU\ImageManager;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
@@ -565,6 +566,11 @@ class UserController extends Controller
         $employee->bank_proof_image = $bankProofImage;
         $employee->profile_image = $imagePath;
         $employee->save();
+
+        // If hub/office changed on profile, punch must use the new location.
+        if ($isStaff || $isDriver) {
+            app(EmployeeLocationService::class)->applyProfileLocation($employee->fresh());
+        }
 
         // $employee->syncRoles($request->role_id);
 

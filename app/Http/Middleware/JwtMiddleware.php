@@ -16,6 +16,15 @@ class JwtMiddleware
         try {
             JWTAuth::setRequest($request);
             $user = JWTAuth::parseToken()->authenticate();
+
+            // authenticate() returns false when subject user is missing → would TypeError on setUser()
+            if (! $user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized: User not found',
+                ], 401);
+            }
+
             auth('api')->setUser($user);
         } catch (TokenExpiredException $e) {
             return response()->json([
