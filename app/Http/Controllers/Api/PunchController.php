@@ -47,10 +47,11 @@ class PunchController extends Controller
         }
 
         $user = auth('api')->user();
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $imagePath = $image->store('punch_images', 'public'); // storage/app/public/punch_images
+        if (! $user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized',
+            ], 401);
         }
 
         $today = date('Y-m-d');

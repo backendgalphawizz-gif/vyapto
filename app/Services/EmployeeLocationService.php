@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\Api\User as ApiUser;
 use App\Models\User;
 use App\Support\StaffRoles;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -50,7 +52,7 @@ class EmployeeLocationService
 
         $user = User::query()->find($employeeId);
         if ($user && ! empty($user->office_id)) {
-            $dateCheck = $this->validateProfileLocationDates($user);
+            $dateCheck = $this->validateProfileLocationDates($employeeId);
             if (! $dateCheck['status']) {
                 return $dateCheck;
             }
@@ -66,25 +68,23 @@ class EmployeeLocationService
 
     public function locationActiveForDate(User $user, string $date): bool
     {
-        if (! $user->location_from_date && ! $user->location_to_date) {
-            return true;
-        }
-
-        if ($user->location_from_date && $date < $user->location_from_date->format('Y-m-d')) {
-            return false;
-        }
-
-        if ($user->location_to_date && $date > $user->location_to_date->format('Y-m-d')) {
-            return false;
-        }
-
-        return true;
+        return $this->isProfileLocationActiveForDate((int) $user->id, $date);
     }
 
-    public function resolveLocationTarget(User $user): array
+    public function resolveLocationTarget(User|ApiUser $user): array
     {
-        if (StaffRoles::isDriverRoleId($user->role_id ?? 0)) {
-            $hubCoordinates = $this->resolveHubCoordinates((int) $user->id);
+        $roleId = (int) ($user->role_id ?? 0);
+        $userId = (int) ($user->id ?? 0);
+
+        if ($userId <= 0) {
+            return [
+                'status' => false,
+                'message' => 'Employee not found.',
+            ];
+        }
+
+        if (StaffRoles::isDriverRoleId($roleId)) {
+            $hubCoordinates = $this->resolveHubCoordinates($userId);
             if (! $hubCoordinates['status']) {
                 return $hubCoordinates;
             }
@@ -97,8 +97,8 @@ class EmployeeLocationService
             ];
         }
 
-        if (StaffRoles::isStaffEmployeeRoleId($user->role_id ?? 0)) {
-            $officeCoordinates = $this->resolveOfficeCoordinates((int) $user->id);
+        if (StaffRoles::isStaffEmployeeRoleId($roleId)) {
+            $officeCoordinates = $this->resolveOfficeCoordinates($userId);
             if (! $officeCoordinates['status']) {
                 return $officeCoordinates;
             }
@@ -117,25 +117,60 @@ class EmployeeLocationService
         ];
     }
 
-    private function validateProfileLocationDates(User $user): array
+    private function validateProfileLocationDates(int $employeeId): array
     {
-        $today = date('Y-m-d');
+        if (! Schema::hasColumn('users', 'location_from_date') && ! Schema::hasColumn('users', 'location_to_date')) {
+            return ['status' => true];
+        }
 
-        if ($user->location_from_date && $today < $user->location_from_date->format('Y-m-d')) {
+        $user = User::query()->find($employeeId);
+        if (! $user) {
+            return ['status' => true];
+        }
+
+        $today = date('Y-m-d');
+        $fromDate = $this->normalizeDateValue($user->location_from_date ?? null);
+        $toDate = $this->normalizeDateValue($user->location_to_date ?? null);
+
+        if ($fromDate && $today < $fromDate) {
             return [
                 'status' => false,
-                'message' => 'Office assignment has not started yet (from '.$user->location_from_date->format('Y-m-d').').',
+                'message' => 'Office assignment has not started yet (from '.$fromDate.').',
             ];
         }
 
-        if ($user->location_to_date && $today > $user->location_to_date->format('Y-m-d')) {
+        if ($toDate && $today > $toDate) {
             return [
                 'status' => false,
-                'message' => 'Office assignment ended on '.$user->location_to_date->format('Y-m-d').'.',
+                'message' => 'Office assignment ended on '.$toDate.'.',
             ];
         }
 
         return ['status' => true];
+    }
+
+    private function isProfileLocationActiveForDate(int $employeeId, string $date): bool
+    {
+        $check = $this->validateProfileLocationDates($employeeId);
+
+        return ($check['status'] ?? false) === true;
+    }
+
+    private function normalizeDateValue(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($value instanceof Carbon) {
+            return $value->format('Y-m-d');
+        }
+
+        try {
+            return Carbon::parse((string) $value)->format('Y-m-d');
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function hubCoordinatesFromId(int $hubId): array
