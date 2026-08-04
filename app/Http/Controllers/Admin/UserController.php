@@ -341,8 +341,8 @@ class UserController extends Controller
         $isStaff = $this->isStaffEmployeeRole($request->role_id);
         $isDriver = $this->isDriverRole($request->role_id);
         $user->department_id = ($isStaff || $isDriver) ? null : $request->department_id;
-        $user->hub_id = $isDriver ? $request->hub_id : null;
-        $user->office_id = $isStaff ? $request->office_id : null;
+        $user->hub_id = ($isDriver || $isStaff) ? ($request->hub_id ?: null) : null;
+        $user->office_id = $isStaff ? ($request->office_id ?: null) : null;
         $user->location_from_date = $isStaff ? $request->location_from_date : null;
         $user->location_to_date = $isStaff ? $request->location_to_date : null;
         $user->job_type = $isStaff ? $request->job_type : null;
@@ -540,8 +540,8 @@ class UserController extends Controller
         $isStaff = $this->isStaffEmployeeRole($request->role_id);
         $isDriver = $this->isDriverRole($request->role_id);
         $employee->department_id = ($isStaff || $isDriver) ? null : $request->department_id;
-        $employee->hub_id = $isDriver ? $request->hub_id : null;
-        $employee->office_id = $isStaff ? $request->office_id : null;
+        $employee->hub_id = ($isDriver || $isStaff) ? ($request->hub_id ?: null) : null;
+        $employee->office_id = $isStaff ? ($request->office_id ?: null) : null;
         $employee->location_from_date = $isStaff ? $request->location_from_date : null;
         $employee->location_to_date = $isStaff ? $request->location_to_date : null;
         $employee->job_type = $isStaff ? $request->job_type : null;

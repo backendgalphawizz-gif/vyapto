@@ -31,26 +31,23 @@ class EmployeePunchService
             ];
         }
 
-        $locationTarget = $this->locationService->resolveLocationTarget($user);
-        if (! $locationTarget['status']) {
-            return [
-                'success' => false,
-                'message' => $locationTarget['message'],
-            ];
-        }
-
-        $distance = $this->calculateDistance(
+        $locationCheck = $this->locationService->validatePunchCoordinates(
+            $user,
             (float) $data['latitude'],
-            (float) $data['longitude'],
-            (float) $locationTarget['latitude'],
-            (float) $locationTarget['longitude']
+            (float) $data['longitude']
         );
+        if (! ($locationCheck['status'] ?? false)) {
+            if (! empty($locationCheck['mismatch_message'])) {
+                return [
+                    'success' => false,
+                    'message' => $locationCheck['mismatch_message'],
+                    'distance_in_meters' => $locationCheck['distance_in_meters'] ?? null,
+                ];
+            }
 
-        if ($distance > 0.1) {
             return [
                 'success' => false,
-                'message' => $locationTarget['mismatch_message'],
-                'distance_in_meters' => round($distance * 1000, 2),
+                'message' => $locationCheck['message'] ?? 'Location validation failed',
             ];
         }
 
@@ -97,26 +94,23 @@ class EmployeePunchService
             ];
         }
 
-        $locationTarget = $this->locationService->resolveLocationTarget($user);
-        if (! $locationTarget['status']) {
-            return [
-                'success' => false,
-                'message' => $locationTarget['message'],
-            ];
-        }
-
-        $distance = $this->calculateDistance(
+        $locationCheck = $this->locationService->validatePunchCoordinates(
+            $user,
             (float) $data['latitude'],
-            (float) $data['longitude'],
-            (float) $locationTarget['latitude'],
-            (float) $locationTarget['longitude']
+            (float) $data['longitude']
         );
+        if (! ($locationCheck['status'] ?? false)) {
+            if (! empty($locationCheck['mismatch_message'])) {
+                return [
+                    'success' => false,
+                    'message' => $locationCheck['mismatch_message'],
+                    'distance_in_meters' => $locationCheck['distance_in_meters'] ?? null,
+                ];
+            }
 
-        if ($distance > 0.1) {
             return [
                 'success' => false,
-                'message' => $locationTarget['mismatch_message'],
-                'distance_in_meters' => round($distance * 1000, 2),
+                'message' => $locationCheck['message'] ?? 'Location validation failed',
             ];
         }
 
@@ -140,20 +134,5 @@ class EmployeePunchService
             'message' => 'Punch out successful.',
             'data' => $attendance->fresh(),
         ];
-    }
-
-    private function calculateDistance($lat1, $lon1, $lat2, $lon2): float
-    {
-        $earthRadius = 6371;
-        $lat1 = deg2rad($lat1);
-        $lon1 = deg2rad($lon1);
-        $lat2 = deg2rad($lat2);
-        $lon2 = deg2rad($lon2);
-        $dLat = $lat2 - $lat1;
-        $dLon = $lon2 - $lon1;
-        $a = sin($dLat / 2) ** 2 + cos($lat1) * cos($lat2) * sin($dLon / 2) ** 2;
-        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
-        return $earthRadius * $c;
     }
 }

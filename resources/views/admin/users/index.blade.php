@@ -232,6 +232,9 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 <span class="badge bg-secondary">{{ $user->hub->name ?? 'No Hub' }}</span>
                                 @elseif($isStaffRow)
                                 <span class="badge bg-info">{{ $user->office->name ?? 'No Office' }}</span>
+                                @if($user->hub_id)
+                                <span class="badge bg-secondary">{{ $user->hub->name ?? 'Hub' }}</span>
+                                @endif
                                 @else
                                 <span class="badge bg-info">{{ $user->department->name ?? 'No Department' }}</span>
                                 @endif
@@ -380,6 +383,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             @if($isStaffView)
                             <div class="mb-2"><label class="small text-muted mb-0">Job Type</label><div class="fw-bold">{{ $user->job_type ?? 'N/A' }}</div></div>
                             <div class="mb-2"><label class="small text-muted mb-0">Office</label><div class="fw-bold">{{ $user->office->name ?? 'N/A' }}</div></div>
+                            <div class="mb-2"><label class="small text-muted mb-0">Hub</label><div class="fw-bold">{{ $user->hub->name ?? 'N/A' }}</div></div>
                             <div class="mb-2"><label class="small text-muted mb-0">From Date</label><div class="fw-bold">{{ $user->location_from_date ? \Carbon\Carbon::parse($user->location_from_date)->format('d M, Y') : 'N/A' }}</div></div>
                             <div class="mb-2"><label class="small text-muted mb-0">To Date</label><div class="fw-bold">{{ $user->location_to_date ? \Carbon\Carbon::parse($user->location_to_date)->format('d M, Y') : 'N/A' }}</div></div>
                             @endif
@@ -584,12 +588,12 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 $editIsStaff = strcasecmp($editRoleName, 'Staff Employee') === 0;
                             @endphp
 
-                            <!-- Hub (Driver only) -->
-                            <div class="col-md-6 {{ ($editIsDriver || old('hub_id', $user->hub_id)) ? '' : 'd-none' }}" id="editHubContainer{{ $user->id }}">
-                                <label class="form-label">Hub <span class="text-danger">*</span></label>
+                            <!-- Hub (Driver required; Staff optional) -->
+                            <div class="col-md-6 {{ ($editIsDriver || $editIsStaff || old('hub_id', $user->hub_id)) ? '' : 'd-none' }}" id="editHubContainer{{ $user->id }}">
+                                <label class="form-label">Hub <span class="text-danger edit-hub-required-mark{{ $user->id }} {{ $editIsDriver ? '' : 'd-none' }}">*</span></label>
                                 <select name="hub_id" id="editHubSelect{{ $user->id }}" class="form-select @error('hub_id', 'userUpdate'.$user->id) is-invalid @enderror"
-                                    {{ ($editIsDriver || old('hub_id', $user->hub_id)) ? 'required' : '' }}>
-                                    <option value="" disabled>Select Hub</option>
+                                    {{ $editIsDriver ? 'required' : '' }}>
+                                    <option value="">{{ $editIsStaff ? 'Select Hub (optional)' : 'Select Hub' }}</option>
                                     @foreach($hubs as $hub)
                                     <option value="{{ $hub->id }}" {{ old('hub_id', $user->hub_id) == $hub->id ? 'selected' : '' }}>{{ $hub->name }}</option>
                                     @endforeach
@@ -599,7 +603,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 @enderror
                             </div>
 
-                            <!-- Office (Staff Employee only) -->
+                            <!-- Office (Staff Employee) -->
                             <div class="col-md-6 {{ ($editIsStaff || old('office_id', $user->office_id)) ? '' : 'd-none' }}" id="editOfficeContainer{{ $user->id }}">
                                 <label class="form-label">Office <span class="text-danger">*</span></label>
                                 <select name="office_id" id="editOfficeSelect{{ $user->id }}" class="form-select @error('office_id', 'userUpdate'.$user->id) is-invalid @enderror"
@@ -1070,11 +1074,11 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             @enderror
                         </div>
 
-                        <!-- Hub (Driver only) -->
+                        <!-- Hub (Driver required; Staff optional — punch allowed at hub too) -->
                         <div class="col-md-6 d-none" id="hubContainer">
-                            <label class="form-label">Hub <span class="text-danger">*</span></label>
+                            <label class="form-label">Hub <span class="text-danger hub-required-mark d-none">*</span></label>
                             <select name="hub_id" id="hubSelect" class="form-select @error('hub_id', 'userCreation') is-invalid @enderror">
-                                <option value="" disabled {{ old('hub_id') ? '' : 'selected' }}>Select Hub</option>
+                                <option value="" {{ old('hub_id') ? '' : 'selected' }}>Select Hub</option>
                                 @foreach($hubs as $hub)
                                 <option value="{{ $hub->id }}" {{ old('hub_id') == $hub->id ? 'selected' : '' }}>{{ $hub->name }}</option>
                                 @endforeach
@@ -1084,7 +1088,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                             @enderror
                         </div>
 
-                        <!-- Office (Staff Employee only) -->
+                        <!-- Office (Staff Employee) -->
                         <div class="col-md-6 d-none" id="officeContainer">
                             <label class="form-label">Office <span class="text-danger">*</span></label>
                             <select name="office_id" id="officeSelect" class="form-select @error('office_id', 'userCreation') is-invalid @enderror">
@@ -1832,11 +1836,12 @@ function toggleFieldsByRole(selectElement, opts) {
         });
 
         hideSelect(departmentContainer, departmentSelect);
-        hideSelect(hubContainer, hubSelect);
+        showSelect(hubContainer, hubSelect, false);
         showSelect(jobTypeContainer, jobTypeSelect, true);
         showSelect(officeContainer, officeSelect, true);
         showDateField(staffDatesContainer, locationFromDate, true);
         showDateField(staffDatesToContainer, locationToDate, true);
+        document.querySelectorAll('.hub-required-mark').forEach(function(el) { el.classList.add('d-none'); });
         setDriverKycRequiredFields(document, false, false);
     } else if (isDriver) {
         additionalFields.forEach(function(field) {
@@ -1853,6 +1858,7 @@ function toggleFieldsByRole(selectElement, opts) {
         hideDateField(staffDatesContainer, locationFromDate);
         hideDateField(staffDatesToContainer, locationToDate);
         showSelect(hubContainer, hubSelect, true);
+        document.querySelectorAll('.hub-required-mark').forEach(function(el) { el.classList.remove('d-none'); });
         setDriverKycRequiredFields(document, true, false);
     } else {
         if (!fromServer && jobTypeSelect) {
@@ -2040,11 +2046,13 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
             });
         });
         hideEditSelect(departmentContainer, departmentSelect);
-        hideEditSelect(hubContainer, hubSelect);
+        showEditSelect(hubContainer, hubSelect, false);
         showEditSelect(jobTypeContainer, jobTypeSelect, true);
         showEditSelect(officeContainer, officeSelect, true);
         showEditDateField(staffDatesContainer, locationFromDate, true);
         showEditDateField(staffDatesToContainer, locationToDate, true);
+        var hubReq = modal.querySelector('.edit-hub-required-mark' + userId);
+        if (hubReq) hubReq.classList.add('d-none');
         setDriverKycRequiredFields(modal, false, true);
     } else if (isDriver) {
         additionalFields.forEach(function(field) {
@@ -2061,6 +2069,8 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
         hideEditDateField(staffDatesContainer, locationFromDate);
         hideEditDateField(staffDatesToContainer, locationToDate);
         showEditSelect(hubContainer, hubSelect, true);
+        var hubReqDriver = modal.querySelector('.edit-hub-required-mark' + userId);
+        if (hubReqDriver) hubReqDriver.classList.remove('d-none');
         modal.querySelectorAll('input[data-preview-wrap]').forEach(function(inp) {
             renderFilePreview(inp);
         });

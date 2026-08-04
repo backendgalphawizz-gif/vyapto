@@ -69,44 +69,25 @@ class PunchController extends Controller
         $userLat = $request->latitude;
         $userLng = $request->longitude;
 
-        $locationTarget = app(EmployeeLocationService::class)->resolveLocationTarget($user);
-        if (!$locationTarget['status']) {
+        $locationCheck = app(EmployeeLocationService::class)->validatePunchCoordinates(
+            $user,
+            (float) $userLat,
+            (float) $userLng
+        );
+        if (! ($locationCheck['status'] ?? false)) {
+            if (! empty($locationCheck['mismatch_message'])) {
+                return response()->json([
+                    'status' => false,
+                    'code' => 200,
+                    'message' => $locationCheck['mismatch_message'],
+                    'distance_in_meters' => $locationCheck['distance_in_meters'] ?? null,
+                ]);
+            }
+
             return response()->json([
                 'status' => false,
                 'code' => 200,
-                'message' => $locationTarget['message']
-            ]);
-        }
-
-        $targetLat = $locationTarget['latitude'];
-        $targetLng = $locationTarget['longitude'];
-
-        // $userLat   = (string)$userLat;
-        // $userLng   = (string)$userLng;
-        // $officeLat = (string)$officeLat;
-        // $officeLng = (string)$officeLng;
-
-        // // dd($userLat, $userLng, $officeLat, $officeLng);
-
-        // if ($userLat !== $officeLat || $userLng !== $officeLng) {
-        //     return response()->json([
-        //         'status' => false,
-        // 		'code' => 200,
-        //         'message' => 'Office Location Not Matched',
-        //         'userLat' => $userLat,
-        //         'officeLat' => $officeLat
-        //     ]);
-        // }
-
-        $distance = $this->calculateDistance($userLat, $userLng, $targetLat, $targetLng);
-
-        // Distance is in KM; 0.1 KM = 100 meters.
-        if ($distance > 0.1) {
-            return response()->json([
-                'status' => false,
-                'code' => 200,
-                'message' => $locationTarget['mismatch_message'],
-                'distance_in_meters' => round($distance * 1000, 2)
+                'message' => $locationCheck['message'] ?? 'Location validation failed',
             ]);
         }
 
@@ -209,27 +190,25 @@ class PunchController extends Controller
         $userLat = $request->latitude;
         $userLng = $request->longitude;
 
-        $locationTarget = app(EmployeeLocationService::class)->resolveLocationTarget($user);
-        if (!$locationTarget['status']) {
+        $locationCheck = app(EmployeeLocationService::class)->validatePunchCoordinates(
+            $user,
+            (float) $userLat,
+            (float) $userLng
+        );
+        if (! ($locationCheck['status'] ?? false)) {
+            if (! empty($locationCheck['mismatch_message'])) {
+                return response()->json([
+                    'status' => false,
+                    'code' => 200,
+                    'message' => $locationCheck['mismatch_message'],
+                    'distance_in_meters' => $locationCheck['distance_in_meters'] ?? null,
+                ]);
+            }
+
             return response()->json([
                 'status' => false,
                 'code' => 200,
-                'message' => $locationTarget['message']
-            ]);
-        }
-
-        $targetLat = $locationTarget['latitude'];
-        $targetLng = $locationTarget['longitude'];
-
-        $distance = $this->calculateDistance($userLat, $userLng, $targetLat, $targetLng);
-
-        // Distance is in KM; 0.1 KM = 100 meters.
-        if ($distance > 0.1) {
-            return response()->json([
-                'status' => false,
-                'code' => 200,
-                'message' => $locationTarget['mismatch_message'],
-                'distance_in_meters' => round($distance * 1000, 2)
+                'message' => $locationCheck['message'] ?? 'Location validation failed',
             ]);
         }
 

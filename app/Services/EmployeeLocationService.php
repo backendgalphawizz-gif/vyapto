@@ -12,12 +12,11 @@ use Illuminate\Support\Facades\Schema;
 class EmployeeLocationService
 {
     /**
-     * Resolve punch geofence target:
-     * 1) Newest active assignment parcel hub/office
-     * 2) Fallback to current users.hub_id / users.office_id
+     * Resolve punch geofence target (single — used for schedule/timing messages).
+     * Drivers → hub. Staff → office first, then hub.
      *
-     * Punch-in and punch-out both call this, so a newly assigned location
-     * is used for both immediately.
+     * For punch distance checks use validatePunchCoordinates() so staff can
+     * punch at either assigned office or hub.
      */
     public function resolveLocationTarget(User|ApiUser $user): array
     {
@@ -46,16 +45,21 @@ class EmployeeLocationService
         }
 
         if (StaffRoles::isStaffEmployeeRoleId($roleId)) {
-            $officeCoordinates = $this->resolveOfficeCoordinates($userId);
-            if (! $officeCoordinates['status']) {
-                return $officeCoordinates;
+            $locations = $this->resolveAllowedLocations($user);
+            if ($locations === []) {
+                return [
+                    'status' => false,
+                    'message' => 'No office/hub assigned to this employee. Assign an Office (and optional Hub) on the employee profile.',
+                ];
             }
+
+            $primary = $locations[0];
 
             return [
                 'status' => true,
-                'latitude' => $officeCoordinates['latitude'],
-                'longitude' => $officeCoordinates['longitude'],
-                'mismatch_message' => 'Assigned office location not matched',
+                'latitude' => $primary['latitude'],
+                'longitude' => $primary['longitude'],
+                'mismatch_message' => 'Assigned office/hub location not matched',
             ];
         }
 
@@ -63,6 +67,142 @@ class EmployeeLocationService
             'status' => false,
             'message' => 'Location validation is not configured for this role.',
         ];
+    }
+
+    /**
+     * Validate punch GPS against all allowed locations (within $maxKm).
+     * Staff may match office OR hub. Drivers match hub only.
+     *
+     * @return array{status:bool,message?:string,mismatch_message?:string,distance_in_meters?:float,matched?:array}
+     */
+    public function validatePunchCoordinates(User|ApiUser $user, float $latitude, float $longitude, float $maxKm = 0.1): array
+    {
+        $locations = $this->resolveAllowedLocations($user);
+
+        if ($locations === []) {
+            $roleId = (int) ($user->role_id ?? 0);
+            if (StaffRoles::isDriverRoleId($roleId)) {
+                return [
+                    'status' => false,
+                    'message' => 'No hub assigned to this employee. Assign a Hub on the employee profile.',
+                ];
+            }
+
+            return [
+                'status' => false,
+                'message' => 'No office/hub assigned to this employee. Assign an Office (and optional Hub) on the employee profile.',
+            ];
+        }
+
+        $bestDistance = null;
+
+        foreach ($locations as $location) {
+            $distance = $this->haversineKm(
+                $latitude,
+                $longitude,
+                (float) $location['latitude'],
+                (float) $location['longitude']
+            );
+
+            if ($bestDistance === null || $distance < $bestDistance) {
+                $bestDistance = $distance;
+            }
+
+            if ($distance <= $maxKm) {
+                return [
+                    'status' => true,
+                    'matched' => $location,
+                    'distance_in_meters' => round($distance * 1000, 2),
+                ];
+            }
+        }
+
+        return [
+            'status' => false,
+            'mismatch_message' => 'Assigned office/hub location not matched',
+            'distance_in_meters' => round(($bestDistance ?? 0) * 1000, 2),
+        ];
+    }
+
+    /**
+     * @return list<array{type:string,id:int,name:?string,latitude:float,longitude:float}>
+     */
+    public function resolveAllowedLocations(User|ApiUser $user): array
+    {
+        $roleId = (int) ($user->role_id ?? 0);
+        $userId = (int) ($user->id ?? 0);
+        $locations = [];
+        $seen = [];
+
+        $push = function (array $coords, string $type) use (&$locations, &$seen): void {
+            if (! ($coords['status'] ?? false)) {
+                return;
+            }
+            $key = $type.':'.($coords[$type.'_id'] ?? $coords['latitude'].','.$coords['longitude']);
+            if (isset($seen[$key])) {
+                return;
+            }
+            $seen[$key] = true;
+            $locations[] = [
+                'type' => $type,
+                'id' => (int) ($coords[$type.'_id'] ?? 0),
+                'name' => $coords[$type.'_name'] ?? null,
+                'latitude' => (float) $coords['latitude'],
+                'longitude' => (float) $coords['longitude'],
+            ];
+        };
+
+        if (StaffRoles::isDriverRoleId($roleId)) {
+            $push($this->resolveHubCoordinates($userId), 'hub');
+
+            return $locations;
+        }
+
+        if (StaffRoles::isStaffEmployeeRoleId($roleId)) {
+            // Office first (primary), then optional hub — punch allowed at either.
+            $push($this->resolveOfficeCoordinates($userId), 'office');
+            $push($this->resolveProfileHubCoordinates($userId), 'hub');
+
+            return $locations;
+        }
+
+        return $locations;
+    }
+
+    /**
+     * Staff profile hub only (does not require driver role).
+     */
+    public function resolveProfileHubCoordinates(int $employeeId): array
+    {
+        $assignment = $this->latestAssignmentForUser($employeeId, 'hub_id');
+        if ($assignment && ! empty($assignment->hub_id)) {
+            return $this->hubCoordinatesFromId((int) $assignment->hub_id);
+        }
+
+        $user = User::query()->find($employeeId);
+        if ($user && ! empty($user->hub_id)) {
+            return $this->hubCoordinatesFromId((int) $user->hub_id);
+        }
+
+        return [
+            'status' => false,
+            'message' => 'No hub assigned.',
+        ];
+    }
+
+    public function haversineKm(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $earthRadius = 6371;
+        $lat1 = deg2rad($lat1);
+        $lon1 = deg2rad($lon1);
+        $lat2 = deg2rad($lat2);
+        $lon2 = deg2rad($lon2);
+        $dLat = $lat2 - $lat1;
+        $dLon = $lon2 - $lon1;
+        $a = sin($dLat / 2) ** 2 + cos($lat1) * cos($lat2) * sin($dLon / 2) ** 2;
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 
     public function resolveHubCoordinates(int $employeeId): array
@@ -151,7 +291,8 @@ class EmployeeLocationService
 
         $updates = [];
 
-        if ($hubId) {
+        if ($hubId && ! $officeId) {
+            // Driver / hub-only assignment
             $updates['hub_id'] = $hubId;
             $updates['office_id'] = null;
             if (Schema::hasColumn('users', 'location_from_date')) {
@@ -161,14 +302,19 @@ class EmployeeLocationService
                 $updates['location_to_date'] = null;
             }
         } elseif ($officeId) {
+            // Staff office assignment — keep any profile hub so they can punch at both
             $updates['office_id'] = $officeId;
-            $updates['hub_id'] = null;
             if (Schema::hasColumn('users', 'location_from_date')) {
                 $updates['location_from_date'] = $fromDate;
             }
             if (Schema::hasColumn('users', 'location_to_date')) {
                 $updates['location_to_date'] = $toDate;
             }
+            if ($hubId) {
+                $updates['hub_id'] = $hubId;
+            }
+        } elseif ($hubId) {
+            $updates['hub_id'] = $hubId;
         }
 
         if ($updates !== []) {
@@ -212,7 +358,25 @@ class EmployeeLocationService
         $this->closeOlderLocationAssignments($userId, (int) $latest->id, $fromDate);
 
         $payload = [];
-        if (! empty($user->hub_id) && Schema::hasColumn($assignmentTable, 'hub_id')) {
+        $isStaff = StaffRoles::isStaffEmployeeRoleId($user->role_id ?? 0);
+
+        if ($isStaff) {
+            if (! empty($user->office_id) && Schema::hasColumn($assignmentTable, 'office_id')) {
+                $payload['office_id'] = (int) $user->office_id;
+            }
+            if (Schema::hasColumn($assignmentTable, 'hub_id')) {
+                $payload['hub_id'] = ! empty($user->hub_id) ? (int) $user->hub_id : null;
+            }
+            if (Schema::hasColumn($assignmentTable, 'from_date')) {
+                $payload['from_date'] = $fromDate;
+            }
+            if (Schema::hasColumn($assignmentTable, 'to_date')) {
+                $payload['to_date'] = $toDate;
+            }
+            if (Schema::hasColumn($assignmentTable, 'assignment_date')) {
+                $payload['assignment_date'] = $fromDate;
+            }
+        } elseif (! empty($user->hub_id) && Schema::hasColumn($assignmentTable, 'hub_id')) {
             $payload['hub_id'] = (int) $user->hub_id;
             if (Schema::hasColumn($assignmentTable, 'office_id')) {
                 $payload['office_id'] = null;
