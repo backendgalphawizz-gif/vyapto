@@ -40,4 +40,9 @@ class User extends Authenticatable implements JWTSubject
 	{
 		return $this->belongsTo(Role::class, 'role_id');
 	}
+
+	public function designationRecord()
+	{
+		return $this->belongsTo(\App\Models\Designation::class, 'designation_id');
+	}
 }

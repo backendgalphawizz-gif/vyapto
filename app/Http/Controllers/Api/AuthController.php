@@ -9,6 +9,7 @@ use App\CPU\ImageManager;
 use Illuminate\Support\Facades\Hash;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use App\Models\Api\UserToken;
+use App\Models\Designation;
 use Spatie\Permission\Models\Role;
 use Validator;
 use Carbon\Carbon;
@@ -77,7 +78,7 @@ class AuthController extends Controller
 			'code' => 200,
 			'message' => 'Login Successful',
 			'token' => $token,
-			'user' => auth('api')->user()
+			'user' => $this->formatUserForApi(auth('api')->user())
 		]);
 	}
 
@@ -177,7 +178,7 @@ class AuthController extends Controller
 			'code' => 200,
 			'message' => 'Login successful',
 			'token' => $token,
-			'user' => $user
+			'user' => $this->formatUserForApi($user)
 		]);
 	}
 
@@ -281,7 +282,7 @@ class AuthController extends Controller
 			'code' => 200,
 			'message' => 'User Profile',
 			// 'today_vehicle_usage_count' => $todayVehicleUsageActualCount,
-			'user' => $user,
+			'user' => $this->formatUserForApi($user),
 		]);
 	}
 
@@ -433,8 +434,27 @@ class AuthController extends Controller
 		return response()->json([
 			'status' => true,
 			'message' => 'Profile updated successfully',
-			'user' => $user
+			'user' => $this->formatUserForApi($user)
 		]);
+	}
+
+	private function formatUserForApi(User $user): array
+	{
+		$data = $user->toArray();
+		$data['designation'] = $this->resolveDesignationName($user->designation_id);
+
+		return $data;
+	}
+
+	private function resolveDesignationName($designationId): ?string
+	{
+		if (empty($designationId)) {
+			return null;
+		}
+
+		return Designation::query()
+			->where('id', $designationId)
+			->value('name');
 	}
 
 	private function iniSizeToBytes($value)
