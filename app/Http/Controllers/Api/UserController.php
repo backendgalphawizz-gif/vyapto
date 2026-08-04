@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Api\UserToken;
 use App\Models\Holiday;
 use App\Services\AttendanceScheduleService;
-use App\Support\StorageAssets;
 
 class UserController extends Controller
 {
@@ -116,8 +115,8 @@ class UserController extends Controller
 				'check_out'          => $attendance->punch_out_time,
 				'check_in_location'  => $attendance->punch_in_location,
 				'check_out_location' => $attendance->punch_out_location,
-				'check_in_image'     => StorageAssets::publicUrl($attendance->punch_in_image),
-				'check_out_image'    => StorageAssets::publicUrl($attendance->punch_out_image),
+				'check_in_image'     => $attendance->punch_in_image,
+				'check_out_image'    => $attendance->punch_out_image,
 				'late_coming'        => $isLateComing,
 				'early_going'        => $isEarlyGoing,
 			];

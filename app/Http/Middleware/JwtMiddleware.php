@@ -14,23 +14,24 @@ class JwtMiddleware
     public function handle(Request $request, Closure $next)
     {
         try {
-            JWTAuth::setRequest($request);
             $user = JWTAuth::parseToken()->authenticate();
-            auth('api')->setUser($user);
-        } catch (TokenExpiredException $e) {
+        } 
+        catch (TokenExpiredException $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Unauthorized: Token expired',
+                'message' => 'Unauthorized: Token expired'
             ], 401);
-        } catch (TokenInvalidException $e) {
+        } 
+        catch (TokenInvalidException $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Unauthorized: Token invalid',
+                'message' => 'Unauthorized: Token invalid'
             ], 401);
-        } catch (JWTException $e) {
+        } 
+        catch (JWTException $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Unauthorized: Token not provided',
+                'message' => 'Unauthorized: Token not provided'
             ], 401);
         }
 
