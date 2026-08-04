@@ -6,11 +6,13 @@ use App\Models\Attendance;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class EmployeePunchService
 {
+    public function __construct(private EmployeeLocationService $locationService)
+    {
+    }
+
     public function todayAttendance(User $user): ?Attendance
     {
         return Attendance::where('employee_id', $user->id)
@@ -29,7 +31,7 @@ class EmployeePunchService
             ];
         }
 
-        $locationTarget = $this->getLocationTargetForUser($user);
+        $locationTarget = $this->locationService->resolveLocationTarget($user);
         if (! $locationTarget['status']) {
             return [
                 'success' => false,
@@ -95,7 +97,7 @@ class EmployeePunchService
             ];
         }
 
-        $locationTarget = $this->getLocationTargetForUser($user);
+        $locationTarget = $this->locationService->resolveLocationTarget($user);
         if (! $locationTarget['status']) {
             return [
                 'success' => false,
@@ -153,114 +155,5 @@ class EmployeePunchService
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
         return $earthRadius * $c;
-    }
-
-    private function getLocationTargetForUser(User $user): array
-    {
-        $roleId = (int) ($user->role_id ?? 0);
-
-        if ($roleId === 3) {
-            $hubCoordinates = $this->getAssignedHubCoordinates($user->id);
-            if (! $hubCoordinates['status']) {
-                return $hubCoordinates;
-            }
-
-            return [
-                'status' => true,
-                'latitude' => $hubCoordinates['latitude'],
-                'longitude' => $hubCoordinates['longitude'],
-                'mismatch_message' => 'Assigned hub location not matched',
-            ];
-        }
-
-        if ($roleId === 4) {
-            $companyCoordinates = $this->getCompanyCoordinates();
-            if (! $companyCoordinates['status']) {
-                return $companyCoordinates;
-            }
-
-            return [
-                'status' => true,
-                'latitude' => $companyCoordinates['latitude'],
-                'longitude' => $companyCoordinates['longitude'],
-                'mismatch_message' => 'Office location not matched',
-            ];
-        }
-
-        return [
-            'status' => false,
-            'message' => 'Location validation is not configured for your role.',
-        ];
-    }
-
-    private function getCompanyCoordinates(): array
-    {
-        $officeLat = DB::table('settings')->where('type', 'company_lat')->value('value')
-            ?? DB::table('settings')->where('type', 'company_latitude')->value('value');
-        $officeLng = DB::table('settings')->where('type', 'company_long')->value('value')
-            ?? DB::table('settings')->where('type', 'company_longitude')->value('value');
-
-        if ($officeLat === null || $officeLng === null) {
-            return [
-                'status' => false,
-                'message' => 'Office location is not configured.',
-            ];
-        }
-
-        return [
-            'status' => true,
-            'latitude' => (float) $officeLat,
-            'longitude' => (float) $officeLng,
-        ];
-    }
-
-    private function getAssignedHubCoordinates(int $employeeId): array
-    {
-        $assignmentTable = Schema::hasTable('assignment_parcel')
-            ? 'assignment_parcel'
-            : (Schema::hasTable('assignment_parcels') ? 'assignment_parcels' : null);
-
-        if (! $assignmentTable) {
-            return [
-                'status' => false,
-                'message' => 'Assignment table not found.',
-            ];
-        }
-
-        $assignmentQuery = DB::table($assignmentTable)->where('user_id', $employeeId);
-
-        if (Schema::hasColumn($assignmentTable, 'assignment_date')) {
-            $assignmentQuery->orderByDesc('assignment_date');
-        }
-        if (Schema::hasColumn($assignmentTable, 'created_at')) {
-            $assignmentQuery->orderByDesc('created_at');
-        }
-
-        $assignment = $assignmentQuery->first();
-
-        if (! $assignment || empty($assignment->hub_id)) {
-            return [
-                'status' => false,
-                'message' => 'No hub assigned to you.',
-            ];
-        }
-
-        $hub = DB::table('hubs')
-            ->where('id', $assignment->hub_id)
-            ->select('id', 'name', 'latitude', 'longitude')
-            ->first();
-
-        if (! $hub || $hub->latitude === null || $hub->longitude === null) {
-            return [
-                'status' => false,
-                'message' => 'Assigned hub location is not configured.',
-            ];
-        }
-
-        return [
-            'status' => true,
-            'latitude' => (float) $hub->latitude,
-            'longitude' => (float) $hub->longitude,
-        ];
     }
 }

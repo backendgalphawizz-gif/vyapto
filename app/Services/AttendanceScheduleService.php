@@ -96,8 +96,8 @@ class AttendanceScheduleService
             }
         }
 
-        // Rare fallback: direct user office/hub (usually cleared; kept for older data)
-        if (! empty($employee->office_id)) {
+        // Fallback: creation-time office/hub on employee profile
+        if (! empty($employee->office_id) && app(EmployeeLocationService::class)->locationActiveForDate($employee, $date)) {
             $office = Office::query()->find($employee->office_id);
             if ($office) {
                 $opening = $this->extractTime($office->opening_time);
