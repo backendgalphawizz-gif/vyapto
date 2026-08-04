@@ -197,6 +197,7 @@ class UserController extends Controller
                     $fail('Office is required for staff employees.');
                 }
             }],
+            'designation' => 'required|string|max:255',
             'date_of_birth' => 'required|date|before:today',
             'gender'     => 'required|in:male,female,other',
             'marital_status' => 'required|in:single,married,divorced,widowed',
@@ -275,6 +276,7 @@ class UserController extends Controller
         $user->hub_id = $isDriver ? $request->hub_id : null;
         $user->office_id = $isStaff ? $request->office_id : null;
         $user->job_type = $isStaff ? $request->job_type : null;
+        $user->designation = $request->designation;
         $user->profile_image = $profileImage;
 
         // PERSONAL
@@ -361,6 +363,7 @@ class UserController extends Controller
                     $fail('Office is required for staff employees.');
                 }
             }],
+            'designation' => 'required|string|max:255',
             'date_of_birth' => 'required|date|before:today',
             'gender'     => 'required|in:male,female,other',
             'marital_status' => 'required|in:single,married,divorced,widowed',
@@ -456,6 +459,7 @@ class UserController extends Controller
         $employee->hub_id = $isDriver ? $request->hub_id : null;
         $employee->office_id = $isStaff ? $request->office_id : null;
         $employee->job_type = $isStaff ? $request->job_type : null;
+        $employee->designation = $request->designation;
         $employee->date_of_birth = $request->date_of_birth;
         $employee->gender = $request->gender;
         $employee->father_name = $request->father_name;

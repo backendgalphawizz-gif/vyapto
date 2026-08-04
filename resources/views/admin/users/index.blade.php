@@ -308,6 +308,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                         </div>
                         <div class="col-md-6">
                             <div class="mb-2"><label class="small text-muted mb-0">Employee Role</label><div class="fw-bold">{{ $user->role->name ?? 'N/A' }}</div></div>
+                            <div class="mb-2"><label class="small text-muted mb-0">Designation</label><div class="fw-bold">{{ $user->designation ?? 'N/A' }}</div></div>
                             @if(!$isStaffView)
                             <div class="mb-2"><label class="small text-muted mb-0">Department</label><div class="fw-bold">{{ $user->department->name ?? 'N/A' }}</div></div>
                             @endif
@@ -473,6 +474,15 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                     @endforeach
                                 </select>
                                 @error('role_id', 'userUpdate'.$user->id)
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Designation <span class="text-danger">*</span></label>
+                                <input type="text" name="designation" class="form-control @error('designation', 'userUpdate'.$user->id) is-invalid @enderror" placeholder="e.g. Delivery Driver, Warehouse Staff"
+                                    value="{{ old('designation', $user->designation) }}" maxlength="255" required>
+                                @error('designation', 'userUpdate'.$user->id)
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -854,6 +864,14 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 @endforeach
                             </select>
                             @error('role_id', 'userCreation')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Designation <span class="text-danger">*</span></label>
+                            <input type="text" name="designation" class="form-control @error('designation', 'userCreation') is-invalid @enderror" placeholder="e.g. Delivery Driver, Warehouse Staff" value="{{ old('designation') }}" maxlength="255" required>
+                            @error('designation', 'userCreation')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>

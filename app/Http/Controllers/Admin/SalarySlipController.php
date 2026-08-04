@@ -45,7 +45,7 @@ class SalarySlipController extends Controller
         $slip = SalarySlip::with(['employee' => function ($q) {
             $q->select(
                 'id', 'name', 'email', 'phone',
-                'date_of_birth', 'join_date', 'gender', 'job_type',
+                'date_of_birth', 'join_date', 'gender', 'job_type', 'designation',
                 'pan_card_no', 'aadhar_card_no',
                 'bank_account_no', 'ifsc_code', 'bank_name', 'bank_branch'
             );
@@ -59,7 +59,7 @@ class SalarySlipController extends Controller
         $slip = SalarySlip::with(['employee' => function ($q) {
             $q->select(
                 'id', 'name', 'email', 'phone',
-                'date_of_birth', 'join_date', 'gender', 'job_type',
+                'date_of_birth', 'join_date', 'gender', 'job_type', 'designation',
                 'pan_card_no', 'aadhar_card_no',
                 'bank_account_no', 'ifsc_code', 'bank_name', 'bank_branch'
             );
@@ -955,7 +955,7 @@ class SalarySlipController extends Controller
             $slip->load(['employee' => function ($q) {
                 $q->select(
                     'id', 'name', 'email', 'phone',
-                    'date_of_birth', 'join_date', 'gender', 'job_type',
+                    'date_of_birth', 'join_date', 'gender', 'job_type', 'designation',
                     'pan_card_no', 'aadhar_card_no',
                     'bank_account_no', 'ifsc_code', 'bank_name', 'bank_branch'
                 );
@@ -1017,7 +1017,7 @@ class SalarySlipController extends Controller
             $slip->employee->makeVisible([
                 'bank_account_no', 'ifsc_code', 'bank_name', 'bank_branch',
                 'pan_card_no', 'aadhar_card_no', 'phone', 'date_of_birth',
-                'join_date', 'gender', 'job_type',
+                'join_date', 'gender', 'job_type', 'designation',
             ]);
         }
 
