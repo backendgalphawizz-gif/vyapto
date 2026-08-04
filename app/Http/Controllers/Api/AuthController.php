@@ -311,6 +311,11 @@ class AuthController extends Controller
 
 		$roleId = $user->role_id;
 
+		// Flutter app sends `name`; API historically expects `fullname`.
+		if (! $request->filled('fullname') && $request->filled('name')) {
+			$request->merge(['fullname' => $request->input('name')]);
+		}
+
 		$request->merge([
 			'pan_card_no' => $request->filled('pan_card_no') ? strtoupper($request->pan_card_no) : $request->pan_card_no,
 			'ifsc_code' => $request->filled('ifsc_code') ? strtoupper($request->ifsc_code) : $request->ifsc_code,
@@ -318,6 +323,7 @@ class AuthController extends Controller
 
 		$validator = Validator::make($request->all(), [
 			'fullname'   => ['required', 'string', 'max:255', 'regex:/^[A-Za-z\s]+$/'],
+			'name'       => ['nullable', 'string', 'max:255', 'regex:/^[A-Za-z\s]+$/'],
 			'email'      => 'required|email|unique:users,email,' . $user->id,
 			'phone'      => [
 				'required',
