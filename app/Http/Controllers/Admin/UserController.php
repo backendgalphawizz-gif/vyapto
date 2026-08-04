@@ -187,6 +187,16 @@ class UserController extends Controller
                     $fail('The job type field is required for staff employees.');
                 }
             }],
+            'hub_id' => ['nullable', 'integer', 'exists:hubs,id', function ($attribute, $value, $fail) use ($request) {
+                if ($this->isDriverRole($request->role_id) && empty($value)) {
+                    $fail('Hub is required for driver employees.');
+                }
+            }],
+            'office_id' => ['nullable', 'integer', 'exists:offices,id', function ($attribute, $value, $fail) use ($request) {
+                if ($this->isStaffEmployeeRole($request->role_id) && empty($value)) {
+                    $fail('Office is required for staff employees.');
+                }
+            }],
             'date_of_birth' => 'required|date|before:today',
             'gender'     => 'required|in:male,female,other',
             'marital_status' => 'required|in:single,married,divorced,widowed',
@@ -262,8 +272,8 @@ class UserController extends Controller
         $isStaff = $this->isStaffEmployeeRole($request->role_id);
         $isDriver = $this->isDriverRole($request->role_id);
         $user->department_id = ($isStaff || $isDriver) ? null : $request->department_id;
-        $user->office_id = null; // Hub/Office assigned on Assignments only
-        $user->hub_id = null;
+        $user->hub_id = $isDriver ? $request->hub_id : null;
+        $user->office_id = $isStaff ? $request->office_id : null;
         $user->job_type = $isStaff ? $request->job_type : null;
         $user->profile_image = $profileImage;
 
@@ -339,6 +349,16 @@ class UserController extends Controller
             'job_type' => ['nullable', 'string', 'in:Full Time,Half Time', function ($attribute, $value, $fail) use ($request) {
                 if ($this->isStaffEmployeeRole($request->role_id) && empty($value)) {
                     $fail('The job type field is required for staff employees.');
+                }
+            }],
+            'hub_id' => ['nullable', 'integer', 'exists:hubs,id', function ($attribute, $value, $fail) use ($request) {
+                if ($this->isDriverRole($request->role_id) && empty($value)) {
+                    $fail('Hub is required for driver employees.');
+                }
+            }],
+            'office_id' => ['nullable', 'integer', 'exists:offices,id', function ($attribute, $value, $fail) use ($request) {
+                if ($this->isStaffEmployeeRole($request->role_id) && empty($value)) {
+                    $fail('Office is required for staff employees.');
                 }
             }],
             'date_of_birth' => 'required|date|before:today',
@@ -433,8 +453,8 @@ class UserController extends Controller
         $isStaff = $this->isStaffEmployeeRole($request->role_id);
         $isDriver = $this->isDriverRole($request->role_id);
         $employee->department_id = ($isStaff || $isDriver) ? null : $request->department_id;
-        $employee->office_id = null; // Hub/Office assigned on Assignments only
-        $employee->hub_id = null;
+        $employee->hub_id = $isDriver ? $request->hub_id : null;
+        $employee->office_id = $isStaff ? $request->office_id : null;
         $employee->job_type = $isStaff ? $request->job_type : null;
         $employee->date_of_birth = $request->date_of_birth;
         $employee->gender = $request->gender;

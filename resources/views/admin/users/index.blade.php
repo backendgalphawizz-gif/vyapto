@@ -466,6 +466,7 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                     <option disabled>Select Role</option>
                                     @foreach($roles as $roleOption)
                                     <option value="{{ $roleOption->id }}"
+                                        data-role-name="{{ $roleOption->name }}"
                                         {{ old('role_id', $user->role_id) == $roleOption->id ? 'selected' : '' }}>
                                         {{ $roleOption->name }}
                                     </option>
@@ -490,7 +491,41 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 @enderror
                             </div>
 
-                            <!-- Office removed: assign Hub/Office on Assignments only -->
+                            @php
+                                $editRoleName = $user->role->name ?? '';
+                                $editIsDriver = stripos($editRoleName, 'driver') !== false;
+                                $editIsStaff = strcasecmp($editRoleName, 'Staff Employee') === 0;
+                            @endphp
+
+                            <!-- Hub (Driver only) -->
+                            <div class="col-md-6 {{ ($editIsDriver || old('hub_id', $user->hub_id)) ? '' : 'd-none' }}" id="editHubContainer{{ $user->id }}">
+                                <label class="form-label">Hub <span class="text-danger">*</span></label>
+                                <select name="hub_id" id="editHubSelect{{ $user->id }}" class="form-select @error('hub_id', 'userUpdate'.$user->id) is-invalid @enderror"
+                                    {{ ($editIsDriver || old('hub_id', $user->hub_id)) ? 'required' : '' }}>
+                                    <option value="" disabled>Select Hub</option>
+                                    @foreach($hubs as $hub)
+                                    <option value="{{ $hub->id }}" {{ old('hub_id', $user->hub_id) == $hub->id ? 'selected' : '' }}>{{ $hub->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('hub_id', 'userUpdate'.$user->id)
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Office (Staff Employee only) -->
+                            <div class="col-md-6 {{ ($editIsStaff || old('office_id', $user->office_id)) ? '' : 'd-none' }}" id="editOfficeContainer{{ $user->id }}">
+                                <label class="form-label">Office <span class="text-danger">*</span></label>
+                                <select name="office_id" id="editOfficeSelect{{ $user->id }}" class="form-select @error('office_id', 'userUpdate'.$user->id) is-invalid @enderror"
+                                    {{ ($editIsStaff || old('office_id', $user->office_id)) ? 'required' : '' }}>
+                                    <option value="" disabled>Select Office</option>
+                                    @foreach($offices as $office)
+                                    <option value="{{ $office->id }}" {{ old('office_id', $user->office_id) == $office->id ? 'selected' : '' }}>{{ $office->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('office_id', 'userUpdate'.$user->id)
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
                             <div class="col-md-6">
                                 <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
@@ -904,6 +939,34 @@ $staffRoleID = $staffRole ? $staffRole->id : null;
                                 <option value="Half Time" {{ old('job_type') == 'Half Time' ? 'selected' : '' }}>Half Time</option>
                             </select>
                             @error('job_type', 'userCreation')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <!-- Hub (Driver only) -->
+                        <div class="col-md-6 d-none" id="hubContainer">
+                            <label class="form-label">Hub <span class="text-danger">*</span></label>
+                            <select name="hub_id" id="hubSelect" class="form-select @error('hub_id', 'userCreation') is-invalid @enderror">
+                                <option value="" disabled {{ old('hub_id') ? '' : 'selected' }}>Select Hub</option>
+                                @foreach($hubs as $hub)
+                                <option value="{{ $hub->id }}" {{ old('hub_id') == $hub->id ? 'selected' : '' }}>{{ $hub->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('hub_id', 'userCreation')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <!-- Office (Staff Employee only) -->
+                        <div class="col-md-6 d-none" id="officeContainer">
+                            <label class="form-label">Office <span class="text-danger">*</span></label>
+                            <select name="office_id" id="officeSelect" class="form-select @error('office_id', 'userCreation') is-invalid @enderror">
+                                <option value="" disabled {{ old('office_id') ? '' : 'selected' }}>Select Office</option>
+                                @foreach($offices as $office)
+                                <option value="{{ $office->id }}" {{ old('office_id') == $office->id ? 'selected' : '' }}>{{ $office->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('office_id', 'userCreation')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -1503,8 +1566,12 @@ function toggleFieldsByRole(selectElement, opts) {
     const additionalFields = document.querySelectorAll('.additional-fields');
     const departmentContainer = document.getElementById('departmentContainer');
     const jobTypeContainer = document.getElementById('jobTypeContainer');
+    const hubContainer = document.getElementById('hubContainer');
+    const officeContainer = document.getElementById('officeContainer');
     const departmentSelect = document.getElementById('departmentSelect');
     const jobTypeSelect = document.getElementById('jobTypeSelect');
+    const hubSelect = document.getElementById('hubSelect');
+    const officeSelect = document.getElementById('officeSelect');
 
     function clearHiddenFieldInputs(container) {
         container.querySelectorAll('input, select, textarea').forEach(function(input) {
@@ -1581,7 +1648,9 @@ function toggleFieldsByRole(selectElement, opts) {
         });
 
         hideSelect(departmentContainer, departmentSelect);
+        hideSelect(hubContainer, hubSelect);
         showSelect(jobTypeContainer, jobTypeSelect, true);
+        showSelect(officeContainer, officeSelect, true);
         setDriverKycRequiredFields(document, false, false);
     } else if (isDriver) {
         additionalFields.forEach(function(field) {
@@ -1594,6 +1663,8 @@ function toggleFieldsByRole(selectElement, opts) {
         });
         hideSelect(departmentContainer, departmentSelect);
         hideSelect(jobTypeContainer, jobTypeSelect);
+        hideSelect(officeContainer, officeSelect);
+        showSelect(hubContainer, hubSelect, true);
         setDriverKycRequiredFields(document, true, false);
     } else {
         if (!fromServer && jobTypeSelect) {
@@ -1611,6 +1682,8 @@ function toggleFieldsByRole(selectElement, opts) {
         });
 
         hideSelect(jobTypeContainer, jobTypeSelect);
+        hideSelect(hubContainer, hubSelect);
+        hideSelect(officeContainer, officeSelect);
         showSelect(departmentContainer, departmentSelect, true);
         setDriverKycRequiredFields(document, false, false);
     }
@@ -1669,6 +1742,10 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
     const departmentSelect = document.getElementById('editDepartmentSelect' + userId);
     const jobTypeContainer = document.getElementById('editJobTypeContainer' + userId);
     const jobTypeSelect = document.getElementById('editJobTypeSelect' + userId);
+    const hubContainer = document.getElementById('editHubContainer' + userId);
+    const hubSelect = document.getElementById('editHubSelect' + userId);
+    const officeContainer = document.getElementById('editOfficeContainer' + userId);
+    const officeSelect = document.getElementById('editOfficeSelect' + userId);
 
     function clearEditHiddenInputs(field) {
         field.querySelectorAll('input, select, textarea').forEach(function(input) {
@@ -1740,7 +1817,9 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
             });
         });
         hideEditSelect(departmentContainer, departmentSelect);
+        hideEditSelect(hubContainer, hubSelect);
         showEditSelect(jobTypeContainer, jobTypeSelect, true);
+        showEditSelect(officeContainer, officeSelect, true);
         setDriverKycRequiredFields(modal, false, true);
     } else if (isDriver) {
         additionalFields.forEach(function(field) {
@@ -1753,6 +1832,8 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
         });
         hideEditSelect(departmentContainer, departmentSelect);
         hideEditSelect(jobTypeContainer, jobTypeSelect);
+        hideEditSelect(officeContainer, officeSelect);
+        showEditSelect(hubContainer, hubSelect, true);
         modal.querySelectorAll('input[data-preview-wrap]').forEach(function(inp) {
             renderFilePreview(inp);
         });
@@ -1773,6 +1854,8 @@ function toggleEditFieldsByRole(selectElement, userId, opts) {
         });
 
         hideEditSelect(jobTypeContainer, jobTypeSelect);
+        hideEditSelect(hubContainer, hubSelect);
+        hideEditSelect(officeContainer, officeSelect);
         showEditSelect(departmentContainer, departmentSelect, true);
 
         modal.querySelectorAll('input[data-preview-wrap]').forEach(function(inp) {
