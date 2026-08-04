@@ -23,16 +23,22 @@ class WebsiteSeeder extends Seeder
     private function seedPageSections(): void
     {
         $sections = [
-            ['page' => 'home', 'section_key' => 'hero', 'title' => 'Complete Logistics Support for', 'subtitle' => 'Your Business', 'content' => 'Vyapto empowers businesses with expert logistics, accounting, IT support, and HR solutions — all from a single trusted partner.', 'sort_order' => 1],
+            ['page' => 'home', 'section_key' => 'hero', 'title' => 'Complete Logistics Support for', 'subtitle' => 'Your Business', 'content' => 'We empower businesses with expert logistics, accounting, IT support, and HR solutions — all from a single trusted partner.', 'sort_order' => 1],
             ['page' => 'home', 'section_key' => 'hero_badge', 'title' => 'Trusted by 500+ Businesses', 'sort_order' => 2],
+            ['page' => 'home', 'section_key' => 'hero_tagline', 'title' => 'Freight, Accounting, HR & IT Support — All Under One Roof', 'sort_order' => 2],
+            ['page' => 'home', 'section_key' => 'hero_btn_services', 'title' => 'Explore Our Services', 'link' => '/our-services', 'sort_order' => 3],
             ['page' => 'home', 'section_key' => 'hero_bg', 'title' => 'Hero Background', 'sort_order' => 3, 'extra' => ['default_image' => 'images/web-auth-bg.png']],
             ['page' => 'home', 'section_key' => 'hero_image', 'title' => 'Freight & Logistics Solutions', 'sort_order' => 4, 'extra' => ['default_image' => 'images/6slider.avif']],
             ['page' => 'home', 'section_key' => 'services_header', 'title' => 'Comprehensive Solutions Built for Growth', 'content' => 'Our integrated platform streamlines every aspect of your operations, from logistics to workforce management.', 'sort_order' => 25],
+            ['page' => 'home', 'section_key' => 'services_view_all', 'title' => 'View All Services', 'link' => '/our-services', 'sort_order' => 26],
+            ['page' => 'home', 'section_key' => 'label_learn_more', 'title' => 'Learn More', 'sort_order' => 27],
+            ['page' => 'home', 'section_key' => 'label_explore', 'title' => 'Explore', 'sort_order' => 28],
             ['page' => 'home', 'section_key' => 'why_header', 'title' => 'Why Partner With Us?', 'content' => 'We deliver strategic advantages that directly impact your bottom line.', 'sort_order' => 30],
             ['page' => 'home', 'section_key' => 'process_header', 'title' => 'Our Streamlined Process', 'content' => 'From initial consultation to ongoing support, we\'ve optimized every step for maximum efficiency.', 'sort_order' => 40],
             ['page' => 'home', 'section_key' => 'impact_header', 'title' => 'Proven Impact, Measurable Results', 'content' => 'Join hundreds of companies that have transformed their operations with our solutions.', 'sort_order' => 50],
             ['page' => 'home', 'section_key' => 'gallery_header', 'title' => 'Operations in Motion', 'content' => 'Real logistics operations and networks powering supply chains.', 'sort_order' => 70],
             ['page' => 'home', 'section_key' => 'faq_header', 'title' => 'Frequently Asked Questions', 'content' => 'Find answers to common questions about our services and solutions.', 'sort_order' => 80],
+            ['page' => 'home', 'section_key' => 'faq_view_all', 'title' => 'View All FAQs', 'link' => '/faq', 'sort_order' => 81],
             ['page' => 'home', 'section_key' => 'cta', 'title' => 'Ready to Transform Your Operations?', 'content' => 'Partner with us today and experience the difference.', 'sort_order' => 90],
             ['page' => 'about', 'section_key' => 'hero', 'title' => "Every load has\nan origin.", 'subtitle' => 'ABOUT VYAPTO', 'content' => 'Vyapto Commerce Pvt. Ltd. is a fast-growing company based in Bihar, India, moving goods, people and opportunity across the country — one consignment at a time.', 'sort_order' => 1, 'extra' => ['default_image' => 'images/vyapto-warehouse-bg.png']],
             ['page' => 'faq', 'section_key' => 'hero', 'title' => 'Frequently Asked Questions', 'content' => 'Find answers to common questions about our services and solutions.', 'sort_order' => 1],
