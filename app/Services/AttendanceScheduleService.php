@@ -315,7 +315,7 @@ class AttendanceScheduleService
             $locationPhrase = $this->punchLocationPhrase($schedule);
 
             if ($actualIn->gt($expectedStart->copy()->addMinutes($graceMinutes))) {
-                $minutesLate = $expectedStart->diffInMinutes($actualIn);
+                $minutesLate = $this->minutesApart($expectedStart, $actualIn);
                 $duration = $this->formatDurationHuman($minutesLate);
 
                 return [
@@ -329,7 +329,7 @@ class AttendanceScheduleService
             }
 
             if ($actualIn->lt($expectedStart->copy()->subMinutes($graceMinutes))) {
-                $minutesEarly = $actualIn->diffInMinutes($expectedStart);
+                $minutesEarly = $this->minutesApart($actualIn, $expectedStart);
                 $duration = $this->formatDurationHuman($minutesEarly);
 
                 return [
@@ -393,7 +393,7 @@ class AttendanceScheduleService
             $locationPhrase = $this->punchLocationPhrase($schedule);
 
             if ($actualOut->lte($expectedEnd->copy()->subMinutes($graceMinutes))) {
-                $minutesEarly = $expectedEnd->diffInMinutes($actualOut);
+                $minutesEarly = $this->minutesApart($actualOut, $expectedEnd);
                 $duration = $this->formatDurationHuman($minutesEarly);
 
                 return [
@@ -407,7 +407,7 @@ class AttendanceScheduleService
             }
 
             if ($actualOut->gte($expectedEnd->copy()->addMinutes($graceMinutes))) {
-                $minutesLate = $actualOut->diffInMinutes($expectedEnd);
+                $minutesLate = $this->minutesApart($expectedEnd, $actualOut);
                 $duration = $this->formatDurationHuman($minutesLate);
 
                 return [
@@ -451,6 +451,15 @@ class AttendanceScheduleService
         }
 
         return '';
+    }
+
+    private function minutesApart(Carbon $earlier, Carbon $later): int
+    {
+        if ($later->lt($earlier)) {
+            [$earlier, $later] = [$later, $earlier];
+        }
+
+        return (int) round($earlier->floatDiffInMinutes($later));
     }
 
     private function formatDurationHuman(int $minutes): string
