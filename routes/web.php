@@ -10,6 +10,7 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\EmailLogController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\DesignationController;
 use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\VehicleController;
@@ -120,6 +121,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/departments/update-status', [DepartmentController::class, 'updateStatus'])->name('departments.updateStatus');
     Route::get('/departments-export', [DepartmentController::class, 'export'])->name('departments.export');
     Route::resource('departments', DepartmentController::class)->except(['create', 'edit', 'show']);
+
+    Route::post('/designations/update-status', [DesignationController::class, 'updateStatus'])->name('designations.updateStatus');
+    Route::get('/designations-export', [DesignationController::class, 'export'])->name('designations.export');
+    Route::resource('designations', DesignationController::class)->except(['create', 'edit', 'show']);
 
 
 

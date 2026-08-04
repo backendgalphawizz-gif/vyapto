@@ -238,7 +238,7 @@
                 <table class="emp-inner" cellspacing="0" cellpadding="0">
                     <tr><td class="emp-lbl">EMP CODE :</td><td>{{ str_pad((string)($emp?->id ?? 'N/A'), 6, '0', STR_PAD_LEFT) }}</td></tr>
                     <tr><td class="emp-lbl">EMP NAME :</td><td>{{ strtoupper($emp?->name ?? 'N/A') }}</td></tr>
-                    <tr><td class="emp-lbl">DESIGNATION :</td><td>{{ strtoupper($emp?->designation ?? 'N/A') }}</td></tr>
+                    <tr><td class="emp-lbl">DESIGNATION :</td><td>{{ strtoupper($emp?->designation?->name ?? 'N/A') }}</td></tr>
                     <tr><td class="emp-lbl">DOB :</td><td>{{ $emp?->date_of_birth ? date('d/m/Y', strtotime($emp->date_of_birth)) : 'N/A' }}</td></tr>
                     <tr><td class="emp-lbl">GRP_DOJ :</td><td>{{ $emp?->join_date ? date('d/m/Y', strtotime($emp->join_date)) : 'N/A' }}</td></tr>
                     <tr><td class="emp-lbl">GENDER :</td><td>{{ $emp?->gender ? ucfirst($emp->gender) : 'N/A' }}</td></tr>

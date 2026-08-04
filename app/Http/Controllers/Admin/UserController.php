@@ -7,6 +7,7 @@ use App\Http\Controllers\Concerns\ExportsTabularData;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Department;
+use App\Models\Designation;
 use App\Models\Office;
 use App\Models\Hub;
 use App\Support\StaffRoles;
@@ -14,6 +15,7 @@ use App\CPU\ImageManager;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -44,7 +46,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $query = User::with(['roles', 'office', 'hub', 'department'])
+        $query = User::with(['roles', 'office', 'hub', 'department', 'designation'])
             ->whereNotIn('role_id', [1, 2]);
 
         if ($request->filled('search')) {
@@ -92,10 +94,11 @@ class UserController extends Controller
 
         $roles = Role::whereNotIn('id', [1, 2])->get();
         $departments = Department::where('status', 1)->get();
+        $designations = Designation::where('status', 1)->orderBy('name')->get();
         $offices = Office::orderBy('name')->get();
         $hubs = Hub::orderBy('name')->get();
 
-        return view('admin.users.index', compact('users', 'roles', 'departments', 'offices', 'hubs'));
+        return view('admin.users.index', compact('users', 'roles', 'departments', 'designations', 'offices', 'hubs'));
     }
 
 
@@ -197,7 +200,11 @@ class UserController extends Controller
                     $fail('Office is required for staff employees.');
                 }
             }],
-            'designation' => 'required|string|max:255',
+            'designation_id' => [
+                'required',
+                'integer',
+                Rule::exists('designations', 'id')->where(fn ($q) => $q->where('status', 1)),
+            ],
             'date_of_birth' => 'required|date|before:today',
             'gender'     => 'required|in:male,female,other',
             'marital_status' => 'required|in:single,married,divorced,widowed',
@@ -276,7 +283,7 @@ class UserController extends Controller
         $user->hub_id = $isDriver ? $request->hub_id : null;
         $user->office_id = $isStaff ? $request->office_id : null;
         $user->job_type = $isStaff ? $request->job_type : null;
-        $user->designation = $request->designation;
+        $user->designation_id = $request->designation_id;
         $user->profile_image = $profileImage;
 
         // PERSONAL
@@ -363,7 +370,11 @@ class UserController extends Controller
                     $fail('Office is required for staff employees.');
                 }
             }],
-            'designation' => 'required|string|max:255',
+            'designation_id' => [
+                'required',
+                'integer',
+                Rule::exists('designations', 'id')->where(fn ($q) => $q->where('status', 1)),
+            ],
             'date_of_birth' => 'required|date|before:today',
             'gender'     => 'required|in:male,female,other',
             'marital_status' => 'required|in:single,married,divorced,widowed',
@@ -459,7 +470,7 @@ class UserController extends Controller
         $employee->hub_id = $isDriver ? $request->hub_id : null;
         $employee->office_id = $isStaff ? $request->office_id : null;
         $employee->job_type = $isStaff ? $request->job_type : null;
-        $employee->designation = $request->designation;
+        $employee->designation_id = $request->designation_id;
         $employee->date_of_birth = $request->date_of_birth;
         $employee->gender = $request->gender;
         $employee->father_name = $request->father_name;

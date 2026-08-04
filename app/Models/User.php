@@ -30,7 +30,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'office_id',
         'hub_id',
         'job_type',
-        'designation',
+        'designation_id',
         'password',
         'email_verified_at',
         'status_count',
@@ -93,6 +93,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function department()
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function designation()
+    {
+        return $this->belongsTo(Designation::class);
     }
 
     public function office()

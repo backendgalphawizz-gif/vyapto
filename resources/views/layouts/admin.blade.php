@@ -134,6 +134,11 @@
         </a>
       </li>
       <li class="nav-item mb-1">
+        <a href="{{ route('designations.index') }}" class="menu-item nav-link {{ request()->routeIs('designations.*') ? 'active' : '' }}" data-tooltip="Designations">
+          <i class="bi bi-briefcase me-2"></i><span>Designations</span>
+        </a>
+      </li>
+      <li class="nav-item mb-1">
         <a href="{{ route('employees.index') }}" class="menu-item nav-link {{ request()->routeIs('employees.index') ? 'active' : '' }}" data-tooltip="employees">
           <i class="bi bi-people-fill me-2"></i><span>Employees</span>
         </a>

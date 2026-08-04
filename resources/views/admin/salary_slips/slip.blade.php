@@ -279,7 +279,7 @@
         <div class="emp-col">
             <div class="emp-row"><span class="label">EMP CODE :</span><span>{{ str_pad($emp->id ?? 'N/A', 6, '0', STR_PAD_LEFT) }}</span></div>
             <div class="emp-row"><span class="label">EMP NAME :</span><span>{{ strtoupper($emp->name ?? 'N/A') }}</span></div>
-            <div class="emp-row"><span class="label">DESIGNATION :</span><span>{{ strtoupper($emp->designation ?? 'N/A') }}</span></div>
+            <div class="emp-row"><span class="label">DESIGNATION :</span><span>{{ strtoupper($emp->designation?->name ?? 'N/A') }}</span></div>
             <div class="emp-row"><span class="label">DOB :</span><span>{{ $emp->date_of_birth ? date('d/m/Y', strtotime($emp->date_of_birth)) : 'N/A' }}</span></div>
             <!-- <div class="emp-row"><span class="label">GRP_DOJ :</span><span>{{ $emp->join_date ? date('d/m/Y', strtotime($emp->join_date)) : 'N/A' }}</span></div> -->
             <div class="emp-row"><span class="label">GENDER :</span><span>{{ $emp->gender ? ucfirst($emp->gender) : 'N/A' }}</span></div>

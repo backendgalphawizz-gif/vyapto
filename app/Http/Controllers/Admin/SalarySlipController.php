@@ -43,12 +43,13 @@ class SalarySlipController extends Controller
     public function show($id)
     {
         $slip = SalarySlip::with(['employee' => function ($q) {
-            $q->select(
-                'id', 'name', 'email', 'phone',
-                'date_of_birth', 'join_date', 'gender', 'job_type', 'designation',
-                'pan_card_no', 'aadhar_card_no',
-                'bank_account_no', 'ifsc_code', 'bank_name', 'bank_branch'
-            );
+            $q->with('designation:id,name')
+                ->select(
+                    'id', 'name', 'email', 'phone', 'designation_id',
+                    'date_of_birth', 'join_date', 'gender', 'job_type',
+                    'pan_card_no', 'aadhar_card_no',
+                    'bank_account_no', 'ifsc_code', 'bank_name', 'bank_branch'
+                );
         }])->findOrFail($id);
 
         return view('admin.salary_slips.slip', $this->prepareSlipViewData($slip));
@@ -57,12 +58,13 @@ class SalarySlipController extends Controller
     public function downloadPdf($id)
     {
         $slip = SalarySlip::with(['employee' => function ($q) {
-            $q->select(
-                'id', 'name', 'email', 'phone',
-                'date_of_birth', 'join_date', 'gender', 'job_type', 'designation',
-                'pan_card_no', 'aadhar_card_no',
-                'bank_account_no', 'ifsc_code', 'bank_name', 'bank_branch'
-            );
+            $q->with('designation:id,name')
+                ->select(
+                    'id', 'name', 'email', 'phone', 'designation_id',
+                    'date_of_birth', 'join_date', 'gender', 'job_type',
+                    'pan_card_no', 'aadhar_card_no',
+                    'bank_account_no', 'ifsc_code', 'bank_name', 'bank_branch'
+                );
         }])->findOrFail($id);
 
         $filename = sprintf(
@@ -953,12 +955,13 @@ class SalarySlipController extends Controller
             ]);
 
             $slip->load(['employee' => function ($q) {
-                $q->select(
-                    'id', 'name', 'email', 'phone',
-                    'date_of_birth', 'join_date', 'gender', 'job_type', 'designation',
-                    'pan_card_no', 'aadhar_card_no',
-                    'bank_account_no', 'ifsc_code', 'bank_name', 'bank_branch'
-                );
+                $q->with('designation:id,name')
+                    ->select(
+                        'id', 'name', 'email', 'phone', 'designation_id',
+                        'date_of_birth', 'join_date', 'gender', 'job_type',
+                        'pan_card_no', 'aadhar_card_no',
+                        'bank_account_no', 'ifsc_code', 'bank_name', 'bank_branch'
+                    );
             }]);
 
             $slip->update([
@@ -1014,10 +1017,14 @@ class SalarySlipController extends Controller
     private function prepareSlipViewData(SalarySlip $slip): array
     {
         if ($slip->employee) {
+            if (! $slip->employee->relationLoaded('designation')) {
+                $slip->employee->load('designation:id,name');
+            }
+
             $slip->employee->makeVisible([
                 'bank_account_no', 'ifsc_code', 'bank_name', 'bank_branch',
                 'pan_card_no', 'aadhar_card_no', 'phone', 'date_of_birth',
-                'join_date', 'gender', 'job_type', 'designation',
+                'join_date', 'gender', 'job_type', 'designation_id',
             ]);
         }
 
