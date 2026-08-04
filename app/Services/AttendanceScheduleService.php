@@ -278,6 +278,122 @@ class AttendanceScheduleService
     }
 
     /**
+     * Compare punch-out time with assigned hub/office (or company) closing time.
+     *
+     * @param  array{start_time:?string,end_time:?string,source:?string,source_name:?string}  $schedule
+     * @return array{
+     *   timing: 'early'|'late'|'on_time'|'unknown',
+     *   minutes_diff: int,
+     *   expected_end_time: ?string,
+     *   location_type: ?string,
+     *   location_name: ?string,
+     *   message: string
+     * }
+     */
+    public function evaluatePunchOutTiming(Carbon $punchOut, string $date, array $schedule, int $graceMinutes = 0): array
+    {
+        $locationType = $schedule['source'] ?? null;
+        $locationName = $schedule['source_name'] ?? null;
+
+        $base = [
+            'timing' => 'unknown',
+            'minutes_diff' => 0,
+            'expected_end_time' => null,
+            'location_type' => $locationType,
+            'location_name' => $locationName,
+            'message' => 'Punch Out Success',
+        ];
+
+        if (empty($schedule['end_time'])) {
+            return $base;
+        }
+
+        try {
+            $expectedEnd = Carbon::parse($date.' '.$schedule['end_time']);
+            $actualOut = $punchOut->copy();
+            $expectedLabel = $expectedEnd->format('h:i A');
+            $locationPhrase = $this->punchOutLocationPhrase($schedule);
+
+            if ($actualOut->lte($expectedEnd->copy()->subMinutes($graceMinutes))) {
+                $minutesEarly = $expectedEnd->diffInMinutes($actualOut);
+                $duration = $this->formatDurationHuman($minutesEarly);
+
+                return [
+                    'timing' => 'early',
+                    'minutes_diff' => $minutesEarly,
+                    'expected_end_time' => $expectedLabel,
+                    'location_type' => $locationType,
+                    'location_name' => $locationName,
+                    'message' => "You are punching out {$duration} early{$locationPhrase}. Expected closing time is {$expectedLabel}.",
+                ];
+            }
+
+            if ($actualOut->gte($expectedEnd->copy()->addMinutes($graceMinutes))) {
+                $minutesLate = $actualOut->diffInMinutes($expectedEnd);
+                $duration = $this->formatDurationHuman($minutesLate);
+
+                return [
+                    'timing' => 'late',
+                    'minutes_diff' => $minutesLate,
+                    'expected_end_time' => $expectedLabel,
+                    'location_type' => $locationType,
+                    'location_name' => $locationName,
+                    'message' => "You are punching out {$duration} late{$locationPhrase}. Expected closing time was {$expectedLabel}.",
+                ];
+            }
+
+            return [
+                'timing' => 'on_time',
+                'minutes_diff' => 0,
+                'expected_end_time' => $expectedLabel,
+                'location_type' => $locationType,
+                'location_name' => $locationName,
+                'message' => 'Punch Out Success',
+            ];
+        } catch (\Throwable) {
+            return $base;
+        }
+    }
+
+    private function punchOutLocationPhrase(array $schedule): string
+    {
+        $name = trim((string) ($schedule['source_name'] ?? ''));
+        $source = $schedule['source'] ?? null;
+
+        if ($source === 'hub' && $name !== '') {
+            return " based on your assigned hub ({$name})";
+        }
+
+        if ($source === 'office' && $name !== '') {
+            return " based on your assigned office ({$name})";
+        }
+
+        if ($name !== '') {
+            return " ({$name})";
+        }
+
+        return '';
+    }
+
+    private function formatDurationHuman(int $minutes): string
+    {
+        $minutes = max(0, $minutes);
+
+        if ($minutes < 60) {
+            return $minutes.' minute'.($minutes === 1 ? '' : 's');
+        }
+
+        $hours = intdiv($minutes, 60);
+        $remainder = $minutes % 60;
+
+        if ($remainder === 0) {
+            return $hours.' hour'.($hours === 1 ? '' : 's');
+        }
+
+        return $hours.' hour'.($hours === 1 ? '' : 's').' '.$remainder.' minute'.($remainder === 1 ? '' : 's');
+    }
+
+    /**
      * @return array{start_time:?string,end_time:?string,half_time:?string}
      */
     public function companyDefaults(): array

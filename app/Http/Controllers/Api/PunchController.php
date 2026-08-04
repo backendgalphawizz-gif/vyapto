@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use App\Models\Api\PunchIn;
 use App\Models\Api\UserToken;
 use App\Models\Api\Setting;
+use App\Models\User as AdminUser;
+use App\Services\AttendanceScheduleService;
 use App\Support\StaffRoles;
 use Carbon\Carbon;
 use Validator;
@@ -139,6 +141,8 @@ class PunchController extends Controller
 
     public function punchOut(Request $request)
     {
+        date_default_timezone_set('Asia/Kolkata');
+
         $validator = Validator::make($request->all(), [
             'employee_id' => 'required',
             'latitude' => 'required',
@@ -228,13 +232,23 @@ class PunchController extends Controller
             $imagePath = $image->store('punch_images', 'public'); // storage/app/public/punch_images
         }
 
+        $punchOutTime = Carbon::now();
+        $punchOutTiming = $this->resolvePunchOutTiming($user, $today, $punchOutTime);
+
+        $punchOutException = $request->exception;
+        if (($punchOutTiming['timing'] ?? '') === 'early') {
+            $punchOutException = $punchOutException ?: 'Early leave';
+        } elseif (($punchOutTiming['timing'] ?? '') === 'late') {
+            $punchOutException = $punchOutException ?: 'Late punch out';
+        }
+
         $query->update([
             'punch_out_date' => $today,
-            'punch_out_time' => Carbon::now(),
+            'punch_out_time' => $punchOutTime,
             'punch_out_lat' => $userLat,
             'punch_out_long' => $userLng,
             'punch_out_location' => $request->location,
-            'punch_out_exception' => $request->exception,
+            'punch_out_exception' => $punchOutException,
             // Keep current schema usage; change to punch_out_image only if column exists.
             'punch_in_image' => $imagePath ?: $query->punch_in_image,
         ]);
@@ -242,9 +256,77 @@ class PunchController extends Controller
         return response()->json([
             'status' => true,
             'code' => 200,
-            'message' => 'Punch Out Success',
+            'message' => $punchOutTiming['message'] ?? 'Punch Out Success',
+            'punch_out_timing' => [
+                'timing' => $punchOutTiming['timing'] ?? 'unknown',
+                'minutes_diff' => $punchOutTiming['minutes_diff'] ?? 0,
+                'expected_end_time' => $punchOutTiming['expected_end_time'] ?? null,
+                'location_type' => $punchOutTiming['location_type'] ?? null,
+                'location_name' => $punchOutTiming['location_name'] ?? null,
+            ],
             'data' => $query->fresh()
         ]);
+    }
+
+    private function resolvePunchOutTiming($user, string $date, Carbon $punchOutTime): array
+    {
+        /** @var AttendanceScheduleService $scheduleService */
+        $scheduleService = app(AttendanceScheduleService::class);
+
+        $schedule = [
+            'start_time' => null,
+            'end_time' => null,
+            'half_time' => null,
+            'source' => null,
+            'source_name' => null,
+        ];
+
+        if (StaffRoles::isDriverRoleId($user->role_id ?? 0)) {
+            $hubData = $this->getAssignedHubCoordinates($user->id);
+            if ($hubData['status']) {
+                $hub = DB::table('hubs')
+                    ->where('id', $hubData['hub_id'])
+                    ->select('name', 'opening_time', 'closing_time')
+                    ->first();
+
+                if ($hub && ! empty($hub->closing_time)) {
+                    $schedule = [
+                        'start_time' => $hub->opening_time ? Carbon::parse($hub->opening_time)->format('H:i:s') : null,
+                        'end_time' => Carbon::parse($hub->closing_time)->format('H:i:s'),
+                        'half_time' => null,
+                        'source' => 'hub',
+                        'source_name' => $hub->name,
+                    ];
+                }
+            }
+        } elseif (StaffRoles::isStaffEmployeeRoleId($user->role_id ?? 0)) {
+            $officeData = $this->getAssignedOfficeCoordinates($user->id);
+            if ($officeData['status']) {
+                $office = DB::table('offices')
+                    ->where('id', $officeData['office_id'])
+                    ->select('name', 'opening_time', 'closing_time')
+                    ->first();
+
+                if ($office && ! empty($office->closing_time)) {
+                    $schedule = [
+                        'start_time' => $office->opening_time ? Carbon::parse($office->opening_time)->format('H:i:s') : null,
+                        'end_time' => Carbon::parse($office->closing_time)->format('H:i:s'),
+                        'half_time' => null,
+                        'source' => 'office',
+                        'source_name' => $office->name,
+                    ];
+                }
+            }
+        }
+
+        if (empty($schedule['end_time'])) {
+            $employee = AdminUser::query()->find($user->id);
+            if ($employee) {
+                $schedule = $scheduleService->resolveSchedule($employee, $date);
+            }
+        }
+
+        return $scheduleService->evaluatePunchOutTiming($punchOutTime, $date, $schedule);
     }
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {
