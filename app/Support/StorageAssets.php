@@ -22,23 +22,27 @@ class StorageAssets
             return asset($path);
         }
 
-        if (str_starts_with($path, 'storage/')) {
-            $path = substr($path, strlen('storage/'));
-        }
-
-        if (str_starts_with($path, 'app/public/')) {
-            $path = substr($path, strlen('app/public/'));
-        }
-
-        if ($path === '') {
+        $relative = self::normalizeRelativePath($path);
+        if ($relative === '') {
             return $fallback;
         }
 
-        if (self::absolutePath($path)) {
-            return route('admin.media.show', ['path' => $path]);
+        if (auth()->check()) {
+            return self::adminMediaUrl($relative);
+        }
+
+        if (self::absolutePath($relative)) {
+            return asset('storage/'.$relative);
         }
 
         return $fallback;
+    }
+
+    public static function adminMediaUrl(string $relativePath): string
+    {
+        $relativePath = self::normalizeRelativePath($relativePath);
+
+        return '/admin/media?'.http_build_query(['path' => $relativePath]);
     }
 
     public static function absolutePath(string $path): ?string
@@ -48,16 +52,36 @@ class StorageAssets
             return null;
         }
 
-        foreach ([
-            storage_path('app/public/'.$path),
-            public_path('storage/'.$path),
-        ] as $full) {
-            if (is_file($full)) {
-                return $full;
+        foreach (self::pathCandidates($path) as $candidate) {
+            if (is_file($candidate)) {
+                return $candidate;
             }
         }
 
         return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function pathCandidates(string $path): array
+    {
+        $path = self::normalizeRelativePath($path);
+        if ($path === '') {
+            return [];
+        }
+
+        $candidates = [
+            storage_path('app/public/'.$path),
+            public_path('storage/'.$path),
+        ];
+
+        if (! str_starts_with($path, 'storage/')) {
+            $candidates[] = storage_path('app/public/storage/'.$path);
+            $candidates[] = public_path($path);
+        }
+
+        return array_values(array_unique($candidates));
     }
 
     public static function normalizeRelativePath(string $path): string
