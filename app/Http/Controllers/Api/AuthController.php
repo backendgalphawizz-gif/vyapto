@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Api\User;
+use App\Models\User as AdminUser;
 use App\CPU\ImageManager;
 use Illuminate\Support\Facades\Hash;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
@@ -439,10 +440,10 @@ class AuthController extends Controller
 		]);
 	}
 
-	private function formatUserForApi(User $user): array
+	private function formatUserForApi(User|AdminUser $user): array
 	{
 		$data = $user->toArray();
-		$data['designation'] = $this->resolveDesignationName($user->designation_id);
+		$data['designation'] = $this->resolveDesignationName($user->designation_id ?? null);
 
 		foreach ([
 			'profile_image',
@@ -452,7 +453,7 @@ class AuthController extends Controller
 			'bank_proof_image',
 		] as $field) {
 			if (! empty($data[$field])) {
-				$data[$field] = StorageAssets::publicUrl($data[$field], $data[$field]);
+				$data[$field] = StorageAssets::publicUrl((string) $data[$field], (string) $data[$field]);
 			}
 		}
 
