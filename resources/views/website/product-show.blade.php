@@ -62,7 +62,7 @@
                 @if($product->link)
                     <a href="{{ $product->link }}" class="svc-btn-primary" target="_blank" rel="noopener">Visit Product</a>
                 @else
-                    <a href="{{ route('website.contact') }}" class="svc-btn-primary">Get in Touch</a>
+                    <a href="{{ route('website.contact') }}" class="svc-btn-primary">{{ ($siteLabels['nav_cta'] ?? null) ?: 'Get in Touch' }}</a>
                 @endif
             </div>
         </article>

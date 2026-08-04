@@ -56,7 +56,7 @@
                 <p class="hero-desc">{{ $hero?->content ?? 'We empower businesses with expert logistics, accounting, IT support, and HR solutions — all from a single trusted partner.' }}</p>
                 <div class="hero-actions">
                     <a href="{{ $hero?->link ?: route('website.services') }}" class="btn-secondary managebutton">Explore Our Services <i class="fa-solid fa-arrow-right"></i></a>
-                    <a href="{{ route('website.contact') }}" class="btn-primary managebutton">Get in Touch</a>
+                    <a href="{{ route('website.contact') }}" class="btn-primary managebutton">{{ ($siteLabels['nav_cta'] ?? null) ?: 'Get in Touch' }}</a>
                 </div>
 
                 <div class="managecontent">
@@ -447,7 +447,7 @@
     <div class="cta-banner" data-reveal>
         <h2>{{ $cta?->title ?? 'Ready to Transform Your Operations?' }}</h2>
         <p>{{ $cta?->content ?? 'Partner with us today and experience the difference.' }}</p>
-        <a href="{{ route('website.contact') }}" class="btn-primary cursor-hover">Get in Touch <i class="fa-solid fa-arrow-right"></i></a>
+        <a href="{{ route('website.contact') }}" class="btn-primary cursor-hover">{{ ($siteLabels['nav_cta'] ?? null) ?: 'Get in Touch' }} <i class="fa-solid fa-arrow-right"></i></a>
     </div>
 </div>
 

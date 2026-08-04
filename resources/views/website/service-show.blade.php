@@ -59,7 +59,7 @@
                 <a href="{{ route('website.services') }}" class="svc-btn-outline">
                     <i class="fa-solid fa-arrow-left"></i> Back to Services
                 </a>
-                <a href="{{ route('website.contact') }}" class="svc-btn-primary">Get in Touch</a>
+                <a href="{{ route('website.contact') }}" class="svc-btn-primary">{{ ($siteLabels['nav_cta'] ?? null) ?: 'Get in Touch' }}</a>
             </div>
         </article>
     </div>
