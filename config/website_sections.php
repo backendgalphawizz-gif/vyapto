@@ -37,7 +37,6 @@ return [
             'hero_badge' => 'Hero — trust badge text',
             'hero_tagline' => 'Hero — tagline under headline (e.g. Freight, Accounting…)',
             'hero_btn_services' => 'Hero — Explore Services button (Title + optional Link)',
-            'hero_bg' => 'Hero — background image',
             'hero_image' => 'Hero — side image (legacy single)',
             'hero_slide_1' => 'Hero carousel — image 1',
             'hero_slide_2' => 'Hero carousel — image 2',
@@ -144,6 +143,124 @@ return [
             'submit_button' => 'Form — Submit button text',
         ],
         'faq' => ['hero' => 'FAQ page — hero'],
+    ],
+
+    /*
+    | Legacy section keys no longer rendered on the public site — hidden in admin list.
+    | Patterns use fnmatch against "{page}.{section_key}".
+    */
+    'hidden_sections' => [
+        'home.hero_bg',
+        'home.features_header',
+        'home.feature_*',
+        'home.platform_feature_*',
+        'home.mobile_app',
+        'home.mobile_phone_*',
+        'home.play_store',
+    ],
+
+    /*
+    | Which admin form fields to show for each section_key.
+    | Exact match: fields.{page}.{section_key}
+    | Pattern match (fnmatch): field_patterns.{pattern} — checked in order.
+    | Always shown separately: status, sort_order.
+    */
+    'fields' => [
+        // exact overrides when patterns are too broad
+        'home' => [
+            'hero' => ['title', 'subtitle', 'content'],
+            'cta' => ['title', 'content', 'link'],
+        ],
+        'about' => [
+            'hero' => ['title', 'subtitle', 'content', 'image'],
+            'vision_header' => ['subtitle'],
+            'advantage_header' => ['title'],
+            'team_cta' => ['title', 'link'],
+        ],
+        'careers' => [
+            'hero' => ['title', 'subtitle', 'content', 'image'],
+            'culture' => ['title', 'subtitle', 'content', 'image'],
+            'roles_header' => ['title', 'subtitle', 'content'],
+            'apply' => ['title', 'subtitle', 'content'],
+        ],
+        'contact' => [
+            'hero' => ['title', 'subtitle', 'content', 'image'],
+            'contact_info' => ['image'],
+        ],
+        'services' => [
+            'hero' => ['title', 'subtitle', 'content', 'image'],
+        ],
+        'products' => [
+            'hero' => ['title', 'subtitle', 'content', 'image'],
+        ],
+        'blogs' => [
+            'hero' => ['title', 'subtitle', 'content', 'image'],
+        ],
+        'faq' => [
+            'hero' => ['title', 'subtitle', 'content', 'image'],
+        ],
+    ],
+
+    // First matching pattern wins — keep specific keys above wildcards.
+    'field_patterns' => [
+        // Logos / pure images
+        'site_logo_*' => ['image'],
+        'hero_bg' => ['image'],
+        'hero_image' => ['image'],
+        'hero_slide_*' => ['image'],
+        'process_image_*' => ['image'],
+        'gallery_[0-9]*' => ['image'],
+        'vision_image' => ['image'],
+
+        // Labels / text-only
+        'nav_*' => ['title'],
+        'footer_col_*' => ['title'],
+        'footer_link_*' => ['title'],
+        'footer_copyright' => ['title'],
+        'footer_privacy' => ['title'],
+        'footer_terms' => ['title'],
+        'label_*' => ['title'],
+        'submit_button' => ['title'],
+        'section_heading' => ['title'],
+        'form_heading' => ['title'],
+        'hero_badge' => ['title'],
+        'hero_tagline' => ['title'],
+
+        // Link-only
+        'social_*' => ['link'],
+
+        // Content-only
+        'footer_tagline' => ['content'],
+        'story' => ['content'],
+        'vision_quote' => ['content'],
+
+        // Title + link buttons
+        'hero_btn_*' => ['title', 'link'],
+        '*_view_all' => ['title', 'link'],
+        'team_cta' => ['title', 'link'],
+
+        // Stats (numbered — before *_header / impact_* wildcards)
+        'stat_*' => ['title', 'subtitle'],
+        'impact_[0-9]*' => ['title', 'subtitle'],
+        'about_stat_*' => ['title', 'subtitle'],
+        'hero_meta_*' => ['title', 'subtitle'],
+
+        // Headers (specific before generic *_header)
+        'story_header' => ['title', 'subtitle'],
+        'why_header' => ['title', 'subtitle', 'content'],
+        'team_header' => ['title', 'subtitle', 'content'],
+        '*_header' => ['title', 'content'],
+
+        // Cards / rich blocks
+        'why_partner_*' => ['title', 'content', 'icon', 'image'],
+        'process_step_*' => ['title', 'content'],
+        'testimonial_*' => ['title', 'subtitle', 'content', 'image'],
+        'story_image' => ['title', 'image'],
+        'vision_point_*' => ['title', 'content'],
+        'issue_*' => ['title', 'subtitle', 'content'],
+        'advantage_[0-9]*' => ['title', 'content', 'icon'],
+        'team_[0-9]*' => ['title', 'subtitle', 'content', 'image', 'icon'],
+        'value_*' => ['title', 'content', 'icon'],
     ],
 
     'hints' => [

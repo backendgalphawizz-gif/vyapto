@@ -18,13 +18,8 @@
     @endif
 
     <div class="alert alert-info py-2 small">
-        Filter by <strong>Home</strong> to edit homepage content and images:
-        <code>hero_slide_1–4</code> (hero carousel),
-        <code>stat_1–3</code> (hero mini stats),
-        <code>gallery_1–8</code> (Operations in Motion),
-        <code>process_image_*</code> + <code>process_step_*</code>,
-        testimonials, impact stats, and more.
-        Use <strong>Global</strong> for logos. Upload an image on each section to replace defaults.
+        Har section edit karte waqt <strong>sirf wahi fields</strong> dikhte hain jo website par actually use hote hain
+        (jaise logo = sirf Image, nav label = sirf Title). Filter by page se list chhoti rakhein.
     </div>
 
     <div class="card shadow-sm border-0 rounded-3 mb-3">

@@ -20,7 +20,14 @@ class WebsitePageSectionController extends Controller
             $query->where('page', $websitePage);
         }
 
-        $sections = $query->paginate(50)->withQueryString();
+        $sections = $query->paginate(100)->withQueryString();
+        $hidden = config('website_sections.hidden_sections', []);
+        if ($hidden !== []) {
+            $sections->setCollection(
+                $sections->getCollection()->reject(fn (WebsitePageSection $s) => $s->isHiddenInAdmin())->values()
+            );
+        }
+
         $pages = config('website_sections.pages', ['global', 'home', 'about', 'services', 'products', 'careers', 'blogs', 'contact', 'faq']);
 
         return view('admin.website.page-sections.index', compact('sections', 'pages', 'websitePage'));
@@ -71,6 +78,12 @@ class WebsitePageSectionController extends Controller
 
     public function edit(WebsitePageSection $pageSection)
     {
+        if ($pageSection->isHiddenInAdmin()) {
+            return redirect()
+                ->route('admin.website.page-sections.index', ['website_page' => $pageSection->page])
+                ->with('error', 'This section is no longer used on the website.');
+        }
+
         return view('admin.website.page-sections.edit', ['section' => $pageSection]);
     }
 

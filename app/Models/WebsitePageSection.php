@@ -66,6 +66,46 @@ class WebsitePageSection extends Model
         return config("website_sections.hints.{$this->section_key}");
     }
 
+    /**
+     * Admin form fields actually used on the public website for this section.
+     *
+     * @return list<string>
+     */
+    public function editableFields(): array
+    {
+        $exact = config("website_sections.fields.{$this->page}.{$this->section_key}");
+        if (is_array($exact) && $exact !== []) {
+            return array_values($exact);
+        }
+
+        $key = $this->section_key;
+        foreach (config('website_sections.field_patterns', []) as $pattern => $fields) {
+            if (fnmatch((string) $pattern, $key) && is_array($fields) && $fields !== []) {
+                return array_values($fields);
+            }
+        }
+
+        return ['title', 'subtitle', 'content', 'image', 'icon', 'link'];
+    }
+
+    public function showsField(string $field): bool
+    {
+        return in_array($field, $this->editableFields(), true);
+    }
+
+    public function isHiddenInAdmin(): bool
+    {
+        $needle = $this->page.'.'.$this->section_key;
+
+        foreach (config('website_sections.hidden_sections', []) as $pattern) {
+            if (fnmatch((string) $pattern, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static function sectionsFor(string $page): \Illuminate\Support\Collection
     {
         return static::query()

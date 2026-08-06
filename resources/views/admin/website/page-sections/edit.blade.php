@@ -20,18 +20,28 @@
             <form action="{{ route('admin.website.page-sections.update', $section) }}" method="POST" enctype="multipart/form-data">
                 @csrf @method('PUT')
                 <div class="row g-3">
+                    @if($section->showsField('title'))
                     <div class="col-md-6">
                         <label class="form-label">Title</label>
                         <input type="text" name="title" class="form-control" value="{{ old('title', $section->title) }}">
                     </div>
+                    @endif
+
+                    @if($section->showsField('subtitle'))
                     <div class="col-md-6">
                         <label class="form-label">Subtitle</label>
                         <input type="text" name="subtitle" class="form-control" value="{{ old('subtitle', $section->subtitle) }}">
                     </div>
+                    @endif
+
+                    @if($section->showsField('content'))
                     <div class="col-12">
                         <label class="form-label">Content</label>
                         <textarea name="content" rows="5" class="form-control">{{ old('content', $section->content) }}</textarea>
                     </div>
+                    @endif
+
+                    @if($section->showsField('image'))
                     <div class="col-md-6">
                         <label class="form-label">Image</label>
                         <input type="file" name="image" class="form-control" accept="image/jpeg,image/jpg,image/png,image/webp,image/avif">
@@ -50,15 +60,23 @@
                             </div>
                         @endif
                     </div>
+                    @endif
+
+                    @if($section->showsField('icon'))
                     <div class="col-md-3">
                         <label class="form-label">Icon (Font Awesome)</label>
                         <input type="text" name="icon" class="form-control" value="{{ old('icon', $section->icon) }}" placeholder="fa-truck">
                     </div>
+                    @endif
+
+                    @if($section->showsField('link'))
                     <div class="col-md-3">
                         <label class="form-label">Link URL</label>
                         <input type="text" name="link" class="form-control" value="{{ old('link', $section->link) }}" placeholder="https://...">
-                        <small class="text-muted">For buttons/badges (e.g. Play Store link).</small>
+                        <small class="text-muted">For buttons / social links.</small>
                     </div>
+                    @endif
+
                     <div class="col-md-2">
                         <label class="form-label">Sort Order</label>
                         <input type="number" name="sort_order" class="form-control" value="{{ old('sort_order', $section->sort_order) }}">

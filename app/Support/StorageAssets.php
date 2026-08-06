@@ -27,11 +27,22 @@ class StorageAssets
             return $fallback;
         }
 
-        if (auth()->check()) {
-            return self::adminMediaUrl($relative);
+        // Prefer public storage symlink (same pattern that works on Vendor list).
+        $symlinkFile = public_path('storage/'.$relative);
+        if (is_file($symlinkFile)) {
+            return asset('storage/'.$relative);
         }
 
-        return self::publicUrl($relative, $fallback);
+        // File exists only under storage disk — use media endpoints.
+        if (self::absolutePath($relative)) {
+            if (auth()->check()) {
+                return url(self::adminMediaUrl($relative));
+            }
+
+            return url('/media?'.http_build_query(['path' => $relative]));
+        }
+
+        return $fallback;
     }
 
     public static function publicUrl(?string $path, ?string $fallback = null): ?string
